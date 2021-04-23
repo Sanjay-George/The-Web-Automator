@@ -2,7 +2,11 @@ var Profiler = (() => {
     const elementTypes = {
         DEFAULT: 0,
         ACTION: 1,
-        STATE: 2,
+        ACTION_TARGET: 2,
+        ACTION_LABEL: 3,
+        STATE: 4,
+        STATE_TARGET: 5,
+        STATE_LABEL: 6
     };
 
 
@@ -16,12 +20,12 @@ var Profiler = (() => {
         isConfigurationActive = true;
         configuredElement = element;
         
-        Utils.resetHighlight(element); 
-        Utils.highlightElement(element, elementType);
+        Highlighter.resetHighlight(element); 
+        Highlighter.highlightElement(element, elementType);
     };
 
     const disableConfigurationMode = () => {
-        Utils.resetHighlight(configuredElement);
+        Highlighter.resetHighlight(configuredElement);
         isConfigurationActive = false;
         configuredElement = null;
     };
@@ -35,11 +39,11 @@ var Profiler = (() => {
         actionMenu.initialize();
 
         document.addEventListener("mouseover", (e) => {
-            !isConfigurationActive && Utils.highlightElement(e.target, elementTypes.DEFAULT);
+            !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
         });
 
         document.addEventListener("mouseout", (e) => {
-            !isConfigurationActive && Utils.resetHighlight(e.target);
+            !isConfigurationActive && Highlighter.resetHighlight(e.target);
         });
 
         document.addEventListener("click", (e) => {

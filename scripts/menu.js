@@ -1,14 +1,17 @@
 class Menu {
 
     createOverlay = () => {
-        if(document.getElementById("profile-overlay"))
+        if(document.getElementById("profile-overlay")) {
+            this.overlay = document.getElementById("profile-overlay");
             return;
+        }
 
         const overlay = document.createElement("div");
         overlay.id = "profile-overlay";
         overlay.classList.add("profile-overlay");
         overlay.classList.add("hide");
         document.body.append(overlay);
+        this.overlay = overlay;
     };
 
     createMenuElement = (id) => {
@@ -20,7 +23,8 @@ class Menu {
         menu.classList.add("card");
         menu.classList.add("hide");
         menu.id = id;
-        document.body.append(menu); 
+        document.body.append(menu);
+        this.menu = menu;
     };
 
 }
@@ -96,33 +100,58 @@ class ActionMenu extends Menu {
         `;
     };
 
+    removeEventListeners = () => {
+        // close btn
+        document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
+    };
+
     close = (event) => {
-        const menu = document.querySelector(`#${this.containerId}`);
+        // const menu = document.querySelector(`#${this.containerId}`);
         const overlay = document.querySelector("#profile-overlay");
         overlay.classList.add("hide");
-        menu.classList.add("hide");
+        this.menu.classList.add("hide");
         
-        document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
-
+        this.removeEventListeners();
         Profiler.disableConfigurationMode();
     };
+
+    setEventListeners = () => {
+        // close btn
+        document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
+
+        // set parent as target
+
+        // select individual element
+        document.querySelector(`#${this.containerId} #target-list`).addEventListener("click", () => {
+            // hide popup & overlay 
+            // reactivate highlight option (diff color)
+        });
+
+        // select individual label
+
+        // select all similar siblings
+
+    };
+
+    showMenu = () => {
+        // const menu = document.querySelector(`#${this.containerId}`);
+        this.menu.classList.remove("hide");
+        const overlay = document.querySelector("#profile-overlay");
+        overlay.classList.remove("hide");
+    }
 
     open = (event) => {
         console.log(event.target);       
         Profiler.enableConfigurationMode(event.target, Profiler.elementTypes.ACTION);
 
-        const menu = document.querySelector(`#${this.containerId}`);
-        const overlay = document.querySelector("#profile-overlay");
-        
-        overlay.classList.remove("hide");
-        menu.classList.remove("hide");
-
-        menu.innerHTML = this.getMenuHTML(event);
-        document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
+        this.showMenu();
+    
+        this.menu.innerHTML = this.getMenuHTML(event);
+        this.setEventListeners();
     };
 
     initialize = () => {
-        this.createMenuElement("action-menu");
+        this.createMenuElement(this.containerId);
         this.createOverlay();
     };
 }
