@@ -9,6 +9,7 @@ var Profiler = (() => {
         STATE_LABEL: 6
     };
 
+    const actionMenu = new ActionMenu();
 
     const actionList = [];
     const stateList = [];
@@ -32,42 +33,43 @@ var Profiler = (() => {
 
     const saveConfiguration = () =>  {};
 
+    const handleMouseOver = (e) => {
+        !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
+    };
+
+    const handleMouseOut = (e) => {
+        !isConfigurationActive && Highlighter.resetHighlight(e.target);
+    };
+
+    const handleClick = (e) => {
+        console.log(e);
+        
+        if(isConfigurationActive && (!e.target.nodeName.toLowerCase() === "input")) {
+            e.preventDefault();
+            return;
+        }
+
+        if(e.shiftKey) {
+            e.preventDefault();
+            isConfigurationActive = true;
+            configuredElement = e.target;
+            actionMenu.open(e);
+        }
+
+        if(e.ctrlKey) {
+            e.preventDefault();
+            isConfigurationActive = true;
+            configuredElement = e.target;
+            setStateMenu(e.target);
+        }
+    };
 
     const registerEvents = () => {
-
-        const actionMenu = new ActionMenu();
         actionMenu.initialize();
 
-        document.addEventListener("mouseover", (e) => {
-            !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
-        });
-
-        document.addEventListener("mouseout", (e) => {
-            !isConfigurationActive && Highlighter.resetHighlight(e.target);
-        });
-
-        document.addEventListener("click", (e) => {
-            console.log(e);
-            
-            if(isConfigurationActive && (!e.target.nodeName.toLowerCase() === "input")) {
-                e.preventDefault();
-                return;
-            }
-
-            if(e.shiftKey) {
-                e.preventDefault();
-                isConfigurationActive = true;
-                configuredElement = e.target;
-                actionMenu.open(e);
-            }
-
-            if(e.ctrlKey) {
-                e.preventDefault();
-                isConfigurationActive = true;
-                configuredElement = e.target;
-                setStateMenu(e.target);
-            }
-        });
+        DynamicEventHandler.addHandler("mouseover", handleMouseOver);
+        DynamicEventHandler.addHandler("mouseout", handleMouseOut);
+        DynamicEventHandler.addHandler("click", handleClick);
     }
 
     return {
@@ -81,3 +83,5 @@ var Profiler = (() => {
 
 
 Profiler.registerEvents();
+
+

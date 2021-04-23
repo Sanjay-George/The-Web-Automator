@@ -12,8 +12,24 @@ const EventEmitter = require('events');
 
 
 	await page.addScriptTag({ path: "./scripts/menu.js" });
+	await page.addScriptTag({ path: "./scripts/actionMenu.js" });
 	await page.addScriptTag({ path: "./scripts/utils.js" });
 	await page.addScriptTag({ path: "./scripts/profiler.js" });
+
+	page.on('framenavigated', async () => {
+		console.log("page navigation occured");
+	});
+
+	page.on('dialog', async dialog => {
+		console.log(dialog.message());
+		await dialog.dismiss();
+	});
+
+	page.on('close', async () => {
+		// get all data from browser (Profiler module) and store in file
+		console.log("page closed");
+	})
+		
   
 })();
 
@@ -23,6 +39,7 @@ const EventEmitter = require('events');
 /* METHODS TO USE 
 
 browser / page disconnected
+https://pptr.dev/#?product=Puppeteer&version=v8.0.0&show=api-event-targetdestroyed
 https://pptr.dev/#?product=Puppeteer&version=v8.0.0&show=api-event-disconnected
 https://pptr.dev/#?product=Puppeteer&version=v8.0.0&show=api-event-close
 
