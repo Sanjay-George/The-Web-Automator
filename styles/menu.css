@@ -1,0 +1,91 @@
+.profile-menu {
+    display: flex;
+    flex-wrap: wrap;
+    width: 700px;
+    height: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+    transform: translateX(-50%) translateY(-50%);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    background-color: #fafafa;
+    box-shadow: 1px 2px 5px #aaa;
+    padding-bottom: 20px;
+}
+
+.profile-overlay {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    opacity: 0.1;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 50;
+}
+
+.hide {
+    display: none;
+}
+
+.profile-menu h4 {
+    padding: 10px 20px; 
+    text-align: center;
+}
+/* 
+.profile-menu .row {
+    margin-left: 20px;
+    margin-right: 20px;
+} */
+
+.profile-menu .row {
+    display: flex;
+    width: 100%;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+}
+
+.profile-menu .col3 {
+    width: 25%;
+}
+.profile-menu .col4 {
+    width: 33.33%;
+}
+.profile-menu .col6 {
+    width: 50%;
+}
+.profile-menu .col8 {
+    width: 66.66%;
+}
+.profile-menu .col12 {
+    width: 100%;
+}
+
+.profile-menu .input-field {
+    padding: 10px 0;
+}
+
+
+.profile-menu .profile-close {
+    position: absolute;
+    right: 0px;
+    cursor: pointer;
+}
+
+.profile-menu .button {
+    padding: 5px 20px;
+    box-shadow: 0px 1px 2px #888;
+    background-color: #222;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 5px 0;
+    cursor: pointer;
+}
+
+.profile-menu input[type="text"] {
+    width: 70%;
+}
