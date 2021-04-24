@@ -1,11 +1,21 @@
 class ActionMenu extends Menu {
     constructor() {
         super();
-        this.containerId = "action-menu"; 
-        this.currentElementType = null;
+        this.containerId = "action-menu";
+        this.configuration = {
+            parentContainer: null,
+            actionName: "",
+            actionType: null,
+            actionkey: "",
+            individualTargetsMeta: [],
+            individualTargets: [],
+            labelTargetsMeta: [],
+            labelTargets: [],
+            customInputs: []
+        }; 
     }
 
-    getMenuHTML = (event) => {
+    getMenuHTML = () => {
         return `
             <div class="row">
                 <div class="col12">
@@ -36,7 +46,7 @@ class ActionMenu extends Menu {
                 
                 <div class="input-field col8">
                     <label for="parent-container">Parent Container</label>
-                    <input id="parent-container" type="text" readonly value="${Utils.getElementPathSelectors(event, 3)}">
+                    <input id="parent-container" type="text" readonly value="${Utils.getElementPathSelectors(this.configuration.parentContainer.fullPath, 2)}">
                 </div>
                 <div class="input-field col4">
                     <label>
@@ -56,12 +66,10 @@ class ActionMenu extends Menu {
                     </div>
                 </div>
                 <div class="input-field col4" style="display: flex; align-items: center;">
-                    <p>
-                    <label>
+                    <label id="sel-similar">
                         <input type="checkbox"/>
                         <span>Select similar elements</span>
                     </label>
-                    </p>
                 </div>
 
                 <div class="input-field col12">
@@ -94,7 +102,7 @@ class ActionMenu extends Menu {
 
     actionTargetHandlers = {
         handleMouseOver: (e) => {
-            Highlighter.highlightElement(e.target, this.currentElementType);
+            Highlighter.highlightElement(e.target, Profiler.elementTypes.ACTION_TARGET);
         },
     
         handleMouseOut: (e) => {
@@ -107,7 +115,69 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
             DynamicEventHandler.removeHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
             DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleOneTimeMouseClick);
+
+            this.configuration.individualTargetsMeta.push({ element: e.target, fullPath: e.path });
+            document.querySelector("#target-list").value = Utils.getElementPathSelectors(e.path, 2);
+
+            console.log(this);
         }
+    };
+
+    actionLabelHandlers = {
+        handleMouseOver: (e) => {
+            Highlighter.highlightElement(e.target, Profiler.elementTypes.ACTION_LABEL);
+        },
+        handleMouseOut: (e) => {
+            Highlighter.resetHighlight(e.target);
+        },
+        handleOneTimeMouseClick: (e) => {
+            e.preventDefault();
+            this.showMenu();
+            DynamicEventHandler.removeHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
+            DynamicEventHandler.removeHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
+            DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleOneTimeMouseClick);
+
+            this.configuration.labelTargetsMeta.push({ element: e.target, fullPath: e.path });
+            document.querySelector("#label-list").value = Utils.getElementPathSelectors(e.path, 2);
+        }
+    };
+
+    verifyIndividualTargets = () => {
+        if(this.configuration.individualTargetsMeta.length === 0) 
+            return false;
+
+        const individualTargetsPath = Utils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
+        const parentContainerPath = Utils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
+        return individualTargetsPath.includes(parentContainerPath);
+    };
+
+    verifyLabelTargets = () => {
+        if(this.configuration.individualTargetsMeta.length === 0) 
+            return false;
+
+        const labelTargetsPath = Utils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
+        const parentContainerPath = Utils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
+        return labelTargetsPath.includes(parentContainerPath);
+    };
+
+    populateSimilarIndividualTargets = () => {
+        const individualTargetsPath = Utils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
+
+        this.configuration.individualTargets = Array.from(document.querySelectorAll(individualTargetsPath));
+
+        this.configuration.individualTargets.forEach(item => {
+            Highlighter.highlightElement(item, Profiler.elementTypes.ACTION_TARGET);
+        });
+    };
+
+    populateSimilarLabelTargets = () => {
+        const labelTargetsPath = Utils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
+
+        this.configuration.labelTargets = Array.from(document.querySelectorAll(labelTargetsPath));
+
+        this.configuration.labelTargets.forEach(item => {
+            Highlighter.highlightElement(item, Profiler.elementTypes.ACTION_LABEL);
+        });
     };
 
     setFormEventListeners = () => {
@@ -122,7 +192,6 @@ class ActionMenu extends Menu {
             console.log("Individual target input clicked");
 
             this.hideMenu();
-            this.currentElementType = Profiler.elementTypes.ACTION_TARGET;
 
             DynamicEventHandler.addHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
@@ -130,9 +199,27 @@ class ActionMenu extends Menu {
         });
 
         // select individual label
+        document.querySelector(`#${this.containerId} #label-list`).addEventListener("click", (e) => {
+            e.stopPropagation();
+            console.log("Individual label input clicked");
+
+            this.hideMenu();
+
+            DynamicEventHandler.addHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
+            DynamicEventHandler.addHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
+            DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleOneTimeMouseClick);
+        });
 
         // select all similar siblings
+        document.querySelector("#sel-similar").addEventListener("click", (e) => {
+            e.stopPropagation();
 
+            if(!this.verifyIndividualTargets())   return;
+            this.populateSimilarIndividualTargets();
+
+            if(!this.verifyLabelTargets())   return;
+            this.populateSimilarLabelTargets();
+        });
     };
 
     showMenu = () => {
@@ -142,10 +229,9 @@ class ActionMenu extends Menu {
 
     open = (event) => {     
         Profiler.enableConfigurationMode(event.target, Profiler.elementTypes.ACTION);
-
+        this.configuration.parentContainer =  { element: event.target, fullPath: event.path };
+        this.menu.innerHTML = this.getMenuHTML();
         this.showMenu();
-    
-        this.menu.innerHTML = this.getMenuHTML(event);
         this.setFormEventListeners();
     };
 

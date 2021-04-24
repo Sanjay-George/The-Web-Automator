@@ -7,8 +7,8 @@ const Utils = (() => {
         return elementPath;
     };
 
-    const getElementPathSelectors = (event, maxHeight) => {
-        const pathList = event.path
+    const getElementPathSelectors = (pathList, maxHeight) => {
+        // pathList =  event.path 
 
         let finalPathList = [];
         for (let i = 0; i < pathList.length; i++) {
