@@ -5,7 +5,7 @@ const EventEmitter = require('events');
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await openTab(browser, "https://www.bikewale.com/");
+    let page = await openTab(browser, "https://www.carwale.com/");
 
 	await page.addStyleTag({ url: "https://fonts.googleapis.com/icon?family=Material+Icons"});
 	await page.addStyleTag({ path: "./styles/menu.css"});
@@ -65,7 +65,8 @@ async function openTab(browser, url) {
     let page = await browser.newPage();
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
-    // getConfigValue("performanceMode") && await disableHeavyResources(page);
+    // getConfigValue("performanceMode") && 
+	await disableHeavyResources(page);
     await page.goto(url, {waitUntil: 'networkidle0', timeout: 60000});
     // await warmUpPage(page);
     return page;
@@ -87,7 +88,8 @@ async function takeScreenShot(elementHandle, fileName) {
 }
 
 async function disableHeavyResources(page) {
-	const heavyResources = ["image", "media", "font"]; 
+	// const heavyResources = ["image", "media", "font"]; 
+	const heavyResources = ["image", "media"]; 
 	const blockedReqKeywords = ["video", "playback", "youtube", "autoplay"];
 
 	await page.setRequestInterception(true);

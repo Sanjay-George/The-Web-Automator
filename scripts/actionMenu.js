@@ -46,7 +46,7 @@ class ActionMenu extends Menu {
                 
                 <div class="input-field col8">
                     <label for="parent-container">Parent Container</label>
-                    <input id="parent-container" type="text" readonly value="${DomUtils.getElementPathSelectors(this.configuration.parentContainer.fullPath, 2)}">
+                    <input id="parent-container" type="text" readonly value="${DomUtils.getQuerySelector(this.configuration.parentContainer.element)}">
                 </div>
                 <div class="input-field col4">
                     <label>
@@ -109,15 +109,16 @@ class ActionMenu extends Menu {
             Highlighter.resetHighlight(e.target);
         },
     
-        handleOneTimeMouseClick: (e) => {
+        handleSelection: (e) => {
             e.preventDefault();
             this.showMenu();
             DynamicEventHandler.removeHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
             DynamicEventHandler.removeHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
-            DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleOneTimeMouseClick);
+            DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleSelection);
 
-            this.configuration.individualTargetsMeta.push({ element: e.target, fullPath: e.path });
-            document.querySelector("#target-list").value = DomUtils.getElementPathSelectors(e.path, 2);
+            const targetQuerySelector = DomUtils.getQuerySelector(e.target);
+            this.configuration.individualTargetsMeta.push({ element: e.target, selector: targetQuerySelector });
+            document.querySelector("#target-list").value = targetQuerySelector;
 
             console.log(this);
         }
@@ -130,15 +131,16 @@ class ActionMenu extends Menu {
         handleMouseOut: (e) => {
             Highlighter.resetHighlight(e.target);
         },
-        handleOneTimeMouseClick: (e) => {
+        handleSelection: (e) => {
             e.preventDefault();
             this.showMenu();
             DynamicEventHandler.removeHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
             DynamicEventHandler.removeHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
-            DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleOneTimeMouseClick);
+            DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleSelection);
 
-            this.configuration.labelTargetsMeta.push({ element: e.target, fullPath: e.path });
-            document.querySelector("#label-list").value = DomUtils.getElementPathSelectors(e.path, 2);
+            const labelQuerySelector = DomUtils.getQuerySelector(e.target);
+            this.configuration.labelTargetsMeta.push({ element: e.target, selector: labelQuerySelector });
+            document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
 
@@ -146,22 +148,22 @@ class ActionMenu extends Menu {
         if(this.configuration.individualTargetsMeta.length === 0) 
             return false;
 
-        const individualTargetsPath = DomUtils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
-        const parentContainerPath = DomUtils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
+        const individualTargetsPath = this.configuration.individualTargetsMeta[0].selector;
+        const parentContainerPath = this.configuration.parentContainer.selector;
         return individualTargetsPath.includes(parentContainerPath);
     };
 
     verifyLabelTargets = () => {
-        if(this.configuration.individualTargetsMeta.length === 0) 
+        if(this.configuration.labelTargetsMeta.length === 0) 
             return false;
 
-        const labelTargetsPath = DomUtils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
-        const parentContainerPath = DomUtils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
+        const labelTargetsPath = this.configuration.labelTargetsMeta[0].selector;
+        const parentContainerPath = this.configuration.parentContainer.selector;
         return labelTargetsPath.includes(parentContainerPath);
     };
 
     populateSimilarIndividualTargets = () => {
-        const individualTargetsPath = DomUtils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
+        const individualTargetsPath = this.configuration.individualTargetsMeta[0].selector;
 
         this.configuration.individualTargets = Array.from(document.querySelectorAll(individualTargetsPath));
 
@@ -171,7 +173,7 @@ class ActionMenu extends Menu {
     };
 
     populateSimilarLabelTargets = () => {
-        const labelTargetsPath = DomUtils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
+        const labelTargetsPath = this.configuration.labelTargetsMeta[0].selector;
 
         this.configuration.labelTargets = Array.from(document.querySelectorAll(labelTargetsPath));
 
@@ -195,7 +197,7 @@ class ActionMenu extends Menu {
 
             DynamicEventHandler.addHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
-            DynamicEventHandler.addHandler("click", this.actionTargetHandlers.handleOneTimeMouseClick);
+            DynamicEventHandler.addHandler("click", this.actionTargetHandlers.handleSelection);
         });
 
         // select individual label
@@ -207,7 +209,7 @@ class ActionMenu extends Menu {
 
             DynamicEventHandler.addHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
-            DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleOneTimeMouseClick);
+            DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleSelection);
         });
 
         // select all similar siblings
@@ -229,7 +231,7 @@ class ActionMenu extends Menu {
 
     open = (event) => {     
         Profiler.enableConfigurationMode(event.target, Profiler.elementTypes.ACTION);
-        this.configuration.parentContainer =  { element: event.target, fullPath: event.path };
+        this.configuration.parentContainer =  { element: event.target, selector: DomUtils.getQuerySelector(event.target) };
         this.menu.innerHTML = this.getMenuHTML();
         this.showMenu();
         this.setFormEventListeners();
