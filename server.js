@@ -13,7 +13,9 @@ const EventEmitter = require('events');
 
 	await page.addScriptTag({ path: "./scripts/menu.js" });
 	await page.addScriptTag({ path: "./scripts/actionMenu.js" });
-	await page.addScriptTag({ path: "./scripts/utils.js" });
+	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
+	await page.addScriptTag({ path: "./scripts/utils/dynamicEventHandler.js" });
+	await page.addScriptTag({ path: "./scripts/utils/highlighter.js" });
 	await page.addScriptTag({ path: "./scripts/profiler.js" });
 
 	page.on('framenavigated', async () => {

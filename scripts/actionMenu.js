@@ -46,7 +46,7 @@ class ActionMenu extends Menu {
                 
                 <div class="input-field col8">
                     <label for="parent-container">Parent Container</label>
-                    <input id="parent-container" type="text" readonly value="${Utils.getElementPathSelectors(this.configuration.parentContainer.fullPath, 2)}">
+                    <input id="parent-container" type="text" readonly value="${DomUtils.getElementPathSelectors(this.configuration.parentContainer.fullPath, 2)}">
                 </div>
                 <div class="input-field col4">
                     <label>
@@ -117,7 +117,7 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleOneTimeMouseClick);
 
             this.configuration.individualTargetsMeta.push({ element: e.target, fullPath: e.path });
-            document.querySelector("#target-list").value = Utils.getElementPathSelectors(e.path, 2);
+            document.querySelector("#target-list").value = DomUtils.getElementPathSelectors(e.path, 2);
 
             console.log(this);
         }
@@ -138,7 +138,7 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleOneTimeMouseClick);
 
             this.configuration.labelTargetsMeta.push({ element: e.target, fullPath: e.path });
-            document.querySelector("#label-list").value = Utils.getElementPathSelectors(e.path, 2);
+            document.querySelector("#label-list").value = DomUtils.getElementPathSelectors(e.path, 2);
         }
     };
 
@@ -146,8 +146,8 @@ class ActionMenu extends Menu {
         if(this.configuration.individualTargetsMeta.length === 0) 
             return false;
 
-        const individualTargetsPath = Utils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
-        const parentContainerPath = Utils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
+        const individualTargetsPath = DomUtils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
+        const parentContainerPath = DomUtils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
         return individualTargetsPath.includes(parentContainerPath);
     };
 
@@ -155,13 +155,13 @@ class ActionMenu extends Menu {
         if(this.configuration.individualTargetsMeta.length === 0) 
             return false;
 
-        const labelTargetsPath = Utils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
-        const parentContainerPath = Utils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
+        const labelTargetsPath = DomUtils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
+        const parentContainerPath = DomUtils.getElementPathSelectors(this.configuration.parentContainer.fullPath);
         return labelTargetsPath.includes(parentContainerPath);
     };
 
     populateSimilarIndividualTargets = () => {
-        const individualTargetsPath = Utils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
+        const individualTargetsPath = DomUtils.getElementPathSelectors(this.configuration.individualTargetsMeta[0].fullPath);
 
         this.configuration.individualTargets = Array.from(document.querySelectorAll(individualTargetsPath));
 
@@ -171,7 +171,7 @@ class ActionMenu extends Menu {
     };
 
     populateSimilarLabelTargets = () => {
-        const labelTargetsPath = Utils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
+        const labelTargetsPath = DomUtils.getElementPathSelectors(this.configuration.labelTargetsMeta[0].fullPath);
 
         this.configuration.labelTargets = Array.from(document.querySelectorAll(labelTargetsPath));
 
