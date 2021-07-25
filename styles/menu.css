@@ -63,6 +63,9 @@
 .profile-menu .col8 {
     width: 66.66%;
 }
+.profile-menu .col9 {
+    width: 75%;
+}
 .profile-menu .col12 {
     width: 100%;
 }
@@ -76,6 +79,13 @@
     position: absolute;
     right: 0px;
     cursor: pointer;
+}
+
+.profile-menu .clear-all {
+    cursor: pointer;
+    font-size: 20px; 
+    position: relative; 
+    top: 2px; 
 }
 
 .profile-menu .button {

@@ -1,3 +1,7 @@
+// TODO: Rename this class according to its purpose 
+
+let actionMenu;  // todo: move this inside scope
+
 var Profiler = (() => {
     const elementTypes = {
         DEFAULT: 0,
@@ -9,7 +13,7 @@ var Profiler = (() => {
         STATE_LABEL: 6
     };
 
-    const actionMenu = new ActionMenu();
+    actionMenu = new ActionMenu();
 
     const actionList = [];
     const stateList = [];

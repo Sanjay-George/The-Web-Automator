@@ -5,7 +5,7 @@ const EventEmitter = require('events');
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await openTab(browser, "https://www.carwale.com/");
+    let page = await openTab(browser, "https://www.bikewale.com/");
 
 	await page.addStyleTag({ url: "https://fonts.googleapis.com/icon?family=Material+Icons"});
 	await page.addStyleTag({ path: "./styles/menu.css"});
@@ -89,7 +89,7 @@ async function takeScreenShot(elementHandle, fileName) {
 
 async function disableHeavyResources(page) {
 	// const heavyResources = ["image", "media", "font"]; 
-	const heavyResources = ["image", "media"]; 
+	const heavyResources = ["image"]; 
 	const blockedReqKeywords = ["video", "playback", "youtube", "autoplay"];
 
 	await page.setRequestInterception(true);
