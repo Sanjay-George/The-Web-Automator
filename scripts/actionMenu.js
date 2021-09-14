@@ -165,7 +165,7 @@ class ActionMenu extends Menu {
         return targets;
     };
 
-    removeSimilarTargets = (targets, targetsMeta) => {
+    removeSimilarTargets = (targets, targetsMeta, elementType) => {
         if(targetsMeta.length === 0 || targets.length === 0)   return targets;
         
         targets.forEach(item => {
@@ -175,6 +175,10 @@ class ActionMenu extends Menu {
         targets = [];
         targetsMeta.forEach(meta => {
             targets.push(document.querySelector(meta.selector));
+        });
+
+        targets.forEach(item => {
+            Highlighter.highlightElement(item, elementType);
         });
         return targets;
     };
@@ -217,8 +221,8 @@ class ActionMenu extends Menu {
                 this.configuration.labelTargets = this.populateSimilarTargets(labelTargets, labelTargetsMeta, Profiler.elementTypes.ACTION_LABEL);
             }
             else {
-                this.configuration.actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta);
-                this.configuration.labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta);
+                this.configuration.actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
+                this.configuration.labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta,  Profiler.elementTypes.ACTION_LABEL);
             }
         });
 
