@@ -1,6 +1,6 @@
 // TODO: Rename this class according to its purpose 
 
-let actionMenu;  // todo: move this inside scope
+let actionMenu;  // todo: move this inside scope, kept here for debugging
 
 var Profiler = (() => {
     const elementTypes = {
@@ -35,7 +35,7 @@ var Profiler = (() => {
         configuredElement = null;
     };
 
-    const saveConfiguration = () =>  {};
+    const saveConfiguration = () =>  {};  // TODO
 
     const handleMouseOver = (e) => {
         !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
@@ -46,7 +46,7 @@ var Profiler = (() => {
     };
 
     const handleClick = (e) => {
-        console.log(e);
+        // console.log(e);
         
         if(isConfigurationActive && (!e.target.nodeName.toLowerCase() === "input")) {
             e.preventDefault();
@@ -64,7 +64,7 @@ var Profiler = (() => {
             e.preventDefault();
             isConfigurationActive = true;
             configuredElement = e.target;
-            setStateMenu(e.target);
+            // setStateMenu(e.target);
         }
     };
 
