@@ -138,14 +138,25 @@ class ActionMenu extends Menu {
         });
     };
 
+    findSimilarElements = (selectorArr) => {
+        let similarElements = [];
+        selectorArr.forEach(selector => {
+            const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
+            const replaceElem = nthChildElem[nthChildElem.length - 1];
+            const newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
+            similarElements = similarElements.concat(Array.from(document.querySelectorAll(newSelector)));
+        });
+        return similarElements;
+    };
+
     populateSimilarActionTargets = () => {
         if(this.configuration.actionTargetsMeta.length === 0)   return;
 
-        // todo: check all meta targets, not just first one
+        // TODO: check all meta targets, not just first one
         const actionTargetsPath = this.configuration.actionTargetsMeta[0].selector;
 
-        // todo: improve this logic, remove nth child
-        this.configuration.actionTargets = Array.from(document.querySelectorAll(actionTargetsPath));
+        // TODO: improve this logic, remove nth child
+        this.configuration.actionTargets = this.findSimilarElements([actionTargetsPath]);
 
         this.configuration.actionTargets.forEach(item => {
             Highlighter.highlightElement(item, Profiler.elementTypes.ACTION_TARGET);
@@ -157,7 +168,7 @@ class ActionMenu extends Menu {
 
         const labelTargetsPath = this.configuration.labelTargetsMeta[0].selector;
 
-        this.configuration.labelTargets = Array.from(document.querySelectorAll(labelTargetsPath));
+        this.configuration.labelTargets = this.findSimilarElements([labelTargetsPath]);
 
         this.configuration.labelTargets.forEach(item => {
             Highlighter.highlightElement(item, Profiler.elementTypes.ACTION_LABEL);

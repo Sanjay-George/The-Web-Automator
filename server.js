@@ -14,7 +14,6 @@ const EventEmitter = require('events');
 	page.on('domcontentloaded', async () => {
 		// insert all styles and scripts
 		console.log(`DOM loaded: ${page.url()}`);
-
 		await insertStyles(page);
 		await insertScripts(page);
 	});
