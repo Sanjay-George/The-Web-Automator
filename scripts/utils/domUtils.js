@@ -1,5 +1,5 @@
 const DomUtils = (() => {
-    
+
     const _buildId = (element) => {
         if(element.id === "")
             return "";
@@ -96,7 +96,6 @@ const DomUtils = (() => {
 
 
     return {
-        getElementPathSelectors,
         getQuerySelector,
     }
 })();

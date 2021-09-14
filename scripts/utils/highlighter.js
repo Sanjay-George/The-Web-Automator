@@ -43,8 +43,8 @@ const Highlighter = (() => {
     };
 
     const resetHighlight = (element) => {
-        element.style.border = element.style.prevBorder ? element.style.prevBorder.pop() : "";
-        element.style.backgroundColor = element.style.prevBackgroundColor ? element.style.prevBackgroundColor.pop() : "";
+        element.style.border = element.style.prevBorder ? element.style.prevBorder.pop() : "transparent";
+        element.style.backgroundColor = element.style.prevBackgroundColor ? element.style.prevBackgroundColor.pop() : "transparent";
     };
 
     return {
