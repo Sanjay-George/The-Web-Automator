@@ -149,31 +149,36 @@ class ActionMenu extends Menu {
         return similarElements;
     };
 
-    populateSimilarActionTargets = () => {
-        if(this.configuration.actionTargetsMeta.length === 0)   return;
+    populateSimilarTargets = (targets, targetsMeta, elementType) => {
+        if(targetsMeta.length === 0)   return targets;
 
         // TODO: check all meta targets, not just first one
-        const actionTargetsPath = this.configuration.actionTargetsMeta[0].selector;
+        const targetsPath = targetsMeta[0].selector;
 
         // TODO: improve this logic, remove nth child
-        this.configuration.actionTargets = this.findSimilarElements([actionTargetsPath]);
+        targets = this.findSimilarElements([targetsPath]);
 
-        this.configuration.actionTargets.forEach(item => {
-            Highlighter.highlightElement(item, Profiler.elementTypes.ACTION_TARGET);
+        targets.forEach(item => {
+            Highlighter.highlightElement(item, elementType);
         });
+
+        return targets;
     };
 
-    populateSimilarLabelTargets = () => {
-        if(this.configuration.labelTargetsMeta.length === 0)    return;
-
-        const labelTargetsPath = this.configuration.labelTargetsMeta[0].selector;
-
-        this.configuration.labelTargets = this.findSimilarElements([labelTargetsPath]);
-
-        this.configuration.labelTargets.forEach(item => {
-            Highlighter.highlightElement(item, Profiler.elementTypes.ACTION_LABEL);
+    removeSimilarTargets = (targets, targetsMeta) => {
+        if(targetsMeta.length === 0 || targets.length === 0)   return targets;
+        
+        targets.forEach(item => {
+            Highlighter.resetHighlight(item);
         });
+
+        targets = [];
+        targetsMeta.forEach(meta => {
+            targets.push(document.querySelector(meta.selector));
+        });
+        return targets;
     };
+
 
     setMenuListeners = () => {
         // close btn
@@ -206,8 +211,15 @@ class ActionMenu extends Menu {
         // select all similar siblings
         document.querySelector("#sel-similar").addEventListener("click", (e) => {
             e.stopPropagation();
-            this.populateSimilarActionTargets();
-            this.populateSimilarLabelTargets();
+            const { actionTargets, actionTargetsMeta, labelTargets, labelTargetsMeta } = this.configuration;
+            if(e.target.checked) {
+                this.configuration.actionTargets = this.populateSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
+                this.configuration.labelTargets = this.populateSimilarTargets(labelTargets, labelTargetsMeta, Profiler.elementTypes.ACTION_LABEL);
+            }
+            else {
+                this.configuration.actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta);
+                this.configuration.labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta);
+            }
         });
 
         // clear action targets
