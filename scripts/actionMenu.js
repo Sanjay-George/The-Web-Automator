@@ -111,8 +111,10 @@ class ActionMenu extends Menu {
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
             // TODO: CHECK FOR DUPLICATE TARGETS
-            this.configuration.actionTargetsMeta.selectors.push(targetQuerySelector);
-            this.configuration.actionTargets.push(e.target);
+            if(!this.configuration.actionTargets.includes(e.target)) {
+                this.configuration.actionTargetsMeta.selectors.push(targetQuerySelector);
+                this.configuration.actionTargets.push(e.target);
+            }
             document.querySelector("#target-list").value = targetQuerySelector;
         }
     };
@@ -132,8 +134,10 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleSelection);
 
             const labelQuerySelector = DomUtils.getQuerySelector(e.target);
-            this.configuration.labelTargetsMeta.selectors.push(labelQuerySelector);
-            this.configuration.labelTargets.push(e.target);
+            if(!this.configuration.labelTargets.includes(labelQuerySelector)) { 
+                this.configuration.labelTargetsMeta.selectors.push(labelQuerySelector);
+                this.configuration.labelTargets.push(e.target);
+            }
             document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
@@ -246,8 +250,8 @@ class ActionMenu extends Menu {
         document.querySelector("#clear-label").addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.labelTargets);
             let {labelTargets, labelTargetsMeta} = this.configuration;
-            labelTargets = [];
-            labelTargetsMeta = { 
+            this.configuration.labelTargets = [];
+            this.configuration.labelTargetsMeta = { 
                 ...labelTargetsMeta,
                 selectors: [], 
             };
@@ -258,7 +262,7 @@ class ActionMenu extends Menu {
 
         // save action config
         document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
-            var config = await Profiler.getConfiguration();
+            var config = await window.getConfiguration();
             const {actionName, actionType, actionKey, actionTargetsMeta, labelTargetsMeta} = this.configuration;
             config.push({
                 actionName, 
@@ -267,7 +271,7 @@ class ActionMenu extends Menu {
                 labelTargetsMeta,
                 actionTargetsMeta,
             });
-            Profiler.setConfiguration(config);
+            await window.setConfiguration(config);
             this.close();
         });
     };

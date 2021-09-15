@@ -3,7 +3,7 @@
 
 let actionMenu;  // todo: move this inside scope, kept here for debugging
 
-var Profiler = (() => {
+const Profiler = (() => {
     const elementTypes = {
         DEFAULT: 0,
         ACTION: 1,
@@ -33,13 +33,6 @@ var Profiler = (() => {
         Highlighter.resetHighlight(configuredElement);
         isConfigurationActive = false;
         configuredElement = null;
-    };
-
-    const getConfiguration = async () => {
-        return await window.getConfiguration();
-    };
-    const setConfiguration = async config => {
-       await window.setConfiguration(config);
     };
 
     const handleMouseOver = (e) => {
@@ -86,8 +79,6 @@ var Profiler = (() => {
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
-        getConfiguration: getConfiguration,
-        setConfiguration: setConfiguration,
     }
 })();
 
