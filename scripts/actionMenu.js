@@ -5,10 +5,16 @@ class ActionMenu extends Menu {
         this.configuration = {
             actionName: "",
             actionType: null,
-            actionkey: "",
-            actionTargetsMeta: [],
+            actionKey: "",
+            actionTargetsMeta: {
+                selectors: [],  // selectors of unique targets to act on
+                actOnSimilarTargets: false, // to extend action to all similar targets
+                maxActionCount: -1 // add max limit of similar elements of each target
+            },
             actionTargets: [],
-            labelTargetsMeta: [],
+            labelTargetsMeta: {
+                selectors: [],
+            },
             labelTargets: [],
             // customInputs: []
         }; 
@@ -46,7 +52,7 @@ class ActionMenu extends Menu {
                 <div class="col9">
                     <div class="input-field">
                         <label for="target-list">Action Target(s)</label>
-                        <input id="target-list" type="text" readonly value="${this.configuration.actionTargetsMeta[0].selector}">
+                        <input id="target-list" type="text" readonly value="${this.configuration.actionTargetsMeta.selectors[0]}">
                         <a id="clear-target"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
                     <div class="input-field">
@@ -104,7 +110,8 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleSelection);
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
-            this.configuration.actionTargetsMeta.push({ selector: targetQuerySelector });
+            // TODO: CHECK FOR DUPLICATE TARGETS
+            this.configuration.actionTargetsMeta.selectors.push(targetQuerySelector);
             this.configuration.actionTargets.push(e.target);
             document.querySelector("#target-list").value = targetQuerySelector;
         }
@@ -125,7 +132,7 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleSelection);
 
             const labelQuerySelector = DomUtils.getQuerySelector(e.target);
-            this.configuration.labelTargetsMeta.push({ selector: labelQuerySelector });
+            this.configuration.labelTargetsMeta.selectors.push(labelQuerySelector);
             this.configuration.labelTargets.push(e.target);
             document.querySelector("#label-list").value = labelQuerySelector;
         }
@@ -138,30 +145,13 @@ class ActionMenu extends Menu {
         });
     };
 
-    findSimilarElements = (selectorArr) => {
-        let similarElements = [];
-        selectorArr.forEach(selector => {
-            const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
-            let newSelector;
-            if(nthChildElem.length) {
-                const replaceElem = nthChildElem[nthChildElem.length - 1];
-                newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
-            } else {
-                newSelector = selector;
-            }   
-            similarElements = similarElements.concat(Array.from(document.querySelectorAll(newSelector)));
-        });
-        return similarElements;
-    };
-
     populateSimilarTargets = (targets, targetsMeta, elementType) => {
-        if(targetsMeta.length === 0)   return targets;
+        if(targetsMeta.selectors.length === 0)   return targets;
 
-        // TODO: check all meta targets, not just first one
-        const targetsPath = targetsMeta[0].selector;
+        // // TODO: check all meta targets, not just first one
+        // const targetsPath = targetsMeta.selectors;
 
-        // TODO: improve this logic, remove nth child
-        targets = this.findSimilarElements([targetsPath]);
+        targets = DomUtils.findSimilarElements(targetsMeta.selectors);
 
         targets.forEach(item => {
             Highlighter.highlightElement(item, elementType);
@@ -171,15 +161,15 @@ class ActionMenu extends Menu {
     };
 
     removeSimilarTargets = (targets, targetsMeta, elementType) => {
-        if(targetsMeta.length === 0 || targets.length === 0)   return targets;
+        if(targetsMeta.selectors.length === 0 || targets.length === 0)   return targets;
         
         targets.forEach(item => {
             Highlighter.resetHighlight(item);
         });
 
         targets = [];
-        targetsMeta.forEach(meta => {
-            targets.push(document.querySelector(meta.selector));
+        targetsMeta.selectors.forEach(selector => {
+            targets.push(document.querySelector(selector));
         });
 
         targets.forEach(item => {
@@ -218,39 +208,65 @@ class ActionMenu extends Menu {
         });
 
         // select all similar siblings
-        document.querySelector("#sel-similar").addEventListener("click", (e) => {
+        document.querySelector(`#${this.containerId} #sel-similar`).addEventListener("click", (e) => {
             e.stopPropagation();
-            const { actionTargets, actionTargetsMeta, labelTargets, labelTargetsMeta } = this.configuration;
+            let { actionTargets, actionTargetsMeta, labelTargets, labelTargetsMeta } = this.configuration;
             if(e.target.checked) {
-                this.configuration.actionTargets = this.populateSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
-                this.configuration.labelTargets = this.populateSimilarTargets(labelTargets, labelTargetsMeta, Profiler.elementTypes.ACTION_LABEL);
+                actionTargets = this.populateSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
+                labelTargets = this.populateSimilarTargets(labelTargets, labelTargetsMeta, Profiler.elementTypes.ACTION_LABEL);
+                actionTargetsMeta.actOnSimilarTargets = true;
             }
             else {
-                this.configuration.actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
-                this.configuration.labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta,  Profiler.elementTypes.ACTION_LABEL);
+                actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
+                labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta,  Profiler.elementTypes.ACTION_LABEL);
+                actionTargetsMeta.actOnSimilarTargets = false;
             }
+            this.configuration = {
+                ...this.configuration,
+                actionTargets,
+                labelTargets,
+                actionTargetsMeta
+            };
         });
 
         // clear action targets
-        document.querySelector("#clear-target").addEventListener("click", (e) => {
+        document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.actionTargets);
+            let {actionTargets, actionTargetsMeta} = this.configuration;
             this.configuration.actionTargets = [];
-            this.configuration.actionTargetsMeta = [];
+            this.configuration.actionTargetsMeta = { 
+                ...actionTargetsMeta,
+                selectors: [], 
+                actOnSimilarTargets: false 
+            };
             document.querySelector("#target-list").value = "";
         });
         
         // clear label targets
         document.querySelector("#clear-label").addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.labelTargets);
-            this.configuration.labelTargets = [];
-            this.configuration.labelTargetsMeta = [];
+            let {labelTargets, labelTargetsMeta} = this.configuration;
+            labelTargets = [];
+            labelTargetsMeta = { 
+                ...labelTargetsMeta,
+                selectors: [], 
+            };
+            // this.configuration.labelTargets = [];
+            // this.configuration.labelTargetsMeta = [];
             document.querySelector("#label-list").value = "";
         });
 
         // save action config
         document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
             var config = await Profiler.getConfiguration();
-            config.push(this.configuration);
+            const {actionName, actionType, actionKey, actionTargetsMeta, labelTargetsMeta} = this.configuration;
+            config.push({
+                actionName, 
+                actionType,
+                actionKey,
+                labelTargetsMeta,
+                actionTargetsMeta,
+            });
             Profiler.setConfiguration(config);
             this.close();
         });
@@ -269,8 +285,10 @@ class ActionMenu extends Menu {
         Profiler.enableConfigurationMode(event.target, Profiler.elementTypes.ACTION);
 
         // initialize configuration values 
-        this.configuration.actionTargetsMeta =  [{ selector: DomUtils.getQuerySelector(event.target) }];
-        this.configuration.actionTargets = [event.target];
+        let {actionTargetsMeta, actionTargets} = this.configuration;
+        actionTargets.push(event.target);
+        actionTargetsMeta.selectors.push(DomUtils.getQuerySelector(event.target));
+        // { selectors: [ DomUtils.getQuerySelector(event.target) ] };
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
@@ -282,15 +300,6 @@ class ActionMenu extends Menu {
         this.createOverlay();
     };
 }
-
-/*
-TODO: 
-1. Restructure the configuration object 
-2. Give importance to target Selectors
-3. Formulate actual elements from the selectors (consider only one element vs all similar elements case)
-4. Only target selectors are useful for puppeteer, hence store that in node
-*/
-
 
 
 /*

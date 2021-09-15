@@ -93,9 +93,26 @@ const DomUtils = (() => {
         return path.reverse().join(" > ");
     }
 
+    const findSimilarElements = (selectorArr) => {
+        let similarElements = [];
+        selectorArr.forEach(selector => {
+            const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
+            let newSelector;
+            if(nthChildElem.length) {
+                const replaceElem = nthChildElem[nthChildElem.length - 1];
+                newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
+            } else {
+                newSelector = selector;
+            }   
+            similarElements = similarElements.concat(Array.from(document.querySelectorAll(newSelector)));
+        });
+        return similarElements;
+    };
+
 
 
     return {
         getQuerySelector,
+        findSimilarElements,
     }
 })();
