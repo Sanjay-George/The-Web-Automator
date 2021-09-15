@@ -67,7 +67,7 @@ class ActionMenu extends Menu {
                     <input id="custom-input" type="text" class="validate">
                 </div> -->
 
-                <a class="button">Configure</a>
+                <a id="configure" class="button">Configure</a>
             </form>
         `;
     };
@@ -142,8 +142,13 @@ class ActionMenu extends Menu {
         let similarElements = [];
         selectorArr.forEach(selector => {
             const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
-            const replaceElem = nthChildElem[nthChildElem.length - 1];
-            const newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
+            let newSelector;
+            if(nthChildElem.length) {
+                const replaceElem = nthChildElem[nthChildElem.length - 1];
+                newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
+            } else {
+                newSelector = selector;
+            }   
             similarElements = similarElements.concat(Array.from(document.querySelectorAll(newSelector)));
         });
         return similarElements;
@@ -242,10 +247,16 @@ class ActionMenu extends Menu {
             document.querySelector("#label-list").value = "";
         });
 
-        // save config
+        // save action config
+        document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
+            var config = await Profiler.getConfiguration();
+            config.push(this.configuration);
+            Profiler.setConfiguration(config);
+            this.close();
+        });
     };
 
-    close = (event) => {
+    close = () => {
         this.hideMenu();
         this.removeMenuListeners();  // TODO: CHECK IF WORKING
         Profiler.disableConfigurationMode();
@@ -271,6 +282,14 @@ class ActionMenu extends Menu {
         this.createOverlay();
     };
 }
+
+/*
+TODO: 
+1. Restructure the configuration object 
+2. Give importance to target Selectors
+3. Formulate actual elements from the selectors (consider only one element vs all similar elements case)
+4. Only target selectors are useful for puppeteer, hence store that in node
+*/
 
 
 
