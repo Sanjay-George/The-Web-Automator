@@ -14,6 +14,12 @@ const Profiler = (() => {
         STATE_LABEL: 6
     };
 
+    const actionTypes = {
+        CLICK: 1,
+        TEXT: 2,
+        SELECT: 3,
+    };
+
     actionMenu = new ActionMenu();
 
     // let configuration = [];

@@ -183,6 +183,15 @@ class ActionMenu extends Menu {
     };
 
 
+    setBasicDetails = () => {
+        this.configuration = {
+            ...this.configuration,
+            actionName: document.querySelector("#action-name").value,
+            actionKey: document.querySelector("#action-key").value,
+            actionType: document.querySelector("#action-type").value
+        };
+    };
+
     setMenuListeners = () => {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
@@ -263,6 +272,8 @@ class ActionMenu extends Menu {
         // save action config
         document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
             var config = await window.getConfiguration();
+            this.setBasicDetails();
+
             const {actionName, actionType, actionKey, actionTargetsMeta, labelTargetsMeta} = this.configuration;
             config.push({
                 actionName, 
