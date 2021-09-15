@@ -1,8 +1,9 @@
 // TODO: Rename this class according to its purpose 
+// This is the start point of each page crawled in config mode
 
 let actionMenu;  // todo: move this inside scope, kept here for debugging
 
-var Profiler = (() => {
+const Profiler = (() => {
     const elementTypes = {
         DEFAULT: 0,
         ACTION: 1,
@@ -13,10 +14,15 @@ var Profiler = (() => {
         STATE_LABEL: 6
     };
 
+    const actionTypes = {
+        CLICK: 1,
+        TEXT: 2,
+        SELECT: 3,
+    };
+
     actionMenu = new ActionMenu();
 
-    const actionList = [];
-    const stateList = [];
+    // let configuration = [];
 
     let isConfigurationActive = false;
     let configuredElement = null;
@@ -34,8 +40,6 @@ var Profiler = (() => {
         isConfigurationActive = false;
         configuredElement = null;
     };
-
-    const saveConfiguration = () =>  {};  // TODO
 
     const handleMouseOver = (e) => {
         !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
@@ -80,7 +84,7 @@ var Profiler = (() => {
         elementTypes: elementTypes,
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
-        disableConfigurationMode: disableConfigurationMode
+        disableConfigurationMode: disableConfigurationMode,
     }
 })();
 

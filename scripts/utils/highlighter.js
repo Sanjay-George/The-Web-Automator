@@ -24,8 +24,8 @@ const Highlighter = (() => {
         }
     };
 
-    const highlightElement = (element, elementType) => {
-        const rgbValues = getColorsByType(elementType);
+    const highlightElement = (element, elementType, customColor = null) => {
+        const rgbValues = customColor || getColorsByType(elementType);
 
         const [red, green, blue] = rgbValues;
 

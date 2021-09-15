@@ -5,11 +5,18 @@ const EventEmitter = require('events');
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await openTab(browser, "https://www.bikewale.com/");
+    let page = await openTab(browser, "https://www.carwale.com/");
 
 	await insertStyles(page);
 	await insertScripts(page);
 
+	let configuration = [];
+	// exposed functions survives navigation, so no need to expose again on page refresh
+	await page.exposeFunction('setConfiguration', config => {
+		console.log(JSON.stringify(config));
+		configuration = config;
+	});
+	await page.exposeFunction('getConfiguration', () => configuration);
 
 	page.on('domcontentloaded', async () => {
 		// insert all styles and scripts
@@ -44,6 +51,7 @@ const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/utils/highlighter.js" });
 	await page.addScriptTag({ path: "./scripts/profiler.js" });
 };
+
 
 
 /* METHODS TO USE 
