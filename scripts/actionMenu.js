@@ -95,7 +95,7 @@ class ActionMenu extends Menu {
 
     actionTargetHandlers = {
         handleMouseOver: (e) => {
-            Highlighter.highlightElement(e.target, Profiler.elementTypes.ACTION_TARGET);
+            Highlighter.highlightElement(e.target, Enum.elementTypes.ACTION_TARGET);
         },
     
         handleMouseOut: (e) => {
@@ -121,7 +121,7 @@ class ActionMenu extends Menu {
 
     actionLabelHandlers = {
         handleMouseOver: (e) => {
-            Highlighter.highlightElement(e.target, Profiler.elementTypes.ACTION_LABEL);
+            Highlighter.highlightElement(e.target, Enum.elementTypes.ACTION_LABEL);
         },
         handleMouseOut: (e) => {
             Highlighter.resetHighlight(e.target);
@@ -151,9 +151,6 @@ class ActionMenu extends Menu {
 
     populateSimilarTargets = (targets, targetsMeta, elementType) => {
         if(targetsMeta.selectors.length === 0)   return targets;
-
-        // // TODO: check all meta targets, not just first one
-        // const targetsPath = targetsMeta.selectors;
 
         targets = DomUtils.findSimilarElements(targetsMeta.selectors);
 
@@ -225,13 +222,13 @@ class ActionMenu extends Menu {
             e.stopPropagation();
             let { actionTargets, actionTargetsMeta, labelTargets, labelTargetsMeta } = this.configuration;
             if(e.target.checked) {
-                actionTargets = this.populateSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
-                labelTargets = this.populateSimilarTargets(labelTargets, labelTargetsMeta, Profiler.elementTypes.ACTION_LABEL);
+                actionTargets = this.populateSimilarTargets(actionTargets, actionTargetsMeta, Enum.elementTypes.ACTION_TARGET);
+                labelTargets = this.populateSimilarTargets(labelTargets, labelTargetsMeta, Enum.elementTypes.ACTION_LABEL);
                 actionTargetsMeta.actOnSimilarTargets = true;
             }
             else {
-                actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta, Profiler.elementTypes.ACTION_TARGET);
-                labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta,  Profiler.elementTypes.ACTION_LABEL);
+                actionTargets = this.removeSimilarTargets(actionTargets, actionTargetsMeta, Enum.elementTypes.ACTION_TARGET);
+                labelTargets = this.removeSimilarTargets(labelTargets, labelTargetsMeta,  Enum.elementTypes.ACTION_LABEL);
                 actionTargetsMeta.actOnSimilarTargets = false;
             }
             this.configuration = {
@@ -264,8 +261,6 @@ class ActionMenu extends Menu {
                 ...labelTargetsMeta,
                 selectors: [], 
             };
-            // this.configuration.labelTargets = [];
-            // this.configuration.labelTargetsMeta = [];
             document.querySelector("#label-list").value = "";
         });
 
@@ -290,14 +285,14 @@ class ActionMenu extends Menu {
     close = () => {
         this.hideMenu();
         this.removeMenuListeners();  // TODO: CHECK IF WORKING
-        Profiler.disableConfigurationMode();
+        ConfigManager.disableConfigurationMode();
 
         // TODO: also remove all highlights on all actions and labels
         // Todo: clear all meta info 
     };
 
     open = (event) => {     
-        Profiler.enableConfigurationMode(event.target, Profiler.elementTypes.ACTION);
+        ConfigManager.enableConfigurationMode(event.target, Enum.elementTypes.ACTION);
 
         // initialize configuration values 
         let {actionTargetsMeta, actionTargets} = this.configuration;

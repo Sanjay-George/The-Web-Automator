@@ -31,7 +31,7 @@ const EventEmitter = require('events');
 	});
 
 	page.on('close', async () => {
-		// get all data from browser (Profiler module) and store in file
+		// get all data from browser (ConfigManager module) and store in file
 		console.log("page closed");
 	});
 		
@@ -45,11 +45,12 @@ const insertStyles = async (page) => {
 
 const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/menu.js" });
+	await page.addScriptTag({ path: "./scripts/enum.js" });
 	await page.addScriptTag({ path: "./scripts/actionMenu.js" });
 	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
 	await page.addScriptTag({ path: "./scripts/utils/dynamicEventHandler.js" });
 	await page.addScriptTag({ path: "./scripts/utils/highlighter.js" });
-	await page.addScriptTag({ path: "./scripts/profiler.js" });
+	await page.addScriptTag({ path: "./scripts/configManager.js" });
 };
 
 

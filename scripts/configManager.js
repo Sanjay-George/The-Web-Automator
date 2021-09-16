@@ -3,23 +3,7 @@
 
 let actionMenu;  // todo: move this inside scope, kept here for debugging
 
-const Profiler = (() => {
-    const elementTypes = {
-        DEFAULT: 0,
-        ACTION: 1,
-        ACTION_TARGET: 2,
-        ACTION_LABEL: 3,
-        STATE: 4,
-        STATE_TARGET: 5,
-        STATE_LABEL: 6
-    };
-
-    const actionTypes = {
-        CLICK: 1,
-        TEXT: 2,
-        SELECT: 3,
-    };
-
+const ConfigManager = (() => {
     actionMenu = new ActionMenu();
 
     // let configuration = [];
@@ -37,12 +21,13 @@ const Profiler = (() => {
 
     const disableConfigurationMode = () => {
         Highlighter.resetHighlight(configuredElement);
+        Highlighter.resetAllHighlights();
         isConfigurationActive = false;
         configuredElement = null;
     };
 
     const handleMouseOver = (e) => {
-        !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
+        !isConfigurationActive && Highlighter.highlightElement(e.target, Enum.elementTypes.DEFAULT);
     };
 
     const handleMouseOut = (e) => {
@@ -81,7 +66,6 @@ const Profiler = (() => {
     }
 
     return {
-        elementTypes: elementTypes,
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
@@ -89,7 +73,6 @@ const Profiler = (() => {
 })();
 
 
-
-Profiler.registerEvents();
+ConfigManager.registerEvents();
 
 
