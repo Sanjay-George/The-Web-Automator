@@ -74,6 +74,7 @@ class ActionMenu extends Menu {
                 </div> -->
 
                 <a id="configure" class="button">Configure</a>
+                <div style="padding-left: 10px; padding-top: 10px; color: red" id="error-msg"></div>
             </form>
         `;
     };
@@ -189,6 +190,25 @@ class ActionMenu extends Menu {
         };
     };
 
+    validateConfig = () => {
+        const {actionName, actionType, actionKey, actionTargetsMeta} = this.configuration;
+        let errorMsg = "";
+        if(!actionName.length || !actionKey.length) {
+            errorMsg = "Enter actionName and actionKey";
+        }
+        else if(!actionType) {
+            errorMsg = "Select actionType"
+        }
+        else if(!actionTargetsMeta.selectors.length) {
+            errorMsg = "Select atleast one Action Target";
+        }
+
+        return {
+            isValid: errorMsg.length === 0,
+            errorMsg  
+        };
+    };
+
     setMenuListeners = () => {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
@@ -268,6 +288,12 @@ class ActionMenu extends Menu {
         document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
             var config = await window.getConfiguration();
             this.setBasicDetails();
+            const {isValid, errorMsg} = this.validateConfig();
+
+            if(!isValid) {
+                document.querySelector("#error-msg").innerHTML = errorMsg;
+                return ;
+            }
 
             const {actionName, actionType, actionKey, actionTargetsMeta, labelTargetsMeta} = this.configuration;
             config.push({
