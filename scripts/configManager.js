@@ -14,7 +14,6 @@ const ConfigManager = (() => {
     const enableConfigurationMode = (element, elementType) => {
         isConfigurationActive = true;
         configuredElement = element;
-        
         Highlighter.resetHighlight(element); 
         Highlighter.highlightElement(element, elementType);
     };

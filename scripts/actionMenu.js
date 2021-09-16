@@ -110,7 +110,7 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleSelection);
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
-            // TODO: CHECK FOR DUPLICATE TARGETS
+            // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
             if(!this.configuration.actionTargets.includes(e.target)) {
                 this.configuration.actionTargetsMeta.selectors.push(targetQuerySelector);
                 this.configuration.actionTargets.push(e.target);
@@ -241,8 +241,8 @@ class ActionMenu extends Menu {
 
         // clear action targets
         document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
-            this.clearHighlight(this.configuration.actionTargets);
-            let {actionTargets, actionTargetsMeta} = this.configuration;
+            this.clearHighlight(this.configuration.actionTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
+            let {actionTargetsMeta} = this.configuration;
             this.configuration.actionTargets = [];
             this.configuration.actionTargetsMeta = { 
                 ...actionTargetsMeta,
@@ -254,7 +254,7 @@ class ActionMenu extends Menu {
         
         // clear label targets
         document.querySelector("#clear-label").addEventListener("click", (e) => {
-            this.clearHighlight(this.configuration.labelTargets);
+            this.clearHighlight(this.configuration.labelTargets); // TODO: not working properly
             let {labelTargets, labelTargetsMeta} = this.configuration;
             this.configuration.labelTargets = [];
             this.configuration.labelTargetsMeta = { 
@@ -286,9 +286,6 @@ class ActionMenu extends Menu {
         this.hideMenu();
         this.removeMenuListeners();  // TODO: CHECK IF WORKING
         ConfigManager.disableConfigurationMode();
-
-        // TODO: also remove all highlights on all actions and labels
-        // Todo: clear all meta info 
     };
 
     open = (event) => {     

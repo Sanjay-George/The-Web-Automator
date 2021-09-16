@@ -71,9 +71,9 @@ const Highlighter = (() => {
     };
 
     const resetAllHighlights = () => {
-        highlightedElements.forEach(element => {
-            resetHighlight(element);
-        });
+        while(highlightedElements.length) {
+            resetHighlight(highlightedElements[0]);
+        }
     };
 
     return {
