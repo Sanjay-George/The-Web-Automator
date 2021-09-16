@@ -10,7 +10,7 @@ const DynamicEventHandler = (() => {
         if(typeof handler !== "function")   return;
 
         if(handlers[eventType].length > 0) {
-            console.log(handlers[eventType][handlers[eventType].length - 1]);
+            // console.log(handlers[eventType][handlers[eventType].length - 1]);
             document.removeEventListener(eventType, handlers[eventType][handlers[eventType].length - 1]);
         }
         handlers[eventType].push(handler);
@@ -22,7 +22,7 @@ const DynamicEventHandler = (() => {
         if(handlers[eventType].length === 0)        return;
 
         var lastHandler = handlers[eventType].pop();
-        console.log(lastHandler);
+        // console.log(lastHandler);
         document.removeEventListener(eventType, lastHandler);
         document.addEventListener(eventType, handlers[eventType][handlers[eventType].length - 1]);
     }; 

@@ -308,7 +308,27 @@ class ActionMenu extends Menu {
         });
     };
 
+    resetConfiguration = () => {
+        this.configuration = {
+            actionName: "",
+            actionType: null,
+            actionKey: "",
+            actionTargetsMeta: {
+                selectors: [],  // selectors of unique targets to act on
+                actOnSimilarTargets: false, // to extend action to all similar targets
+                maxActionCount: -1 // add max limit of similar elements of each target
+            },
+            actionTargets: [],
+            labelTargetsMeta: {
+                selectors: [],
+            },
+            labelTargets: [],
+            // customInputs: []
+        }; 
+    }
+
     close = () => {
+        this.resetConfiguration();
         this.hideMenu();
         this.removeMenuListeners();  // TODO: CHECK IF WORKING
         ConfigManager.disableConfigurationMode();
