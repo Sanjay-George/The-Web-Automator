@@ -1,25 +1,7 @@
-// TODO: Rename this class according to its purpose 
 // This is the start point of each page crawled in config mode
-
 let actionMenu;  // todo: move this inside scope, kept here for debugging
 
-const Profiler = (() => {
-    const elementTypes = {
-        DEFAULT: 0,
-        ACTION: 1,
-        ACTION_TARGET: 2,
-        ACTION_LABEL: 3,
-        STATE: 4,
-        STATE_TARGET: 5,
-        STATE_LABEL: 6
-    };
-
-    const actionTypes = {
-        CLICK: 1,
-        TEXT: 2,
-        SELECT: 3,
-    };
-
+const ConfigManager = (() => {
     actionMenu = new ActionMenu();
 
     // let configuration = [];
@@ -30,19 +12,19 @@ const Profiler = (() => {
     const enableConfigurationMode = (element, elementType) => {
         isConfigurationActive = true;
         configuredElement = element;
-        
         Highlighter.resetHighlight(element); 
         Highlighter.highlightElement(element, elementType);
     };
 
     const disableConfigurationMode = () => {
         Highlighter.resetHighlight(configuredElement);
+        Highlighter.resetAllHighlights();
         isConfigurationActive = false;
         configuredElement = null;
     };
 
     const handleMouseOver = (e) => {
-        !isConfigurationActive && Highlighter.highlightElement(e.target, elementTypes.DEFAULT);
+        !isConfigurationActive && Highlighter.highlightElement(e.target, Enum.elementTypes.DEFAULT);
     };
 
     const handleMouseOut = (e) => {
@@ -81,7 +63,6 @@ const Profiler = (() => {
     }
 
     return {
-        elementTypes: elementTypes,
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
@@ -89,7 +70,37 @@ const Profiler = (() => {
 })();
 
 
+ConfigManager.registerEvents();
 
-Profiler.registerEvents();
 
+const ActionChain = (() => {    
+    const push = async (action) => {
+        let actionChain = await get(); 
+        actionChain.push(action);
+        return await window.setActionChain(actionChain);
+    };
+    
+    const get = async () => {
+        return await window.getActionChain(); 
+    };
 
+    const pop = async () => {
+        let actionChain = await get(); 
+        actionChain.pop(); 
+        return await window.setActionChain(actionChain);
+    }
+    const removeAt = async (index = -1) => {
+        let actionChain = await get(); 
+        if(!actionChain.length || index < 0)     
+            return undefined;
+        actionChain.splice(index, 1);
+        return await window.setActionChain(actionChain);
+    };  
+
+    return {
+        push: push,
+        get: get,
+        pop: pop,
+        removeAt: removeAt
+    };
+})();

@@ -73,15 +73,15 @@
 
 //     const getColorsByType = (elementType) => {
 //         switch(elementType) {
-//             case Profiler.elementTypes.DEFAULT:
+//             case Enum.elementTypes.DEFAULT:
 //                return colors.hover;
-//             case Profiler.elementTypes.ACTION:
+//             case Enum.elementTypes.ACTION:
 //                 return colors.action;
-//             case Profiler.elementTypes.ACTION_TARGET:
+//             case Enum.elementTypes.ACTION_TARGET:
 //                 return colors.actionTarget;
-//             case Profiler.elementTypes.ACTION_LABEL: 
+//             case Enum.elementTypes.ACTION_LABEL: 
 //                 return colors.actionLabel;
-//             case Profiler.elementTypes.STATE:
+//             case Enum.elementTypes.STATE:
 //                 return colors.state;
 //             default:
 //                 return colors.hover;
