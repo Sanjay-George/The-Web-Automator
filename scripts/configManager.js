@@ -1,6 +1,4 @@
-// TODO: Rename this class according to its purpose 
 // This is the start point of each page crawled in config mode
-
 let actionMenu;  // todo: move this inside scope, kept here for debugging
 
 const ConfigManager = (() => {
@@ -23,6 +21,14 @@ const ConfigManager = (() => {
         Highlighter.resetAllHighlights();
         isConfigurationActive = false;
         configuredElement = null;
+    };
+
+    const getConfiguration = async () => await window.getConfiguration();
+    const setConfiguration = async (config) => {
+        // push to config chain (to handle colors etc)
+        const configChain = await getConfiguration();
+        configChain.push(config);
+        await window.setConfiguration(configChain);
     };
 
     const handleMouseOver = (e) => {
@@ -68,6 +74,7 @@ const ConfigManager = (() => {
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
+        setConfiguration: setConfiguration,
     }
 })();
 
@@ -75,3 +82,33 @@ const ConfigManager = (() => {
 ConfigManager.registerEvents();
 
 
+const ActionChain = (() => {
+    let actionChain = [];
+    
+    const push = (action) => {
+        // store to node
+        return actionChain.push(action);
+    };
+    
+    const get = () => {
+        // get from node 
+        return actionChain
+    };
+
+    const pop = () => {
+        return actionChain.pop();
+        // store to node
+    }
+    const removeAt = (index = -1) => {
+        if(!actionChain.length || index < 0)     return undefined;
+        return actionChain.splice(index, 1);
+        // store to node
+    };  
+
+    return {
+        push: push,
+        get: get,
+        pop: pop,
+        removeAt: removeAt
+    };
+})();

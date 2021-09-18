@@ -1,5 +1,5 @@
 const Enum = (() => {
-
+    
     const elementTypes = {
         DEFAULT: 0,
         ACTION: 1,
