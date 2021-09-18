@@ -282,21 +282,19 @@ class ActionMenu extends Menu {
 
             const {actionName, actionType, actionKey, selectedTargets, selectedLabels} = this.configuration;
             const config = {
-                elementType,
                 actionName, 
                 actionType,
                 actionKey,
                 selectedLabels,
                 selectedTargets,
             };
-            await ConfigManager.setConfiguration(config);
+            await ActionChain.push(config);
             this.close();
         });
     };
 
     resetConfiguration = () => {
         this.configuration = {
-            elementType: Enum.elementTypes.ACTION,
             actionName: "",
             actionType: null,
             actionKey: "",

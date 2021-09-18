@@ -23,14 +23,6 @@ const ConfigManager = (() => {
         configuredElement = null;
     };
 
-    const getConfiguration = async () => await window.getConfiguration();
-    const setConfiguration = async (config) => {
-        // push to config chain (to handle colors etc)
-        const configChain = await getConfiguration();
-        configChain.push(config);
-        await window.setConfiguration(configChain);
-    };
-
     const handleMouseOver = (e) => {
         !isConfigurationActive && Highlighter.highlightElement(e.target, Enum.elementTypes.DEFAULT);
     };
@@ -74,7 +66,6 @@ const ConfigManager = (() => {
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
-        setConfiguration: setConfiguration,
     }
 })();
 
@@ -82,27 +73,28 @@ const ConfigManager = (() => {
 ConfigManager.registerEvents();
 
 
-const ActionChain = (() => {
-    let actionChain = [];
-    
-    const push = (action) => {
-        // store to node
-        return actionChain.push(action);
+const ActionChain = (() => {    
+    const push = async (action) => {
+        let actionChain = await get(); 
+        actionChain.push(action);
+        return await window.setActionChain(actionChain);
     };
     
-    const get = () => {
-        // get from node 
-        return actionChain
+    const get = async () => {
+        return await window.getActionChain(); 
     };
 
-    const pop = () => {
-        return actionChain.pop();
-        // store to node
+    const pop = async () => {
+        let actionChain = await get(); 
+        actionChain.pop(); 
+        return await window.setActionChain(actionChain);
     }
-    const removeAt = (index = -1) => {
-        if(!actionChain.length || index < 0)     return undefined;
-        return actionChain.splice(index, 1);
-        // store to node
+    const removeAt = async (index = -1) => {
+        let actionChain = await get(); 
+        if(!actionChain.length || index < 0)     
+            return undefined;
+        actionChain.splice(index, 1);
+        return await window.setActionChain(actionChain);
     };  
 
     return {

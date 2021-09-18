@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 const pageHelper = require('./modules/common/pageHelper');
 const actionChain = require('./modules/core/actionChain');
-const stateChain;
+// const stateChain;
 
 
 (async () => {
@@ -35,7 +35,7 @@ const stateChain;
 // exposed functions survives navigation, so no need to expose again on page refresh
 const exposeFunctions = async (page) => {
 	await page.exposeFunction('setActionChain', chain => {
-		console.log(JSON.stringify(config));
+		console.log(JSON.stringify(chain));
 		actionChain.set(chain);
 	});
 	await page.exposeFunction('getActionChain', () => { return actionChain.get() });
