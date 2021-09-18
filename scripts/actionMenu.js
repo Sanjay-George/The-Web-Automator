@@ -9,7 +9,7 @@ class ActionMenu extends Menu {
             key: "",
             selectedTargets: [],
             selectedLabels: [],
-            finalTargets: [],
+            finalTargets: [],  // MAJOR TODO: store selectors instead of elements
             finalLabels: [],    
             repeatCount: 0,
             maxTargetCount: -1
@@ -27,7 +27,7 @@ class ActionMenu extends Menu {
 
             <form id='configure-action' class="row">
                 <div class="input-field col5">
-                    <label for="action-name">Action</label>
+                    <label for="action-name">Action*</label>
                     <input id="action-name" type="text">
                 </div>
 
@@ -187,10 +187,10 @@ class ActionMenu extends Menu {
     };
 
     validateConfig = () => {
-        const {actionName, actionType, actionKey, selectedTargets} = this.configuration;
+        const {actionName, actionType, selectedTargets} = this.configuration;
         let errorMsg = "";
-        if(!actionName.length || !actionKey.length) {
-            errorMsg = "Enter actionName and actionKey";
+        if(!actionName.length) {
+            errorMsg = "Enter actionName";
         }
         else if(!actionType) {
             errorMsg = "Select actionType"
