@@ -54,12 +54,21 @@ const ConfigManager = (() => {
         }
     };
 
+    handleRightClick = (e) => {
+        console.log(e);
+        e.preventDefault();
+        ContextMenu.open(e.pageX, e.pageY);
+    }
+
     const registerEvents = () => {
         actionMenu.initialize();
+        ContextMenu.initialize();
 
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
         DynamicEventHandler.addHandler("mouseout", handleMouseOut);
         DynamicEventHandler.addHandler("click", handleClick);
+
+        document.addEventListener('contextmenu', handleRightClick, false);
     }
 
     return {
@@ -68,9 +77,6 @@ const ConfigManager = (() => {
         disableConfigurationMode: disableConfigurationMode,
     }
 })();
-
-
-ConfigManager.registerEvents();
 
 
 const ActionChain = (() => {    
@@ -104,3 +110,6 @@ const ActionChain = (() => {
         removeAt: removeAt
     };
 })();
+
+
+ConfigManager.registerEvents();

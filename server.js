@@ -53,6 +53,7 @@ const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
 	await page.addScriptTag({ path: "./scripts/utils/dynamicEventHandler.js" });
 	await page.addScriptTag({ path: "./scripts/utils/highlighter.js" });
+	await page.addScriptTag({ path: "./scripts/contextMenu.js" });
 	await page.addScriptTag({ path: "./scripts/configManager.js" });
 };
 

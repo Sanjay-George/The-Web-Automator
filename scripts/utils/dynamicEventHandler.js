@@ -2,7 +2,7 @@ const DynamicEventHandler = (() => {
     const handlers = {
         "mouseover": [],
         "mouseout": [],
-        "click": []
+        "click": [],
     };
 
     const addHandler = (eventType, handler) => {
