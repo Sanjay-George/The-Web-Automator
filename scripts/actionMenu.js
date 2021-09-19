@@ -9,8 +9,9 @@ class ActionMenu extends Menu {
             key: "",
             selectedTargets: [],
             selectedLabels: [],
-            finalTargets: [],  // MAJOR TODO: store selectors instead of elements
-            finalLabels: [],    
+            finalTargets: [], 
+            finalLabels: [],
+            selectSimilar: false,    
             repeatCount: 0,
             maxTargetCount: -1
         }; 
@@ -240,27 +241,29 @@ class ActionMenu extends Menu {
         // select all similar siblings
         document.querySelector(`#${this.containerId} #sel-similar`).addEventListener("click", (e) => {
             e.stopPropagation();
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels } = this.configuration;
+            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar } = this.configuration;
             if(e.target.checked) {
                 finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
                 finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                selectSimilar = true;
             }
             else {
                 finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
                 finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                selectSimilar = false;
             }
             this.configuration = {
                 ...this.configuration,
                 finalTargets,
                 finalLabels,
-                selectedTargets
+                selectedTargets,
+                selectSimilar,
             };
         });
 
         // clear action targets
         document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
-            let {selectedTargets} = this.configuration;
             this.configuration.finalTargets = [];
             this.configuration.selectedTargets = [];
             document.querySelector("#target-list").value = "";
@@ -269,7 +272,6 @@ class ActionMenu extends Menu {
         // clear label targets
         document.querySelector("#clear-label").addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.finalLabels); // TODO: not working properly
-            let {finalLabels, selectedLabels} = this.configuration;
             this.configuration.finalLabels = [];
             this.configuration.selectedLabels = [];
             document.querySelector("#label-list").value = "";
@@ -283,30 +285,32 @@ class ActionMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-
-            const {actionName, actionType, actionKey, selectedTargets, selectedLabels} = this.configuration;
-            const config = {
+            const { actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar } = this.configuration;
+            await ActionChain.push({
                 actionName, 
                 actionType,
                 actionKey,
                 selectedLabels,
                 selectedTargets,
-            };
-            await ActionChain.push(config);
+                selectSimilar
+            });
             this.close();
         });
     };
 
     resetConfiguration = () => {
         this.configuration = {
-            actionName: "",
-            actionType: null,
-            actionKey: "",
+            id: 0,
+            name: "",
+            type: null,
+            key: "",
             selectedTargets: [],
-            finalTargets: [],
             selectedLabels: [],
+            finalTargets: [],
             finalLabels: [],
-            // customInputs: []
+            selectSimilar: false,    
+            repeatCount: 0,
+            maxTargetCount: -1
         }; 
     }
 

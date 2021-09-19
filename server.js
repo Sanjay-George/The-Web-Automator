@@ -6,7 +6,7 @@ const actionChain = require('./modules/core/actionChain');
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await pageHelper.openTab(browser, "https://www.carwale.com/");
+    let page = await pageHelper.openTab(browser, "https://www.bikewale.com/");
 
 	await insertStyles(page);
 	await insertScripts(page);
