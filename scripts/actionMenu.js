@@ -100,11 +100,13 @@ class ActionMenu extends Menu {
         },
     
         handleSelection: (e) => {
+            // TODO: HOW TO PREVENT REACT ROUTER?
             e.preventDefault();
             this.showMenu();
-            DynamicEventHandler.removeHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
-            DynamicEventHandler.removeHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
-            DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleSelection);
+            
+            DynamicEventHandler.removeHandler("mouseover");
+            DynamicEventHandler.removeHandler("mouseout");
+            DynamicEventHandler.removeHandler("click");
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
             // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
@@ -124,11 +126,13 @@ class ActionMenu extends Menu {
             Highlighter.resetHighlight(e.target);
         },
         handleSelection: (e) => {
+            // TODO: HOW TO PREVENT routing?
+            // event listener is on document, hence routing already in progress by the time handler is hit
             e.preventDefault();
             this.showMenu();
-            DynamicEventHandler.removeHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
-            DynamicEventHandler.removeHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
-            DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleSelection);
+            DynamicEventHandler.removeHandler("mouseover");
+            DynamicEventHandler.removeHandler("mouseout");
+            DynamicEventHandler.removeHandler("click");
 
             const labelQuerySelector = DomUtils.getQuerySelector(e.target);
             if(!this.configuration.finalLabels.includes(labelQuerySelector)) { 
@@ -313,14 +317,13 @@ class ActionMenu extends Menu {
         ConfigManager.disableConfigurationMode();
     };
 
-    open = (event) => {     
-        ConfigManager.enableConfigurationMode(event.target, Enum.elementTypes.ACTION);
+    open = (target) => {     
+        ConfigManager.enableConfigurationMode(target, Enum.elementTypes.ACTION);
 
         // initialize configuration values 
         let {selectedTargets, finalTargets} = this.configuration;
-        finalTargets.push(event.target);
-        selectedTargets.push(DomUtils.getQuerySelector(event.target));
-        // { selectors: [ DomUtils.getQuerySelector(event.target) ] };
+        finalTargets.push(target);
+        selectedTargets.push(DomUtils.getQuerySelector(target));
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
@@ -332,12 +335,3 @@ class ActionMenu extends Menu {
         this.createOverlay();
     };
 }
-
-
-/*
-On clicking shift + left mouse on element, popup opens actionMenu.open()
-    - set first action target in list 
-On clicking action target / label target, should give option to add more target
-Delete button to clear selected targets
-Close btn => close popup, remove all highlights
-*/

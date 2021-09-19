@@ -57,7 +57,7 @@ const ConfigManager = (() => {
     handleRightClick = (e) => {
         console.log(e);
         e.preventDefault();
-        ContextMenu.open(e.pageX, e.pageY);
+        ContextMenu.open(e.pageX, e.pageY, e.target);
     }
 
     const registerEvents = () => {
@@ -66,7 +66,7 @@ const ConfigManager = (() => {
 
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
         DynamicEventHandler.addHandler("mouseout", handleMouseOut);
-        DynamicEventHandler.addHandler("click", handleClick);
+        // DynamicEventHandler.addHandler("click", handleClick);
 
         document.addEventListener('contextmenu', handleRightClick, false);
     }
@@ -75,6 +75,7 @@ const ConfigManager = (() => {
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
+        isConfigurationActive: () => isConfigurationActive,
     }
 })();
 
