@@ -54,30 +54,23 @@ const ConfigManager = (() => {
         }
     };
 
-    handleRightClick = (e) => {
-        console.log(e);
-        e.preventDefault();
-        ContextMenu.open(e.pageX, e.pageY, e.target);
-    }
-
     const registerEvents = () => {
         actionMenu.initialize();
-        ContextMenu.initialize();
 
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
         DynamicEventHandler.addHandler("mouseout", handleMouseOut);
-        // DynamicEventHandler.addHandler("click", handleClick);
-
-        document.addEventListener('contextmenu', handleRightClick, false);
+        DynamicEventHandler.addHandler("click", handleClick);
     }
 
     return {
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
-        isConfigurationActive: () => isConfigurationActive,
     }
 })();
+
+
+ConfigManager.registerEvents();
 
 
 const ActionChain = (() => {    
@@ -111,6 +104,3 @@ const ActionChain = (() => {
         removeAt: removeAt
     };
 })();
-
-
-ConfigManager.registerEvents();
