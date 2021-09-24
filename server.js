@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const pageHelper = require('./modules/common/pageHelper');
-const actionChain = require('./modules/core/actionChain');
+let actionChain = [];
 // const stateChain;
 
 
@@ -36,9 +36,9 @@ const actionChain = require('./modules/core/actionChain');
 const exposeFunctions = async (page) => {
 	await page.exposeFunction('setActionChain', chain => {
 		console.log(JSON.stringify(chain));
-		actionChain.set(chain);
+		actionChain = chain ;
 	});
-	await page.exposeFunction('getActionChain', () => { return actionChain.get() });
+	await page.exposeFunction('getActionChain', () => { return actionChain; });
 }
 
 const insertStyles = async (page) => {
