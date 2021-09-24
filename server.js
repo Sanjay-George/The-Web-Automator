@@ -6,7 +6,7 @@ const actionChain = require('./modules/core/actionChain');
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await pageHelper.openTab(browser, "https://www.bikewale.com/");
+    let page = await pageHelper.openTab(browser, "https://www.carwale.com/");
 
 	await insertStyles(page);
 	await insertScripts(page);
@@ -53,7 +53,6 @@ const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
 	await page.addScriptTag({ path: "./scripts/utils/dynamicEventHandler.js" });
 	await page.addScriptTag({ path: "./scripts/utils/highlighter.js" });
-	await page.addScriptTag({ path: "./scripts/contextMenu.js" });
 	await page.addScriptTag({ path: "./scripts/configManager.js" });
 };
 

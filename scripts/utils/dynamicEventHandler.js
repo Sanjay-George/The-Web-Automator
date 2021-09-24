@@ -1,15 +1,8 @@
-// This module ensures that event listeners of the same type are only applied once, and handles them effectively
-// On adding a listener (eg: click), existing listener is removed,  maintained in stack, and the new one is applied
-// On removing a listener, it is removed from stack, and the penultimate listener is applied back.
-// Supports only listeners on document as of now. 
-
-let handlers = {}; // TODO: MOVE INSIDE SCOPE
-
 const DynamicEventHandler = (() => {
-    handlers = {
+    const handlers = {
         "mouseover": [],
         "mouseout": [],
-        "click": [],
+        "click": []
     };
 
     const addHandler = (eventType, handler) => {
