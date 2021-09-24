@@ -9,8 +9,9 @@ class ActionMenu extends Menu {
             key: "",
             selectedTargets: [],
             selectedLabels: [],
-            finalTargets: [],  // MAJOR TODO: store selectors instead of elements
-            finalLabels: [],    
+            finalTargets: [], 
+            finalLabels: [],
+            selectSimilar: false,    
             repeatCount: 0,
             maxTargetCount: -1
         }; 
@@ -100,11 +101,13 @@ class ActionMenu extends Menu {
         },
     
         handleSelection: (e) => {
+            // TODO: HOW TO PREVENT REACT ROUTER?
             e.preventDefault();
             this.showMenu();
-            DynamicEventHandler.removeHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
-            DynamicEventHandler.removeHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
-            DynamicEventHandler.removeHandler("click", this.actionTargetHandlers.handleSelection);
+            
+            DynamicEventHandler.removeHandler("mouseover");
+            DynamicEventHandler.removeHandler("mouseout");
+            DynamicEventHandler.removeHandler("click");
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
             // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
@@ -124,11 +127,13 @@ class ActionMenu extends Menu {
             Highlighter.resetHighlight(e.target);
         },
         handleSelection: (e) => {
+            // TODO: HOW TO PREVENT routing?
+            // event listener is on document, hence routing already in progress by the time handler is hit
             e.preventDefault();
             this.showMenu();
-            DynamicEventHandler.removeHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
-            DynamicEventHandler.removeHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
-            DynamicEventHandler.removeHandler("click", this.actionLabelHandlers.handleSelection);
+            DynamicEventHandler.removeHandler("mouseover");
+            DynamicEventHandler.removeHandler("mouseout");
+            DynamicEventHandler.removeHandler("click");
 
             const labelQuerySelector = DomUtils.getQuerySelector(e.target);
             if(!this.configuration.finalLabels.includes(labelQuerySelector)) { 
@@ -236,27 +241,29 @@ class ActionMenu extends Menu {
         // select all similar siblings
         document.querySelector(`#${this.containerId} #sel-similar`).addEventListener("click", (e) => {
             e.stopPropagation();
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels } = this.configuration;
+            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar } = this.configuration;
             if(e.target.checked) {
                 finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
                 finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                selectSimilar = true;
             }
             else {
                 finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
                 finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                selectSimilar = false;
             }
             this.configuration = {
                 ...this.configuration,
                 finalTargets,
                 finalLabels,
-                selectedTargets
+                selectedTargets,
+                selectSimilar,
             };
         });
 
         // clear action targets
         document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
-            let {selectedTargets} = this.configuration;
             this.configuration.finalTargets = [];
             this.configuration.selectedTargets = [];
             document.querySelector("#target-list").value = "";
@@ -265,7 +272,6 @@ class ActionMenu extends Menu {
         // clear label targets
         document.querySelector("#clear-label").addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.finalLabels); // TODO: not working properly
-            let {finalLabels, selectedLabels} = this.configuration;
             this.configuration.finalLabels = [];
             this.configuration.selectedLabels = [];
             document.querySelector("#label-list").value = "";
@@ -279,30 +285,32 @@ class ActionMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-
-            const {actionName, actionType, actionKey, selectedTargets, selectedLabels} = this.configuration;
-            const config = {
+            const { actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar } = this.configuration;
+            await ActionChain.push({
                 actionName, 
                 actionType,
                 actionKey,
                 selectedLabels,
                 selectedTargets,
-            };
-            await ActionChain.push(config);
+                selectSimilar
+            });
             this.close();
         });
     };
 
     resetConfiguration = () => {
         this.configuration = {
-            actionName: "",
-            actionType: null,
-            actionKey: "",
+            id: 0,
+            name: "",
+            type: null,
+            key: "",
             selectedTargets: [],
-            finalTargets: [],
             selectedLabels: [],
+            finalTargets: [],
             finalLabels: [],
-            // customInputs: []
+            selectSimilar: false,    
+            repeatCount: 0,
+            maxTargetCount: -1
         }; 
     }
 
@@ -313,14 +321,13 @@ class ActionMenu extends Menu {
         ConfigManager.disableConfigurationMode();
     };
 
-    open = (event) => {     
-        ConfigManager.enableConfigurationMode(event.target, Enum.elementTypes.ACTION);
+    open = (target) => {     
+        ConfigManager.enableConfigurationMode(target, Enum.elementTypes.ACTION);
 
         // initialize configuration values 
         let {selectedTargets, finalTargets} = this.configuration;
-        finalTargets.push(event.target);
-        selectedTargets.push(DomUtils.getQuerySelector(event.target));
-        // { selectors: [ DomUtils.getQuerySelector(event.target) ] };
+        finalTargets.push(target);
+        selectedTargets.push(DomUtils.getQuerySelector(target));
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
@@ -332,12 +339,3 @@ class ActionMenu extends Menu {
         this.createOverlay();
     };
 }
-
-
-/*
-On clicking shift + left mouse on element, popup opens actionMenu.open()
-    - set first action target in list 
-On clicking action target / label target, should give option to add more target
-Delete button to clear selected targets
-Close btn => close popup, remove all highlights
-*/
