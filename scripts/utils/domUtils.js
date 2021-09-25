@@ -108,10 +108,24 @@ const DomUtils = (() => {
         return similarElements;
     };
 
+    const unloadListener = () => {
+        window.handlePageUnload();
+    };
+
+    const addUnloadListener = () => {
+        window.addEventListener("beforeunload", unloadListener);
+    };
+
+    const removeUnloadListener = () => {
+        window.removeEventListener("beforeunload", unloadListener);
+    };
+
 
 
     return {
         getQuerySelector,
         findSimilarElements,
+        addUnloadListener,
+        removeUnloadListener,
     }
 })();
