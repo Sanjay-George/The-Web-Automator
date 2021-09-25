@@ -2,23 +2,29 @@ const pageHelper = require('../common/pageHelper');
 const puppeteer = require('puppeteer');
 const { elementTypes, actionTypes } = require('../common/enum');
 
+let rootUrl = "";
+
 const initiate = async (url, configChain) => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
+    rootUrl = url;
+
     await insertScripts(page);
 
-    page.on('\ndomcontentloaded', async () => {
-		console.log(`DOM loaded: ${page.url()}`);
+    page.on('domcontentloaded', async () => {
+		console.log(`\nDOM loaded: ${page.url()}`);
 		await insertScripts(page);
 	});
 
     await run(configChain, 0, page);
+
+    await page.close();
 };
 
 
 const run = async (chain, step, page, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
-    if(step > chain.length - 1)     return;
+    if(step >= chain.length)     return;
 
     const action = chain[step];
     const targets = action.selectSimilar ?  await populateSimilarTargets(action.selectedTargets, page) : action.selectedTargets;
@@ -31,7 +37,7 @@ const run = async (chain, step, page, memory = []) => {
         
         const isActionPerformed = await performAction(action, target, memory, step, page);
         if(!isActionPerformed) {
-            console.error(`Unable to perform action : ${action.actionName} for target at index: ${i}`);
+            console.error(`Unable to perform action "${action.actionName}" for target at index ${i}`);
             break;
         }
         
@@ -59,11 +65,13 @@ const performAction = async (action, target, memory, step, page) => {
 const tryActionsInMemory = async (memory, step, page) => {
     // repeat all actions from beginning of memory to end
     console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
+    // console.log(JSON.stringify(memory));
 
     let wasActionPerformed = true;
     for (let i = 0; i <= step; i++) {
-        const { action, target } = memory[step];
+        const { action, target } = memory[i];
         try{
+            // console.log(target);
             await perform(action, target, page);
         }
         catch(ex) {
@@ -78,6 +86,8 @@ const tryActionsInMemory = async (memory, step, page) => {
 
 const tryActionOnPrevPage = async (action, target, memory, step, page) => {
     console.log(`\ntryActionOnPrevPage() - action: ${action.actionName}, target: ${target}`);
+    
+    if(await page.url() === rootUrl)  return false;
     if(await page.goBack(pageHelper.getWaitOptions())  === null) {
         return false;
     }
