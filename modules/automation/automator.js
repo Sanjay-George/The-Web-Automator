@@ -1,6 +1,8 @@
 const pageHelper = require('../common/pageHelper');
 const puppeteer = require('puppeteer');
 const { elementTypes, actionTypes } = require('../common/enum');
+const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
+const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
 
 let rootUrl = "";
 
@@ -106,18 +108,29 @@ const memorize = (memory, step, action, target) => {
 
 const perform = async (action, target, page) => {
 
+    await addXhrListener(page);
+    await addNavigationListener(page);
     switch(parseInt(action.actionType)) {
         case actionTypes.CLICK:
             // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
             // TODO: test client-side render, react / SPAs -
             // TODO: incorporate xhrHandler
+
             await page.click(target);
-            await page.waitForTimeout(10000);
+            await Promise.all([
+                awaitXhrResponse(),
+                awaitNavigation(),
+                // page.waitForTimeout(5000),
+            ]);
+            
+
             // page.waitForNavigation(pageHelper.getWaitOptions()),   
             break;
         default:
             break;
     }
+    await removeXhrListener();
+    removeNavigationListener(); 
 };
 
 const populateSimilarTargets = async (selectedTargets, page) => {
@@ -140,6 +153,10 @@ const populateSimilarTargets = async (selectedTargets, page) => {
 const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/enum.js" });
 	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
+
+    try { 
+        await page.exposeFunction('handlePageUnload', handlePageUnload); 
+    } catch(ex) {}
 };
 
 

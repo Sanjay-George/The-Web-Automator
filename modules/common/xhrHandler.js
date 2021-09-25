@@ -5,6 +5,8 @@ let status = {
     isProfilingActive: false
 };
 
+const MAX_WAIT_TIME = 5000;
+
 
 function handleRequest(request) {
     if(!status.isXhrReadActive)             return;
@@ -25,34 +27,37 @@ function handleResponse(response) {
 }
 
 function clearUnprocessedRequests() {
+    console.log('xhrRequest count: ', xhrRequests.length);
     if(xhrRequests.length > 0)
-        xhrRequests = xhrRequests.slice(1, xhrRequests.length);        
+        xhrRequests = xhrRequests.slice(1, xhrRequests.length);    // remove first entry    
     if(xhrRequests.length === 0)    
         status.isXhrReadActive = true;
 }
 
-function addXhrListener(pageObj) {
-    page = pageObj;
-    page.on("request", handleRequest);
-}
-
-function removeXhrListener() {
-    page.off("request", handleRequest);
-    page.off("response", handleResponse);
-    xhrRequests = [];
-}
 
 function waitTillLastRequest() {
-    let clearRequestTimer = setInterval(clearUnprocessedRequests, 5000);
+    let clearRequestTimer = setInterval(clearUnprocessedRequests, 2000);
+    let clearAllTimer = setInterval(() => { xhrRequests = []; }, MAX_WAIT_TIME);
     return new Promise((resolve, reject) => {
         let lastRequestTimer = setInterval(() => {
             if(xhrRequests.length === 0)   {  
                 page.on("request", handleRequest);
                 page.off("response", handleResponse);
-                resolve({ lastRequestTimer, clearRequestTimer });
+                resolve({ lastRequestTimer, clearRequestTimer, clearAllTimer });
             }
         }, 100);
     });
+}
+
+async function addXhrListener(pageObj) {
+    page = pageObj;
+    await page.on("request", handleRequest);
+}
+
+async function removeXhrListener() {
+    await page.off("request", handleRequest);
+    await page.off("response", handleResponse);
+    xhrRequests = [];
 }
 
 async function awaitXhrResponse() {
@@ -60,11 +65,12 @@ async function awaitXhrResponse() {
         page.off("request", handleRequest);
         status.isXhrReadActive = false;
         page.on("response", handleResponse);
-    }, 30);   
+    }, 10);   
     
-    let { lastRequestTimer, clearRequestTimer } = await waitTillLastRequest();
+    let { lastRequestTimer, clearRequestTimer, clearAllTimer } = await waitTillLastRequest();
     clearInterval(lastRequestTimer);
     clearInterval(clearRequestTimer);
+    clearInterval(clearAllTimer);
     status.isXhrReadActive = true;
 }
 
