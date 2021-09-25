@@ -32,14 +32,13 @@ const DomUtils = (() => {
     };
 
     const hasSiblingsWithSameClassList = (element) => {
-        if(element.classList.length > 0)    return false;
         if(element.parentElement.children.length === 1) return false;
 
-        const parent = element.parent;
+        const parent = element.parentElement;
         const siblings = Array.from(parent.children).filter(child => child !== element);
-        const siblingsWithSameClassList = siblings.filter(sib => sib.classList.sort().join(",") === element.classList.sort().join(","));
+        const siblingsWithSameClassList = siblings.filter(sib => Array.from(sib.classList).sort().join(",") === Array.from(element.classList).sort().join(","));
 
-        return siblingsWithSameClassList.length > 0;
+        return (siblingsWithSameClassList.length > 0);
     }; 
 
     const hasClasses = (element) => {
@@ -61,7 +60,7 @@ const DomUtils = (() => {
         5. Use nth-child, if no classes present. (NOTE: nth-child is irrespective of the nodetype)
         */
 
-        let path = [];
+        let path = [];        
         
         while(element !== document.body) {
             let currentSelector = element.nodeName.toLowerCase();
