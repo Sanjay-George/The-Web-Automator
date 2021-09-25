@@ -1,5 +1,6 @@
 const pageHelper = require('../common/pageHelper');
 const puppeteer = require('puppeteer');
+const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 const { elementTypes, actionTypes } = require('../common/enum');
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
@@ -10,6 +11,9 @@ const initiate = async (url, configChain) => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
     rootUrl = url;
+    
+    const recorder = new PuppeteerScreenRecorder(page);
+    await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
 
     await insertScripts(page);
 
@@ -20,6 +24,7 @@ const initiate = async (url, configChain) => {
 
     await run(configChain, 0, page);
 
+    await recorder.stop();
     await page.close();
 };
 
@@ -42,7 +47,6 @@ const run = async (chain, step, page, memory = []) => {
             console.error(`Unable to perform action "${action.actionName}" for target at index ${i}`);
             break;
         }
-        
         await run(chain, step + 1, page, memory);
     }
 };
@@ -106,8 +110,8 @@ const memorize = (memory, step, action, target) => {
     }
 };
 
-const perform = async (action, target, page) => {
 
+const perform = async (action, target, page) => {
     await addXhrListener(page);
     await addNavigationListener(page);
     switch(parseInt(action.actionType)) {
@@ -159,6 +163,13 @@ const insertScripts = async (page) => {
     } catch(ex) {}
 };
 
+const takeScreenShot = async (page) => {
+    await page.screenshot({
+        path: `./shots/screenshot-${+ new Date()}.png`,
+        type: 'jpeg',
+        quality: 30,
+    });
+}
 
 
 module.exports = {

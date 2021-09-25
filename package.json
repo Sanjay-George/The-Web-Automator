@@ -13,6 +13,7 @@
     "mysql": "^2.18.1",
     "puppeteer": "^10.0.0",
     "puppeteer-extra": "^3.2.1",
-    "puppeteer-extra-plugin-stealth": "^2.8.1"
+    "puppeteer-extra-plugin-stealth": "^2.8.1",
+    "puppeteer-screen-recorder": "^1.1.11"
   }
 }
