@@ -7,7 +7,7 @@ const initiate = async (url, configChain) => {
     let page = await pageHelper.openTab(browser, url);
     await insertScripts(page);
 
-    page.on('domcontentloaded', async () => {
+    page.on('\ndomcontentloaded', async () => {
 		console.log(`DOM loaded: ${page.url()}`);
 		await insertScripts(page);
 	});
@@ -17,10 +17,13 @@ const initiate = async (url, configChain) => {
 
 
 const run = async (chain, step, page, memory = []) => {
+    console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step > chain.length - 1)     return;
 
     const action = chain[step];
     const targets = action.selectSimilar ?  await populateSimilarTargets(action.selectedTargets, page) : action.selectedTargets;
+
+    console.log(`Number of targets: ${targets.length}`);
     
     for(let i = 0; i < targets.length; i++) {
         const target = targets[i];
@@ -32,7 +35,7 @@ const run = async (chain, step, page, memory = []) => {
             break;
         }
         
-        await run(chain, step + 1, page);
+        await run(chain, step + 1, page, memory);
     }
 };
 
@@ -55,14 +58,13 @@ const performAction = async (action, target, memory, step, page) => {
 
 const tryActionsInMemory = async (memory, step, page) => {
     // repeat all actions from beginning of memory to end
-    console.log(`tryActionsInMemory() - memory: ${JSON.stringify(memory)}, step: ${step}`);
+    console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
 
     let wasActionPerformed = true;
     for (let i = 0; i <= step; i++) {
         const { action, target } = memory[step];
         try{
             await perform(action, target, page);
-            performedActionCount++;
         }
         catch(ex) {
             if(i === step) {
@@ -75,7 +77,7 @@ const tryActionsInMemory = async (memory, step, page) => {
 };
 
 const tryActionOnPrevPage = async (action, target, memory, step, page) => {
-    console.log(`tryActionOnPrevPage() - action: ${action.actionName}, target: ${target}`);
+    console.log(`\ntryActionOnPrevPage() - action: ${action.actionName}, target: ${target}`);
     if(await page.goBack(pageHelper.getWaitOptions())  === null) {
         return false;
     }
@@ -93,7 +95,6 @@ const memorize = (memory, step, action, target) => {
 };
 
 const perform = async (action, target, page) => {
-    console.log(`Performing action: ${action.actionName}`);
 
     switch(parseInt(action.actionType)) {
         case actionTypes.CLICK:
@@ -101,19 +102,13 @@ const perform = async (action, target, page) => {
             // TODO: test client-side render, react / SPAs -
             // TODO: incorporate xhrHandler
             await page.click(target);
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(10000);
             // page.waitForNavigation(pageHelper.getWaitOptions()),   
             break;
         default:
             break;
     }
 };
-
-
-
-
-
-
 
 const populateSimilarTargets = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];
@@ -127,7 +122,7 @@ const populateSimilarTargets = async (selectedTargets, page) => {
         return targetSelectors;
     }, selectedTargets);
     
-    console.log('All targets', JSON.stringify(finalTargets));
+    // console.log('All targets', JSON.stringify(finalTargets));
 
     return finalTargets;  // target selectors, not elements
 };
