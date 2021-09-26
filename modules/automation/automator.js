@@ -1,139 +1,198 @@
 const pageHelper = require('../common/pageHelper');
+const puppeteer = require('puppeteer');
+const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 const { elementTypes, actionTypes } = require('../common/enum');
+const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
+const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
 
-async function run(configuration) {
+let rootUrl = "";
+
+const initiate = async (url, configChain) => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await pageHelper.openTab(browser, "https://www.carwale.com/");
-
-    await recursiveRun(configuration, 0, page);
-}
-
-
-// TODO: RETHINK HOW TO PERFORM ACTIONS
-async function recursiveRun(configChain, step, page, goBack = false) {
-    currentStep = configChain[step];
-
-    if(currentStep.elementType === elementTypes.ACTION) {  
-        const { selectors, actOnSimilarTargets, maxActionCount } = currentStep.actionTargetsMeta;
-
-        // populate actionable targets (selector) first based on actOnSimilarTargets flag
-
-        selectors.forEach(selector => {
-            // perform the action based on actionType
-            // if page navigates, set goBackOnceDone
-            // formulate final jSON
-
-            act(selector, currentStep.actionType);
-
-            
-            await recursiveRun(controlChain, step+1, page, goBack); 
-            
-            if(goBack) { // TODO: RETHINK
-                // go back in puppeteer
-            }
-        });
-    }
-    else if(currentStep.elementType === elementTypes.STATE) {}
+    let page = await pageHelper.openTab(browser, url);
+    rootUrl = url;
     
-}
+    const recorder = new PuppeteerScreenRecorder(page);
+    await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
+
+    await insertScripts(page);
+
+    page.on('domcontentloaded', async () => {
+		console.log(`\nDOM loaded: ${page.url()}`);
+		await insertScripts(page);
+	});
+
+    await run(configChain, 0, page);
+
+    await recorder.stop();
+    // await page.close();
+};
 
 
+const run = async (chain, step, page, memory = []) => {
+    console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
+    if(step >= chain.length)     return;
 
-const act = async (selector, actionType) => {
-    switch(actionType) {
+    const action = chain[step];
+    const targets = action.selectSimilar ?  await populateSimilarTargets(action.selectedTargets, page) : action.selectedTargets;
+
+    console.log(`Number of targets: ${targets.length}`);
+    
+    for(let i = 0; i < targets.length; i++) {
+        const target = targets[i];
+        memorize(memory, step, action, target);
+        
+        const isActionPerformed = await performAction(action, target, memory, step, page);
+        if(!isActionPerformed) {
+            console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
+            break;
+        }
+        await run(chain, step + 1, page, memory);
+    }
+};
+
+const performAction = async (action, target, memory, step, page) => {
+    console.log(`performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
+    try {
+        await perform(action, target, page);
+    }
+    catch(ex) {
+        // if perform(action) doesn't work, retry previous actions (handle popup cases)
+        // if none of the actions work, go back one page and try 
+        let wasActionPerformed = await tryActionsInMemory(memory, step, page);
+        if(!wasActionPerformed) {
+            wasActionPerformed = await tryActionOnPrevPage(action, target, memory, step, page);
+            return wasActionPerformed;
+        }
+    }
+    return true;
+};
+
+const tryActionsInMemory = async (memory, step, page) => {
+    // repeat all actions from beginning of memory to end
+    console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
+    // console.log(JSON.stringify(memory));
+
+    let wasActionPerformed = true;
+    for (let i = 0; i <= step; i++) {
+        const { action, target } = memory[i];
+        try{
+            // console.log(target);
+            await perform(action, target, page);
+        }
+        catch(ex) {
+            if(i === step) {
+                wasActionPerformed = false;
+            }
+            continue;
+        }
+    }
+    return wasActionPerformed;
+};
+
+const tryActionOnPrevPage = async (action, target, memory, step, page) => {
+    console.log(`\ntryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
+    
+    if(await page.url() === rootUrl)  return false;
+    await Promise.all([
+        addXhrListener(page),
+        addNavigationListener(page),
+    ]);
+    
+    const httpRes = await page.goBack(pageHelper.getWaitOptions());
+    await Promise.all([
+        awaitXhrResponse(),
+        awaitNavigation(),
+        page.waitForTimeout(500),
+    ]);
+
+    // console.log("going back, httpRes", httpRes);
+
+    if(httpRes  === null) {
+        await page.reload(pageHelper.getWaitOptions());
+        return await performAction(action, target, memory, step, page);
+    }
+
+    await Promise.all([
+        removeXhrListener(),
+        removeNavigationListener(), 
+    ]);
+
+
+    // await page.goBack(pageHelper.getWaitOptions());
+    // await page.reload(pageHelper.getWaitOptions());
+    return await performAction(action, target, memory, step, page);
+};
+
+
+const memorize = (memory, step, action, target) => {
+    if(memory[step]) {
+        memory[step] = {action, target}; // tuple
+    }
+    else {
+        memory.push({action, target});
+    }
+};
+
+
+const perform = async (action, target, page) => {
+    await addXhrListener(page);
+    await addNavigationListener(page);
+    switch(parseInt(action.actionType)) {
         case actionTypes.CLICK:
+            // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
+            // TODO: test client-side render, react / SPAs -
+            // TODO: incorporate xhrHandler
+
+            await page.click(target);
             await Promise.all([
-                page.waitForNavigation(waitOptions),
-                page.click(selector),
+                awaitXhrResponse(),
+                awaitNavigation(),
+                page.waitForTimeout(500),
             ]);
             break;
         default:
             break;
     }
+    await removeXhrListener();
+    removeNavigationListener(); 
 };
 
+const populateSimilarTargets = async (selectedTargets, page) => {
+    if(selectedTargets.length === 0)   return [];
+
+    const finalTargets =  await page.evaluate((selectedTargets) => { 
+        const targets = DomUtils.findSimilarElements(selectedTargets);
+        const targetSelectors = [];
+        targets.forEach(target => {
+            targetSelectors.push(DomUtils.getQuerySelector(target));
+        });
+        return targetSelectors;
+    }, selectedTargets);
+    
+    // console.log('All targets', JSON.stringify(finalTargets));
+
+    return finalTargets;  // target selectors, not elements
+};
+
+const insertScripts = async (page) => {
+	await page.addScriptTag({ path: "./scripts/enum.js" });
+	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
+
+    try { 
+        await page.exposeFunction('handlePageUnload', handlePageUnload); 
+    } catch(ex) {}
+};
+
+const takeScreenShot = async (page) => {
+    await page.screenshot({
+        path: `./shots/screenshot-${+ new Date()}.png`,
+        type: 'jpeg',
+        quality: 30,
+    });
+}
 
 
 module.exports = {
-    run
-};
-
-
-
-
-
-
-/*
-                        open popup   city        area      submit
-configChain = [(a1, t1), (a2, t1),| (a3, t1),| (a4, t1),| (a5, t1))]
-                                                   ^ 
-                           curr                   pause
-
-
-
-RETHINK CONFIG STRUCTURE
-
-run(configChain = [], configMeta= [{}, {}], stepIndex = 0, targetIndex = 0, isBackTracking = false)
-{
-    const currActionMeta = configMeta[stepIndex];
-    let currTarget;
-
-    if(isBackTracking) {
-        currTarget =  configChain[stepIndex];
-    }
-    else {
-        // get all targets(selector) of this action, before this step
-        targetList = getAllTargets(currActionMeta.actionTargetsMeta.selectors);
-        if(targetIndex === targetList.length) {
-            return; 
-        }
-        currTarget = targetList[targetIndex];
-    }    
-    
-    if(performAction(currActionMeta, ) !== work) {
-        run(configChain, configMeta, stepIndex-1, targetIndex, true)
-    }
-    
-    
-    
-    
-    
-    // PERFORM ACTION HERE....
-
-    
-
-    if(!configChain[stepIndex]) {
-        // a3 hasn't happened yet, a1 and a2 are in config chain.
-        configChain.push(currTarget);
-    }
-    else {
-        // (a3,t1) has happend, now (a3,t2) needs to be selected
-        configChain[stepIndex] = currTarget
-    }
-
-
-    run(configChain, configMeta, stepIndex+1, targetIndex)
-
-
-
-
-    
-    // for (let i = 0; i < targetSelectors.length; i++) {
-    //     selector = targetSelectors[i];
-
-    //     configChain.push(['', selector])
-    // }
-
+    initiate
 }
-
-
-
-                           
-optimization ??
-{
-    pausePoint: resumePoint
-    a4: a2
-    a3: a2
-}
-
-*/

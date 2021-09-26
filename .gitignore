@@ -1,6 +1,5 @@
 node_modules/
-screenshots/
-data/
+captures/
 config/
 *.zip
 *.txt

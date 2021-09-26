@@ -1,10 +1,20 @@
 const DomUtils = (() => {
 
+    const _startsWithNumber = (str) => {
+        return !isNaN(parseInt(str[0]));   // first char in str is parseable 
+    };
+
     const _buildId = (element) => {
         if(element.id === "")
             return "";
 
-        return "#"+ element.id;
+        let id = element.id;
+        if(_startsWithNumber(id)) {   
+            // https://stackoverflow.com/a/20306237/6513094
+            id = `\\3${id.slice(0,1)} ${id.slice(1)}`;
+        }
+
+        return "#"+ id;
     }
 
     const _buildClassList = (element) => {
@@ -32,14 +42,13 @@ const DomUtils = (() => {
     };
 
     const hasSiblingsWithSameClassList = (element) => {
-        if(element.classList.length > 0)    return false;
         if(element.parentElement.children.length === 1) return false;
 
-        const parent = element.parent;
+        const parent = element.parentElement;
         const siblings = Array.from(parent.children).filter(child => child !== element);
-        const siblingsWithSameClassList = siblings.filter(sib => sib.classList.sort().join(",") === element.classList.sort().join(","));
+        const siblingsWithSameClassList = siblings.filter(sib => Array.from(sib.classList).sort().join(",") === Array.from(element.classList).sort().join(","));
 
-        return siblingsWithSameClassList.length > 0;
+        return (siblingsWithSameClassList.length > 0);
     }; 
 
     const hasClasses = (element) => {
@@ -61,7 +70,7 @@ const DomUtils = (() => {
         5. Use nth-child, if no classes present. (NOTE: nth-child is irrespective of the nodetype)
         */
 
-        let path = [];
+        let path = [];        
         
         while(element !== document.body) {
             let currentSelector = element.nodeName.toLowerCase();
@@ -109,10 +118,24 @@ const DomUtils = (() => {
         return similarElements;
     };
 
+    const unloadListener = () => {
+        window.handlePageUnload();
+    };
+
+    const addUnloadListener = () => {
+        window.addEventListener("beforeunload", unloadListener);
+    };
+
+    const removeUnloadListener = () => {
+        window.removeEventListener("beforeunload", unloadListener);
+    };
+
 
 
     return {
         getQuerySelector,
         findSimilarElements,
+        addUnloadListener,
+        removeUnloadListener,
     }
 })();
