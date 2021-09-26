@@ -1,5 +1,3 @@
-const { elementTypes } = require("../modules/common/enum");
-
 class ActionMenu extends Menu {
     constructor() {
         super();
@@ -344,14 +342,15 @@ class ActionMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar } = this.configuration;
+            const { actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
             await ActionChain.push({
                 actionName, 
                 actionType,
                 actionKey,
                 selectedLabels,
                 selectedTargets,
-                selectSimilar
+                selectSimilar,
+                selectSiblings,
             });
             this.close();
         });
