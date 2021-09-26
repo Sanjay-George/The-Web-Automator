@@ -1,10 +1,20 @@
 const DomUtils = (() => {
 
+    const _startsWithNumber = (str) => {
+        return !isNaN(parseInt(str[0]));   // first char in str is parseable 
+    };
+
     const _buildId = (element) => {
         if(element.id === "")
             return "";
 
-        return "#"+ element.id;
+        let id = element.id;
+        if(_startsWithNumber(id)) {   
+            // https://stackoverflow.com/a/20306237/6513094
+            id = `\\3${id.slice(0,1)} ${id.slice(1)}`;
+        }
+
+        return "#"+ id;
     }
 
     const _buildClassList = (element) => {
