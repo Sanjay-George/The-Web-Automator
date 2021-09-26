@@ -3,10 +3,9 @@ class ActionMenu extends Menu {
         super();
         this.containerId = "action-menu";
         this.configuration = {
-            id: 0,
-            name: "",
-            type: null,
-            key: "",
+            actionName: "",
+            actionType: null,
+            actionKey: "",
             selectedTargets: [],
             selectedLabels: [],
             finalTargets: [], 
@@ -300,10 +299,9 @@ class ActionMenu extends Menu {
 
     resetConfiguration = () => {
         this.configuration = {
-            id: 0,
-            name: "",
-            type: null,
-            key: "",
+            actionName: "",
+            actionType: null,
+            actionKey: "",
             selectedTargets: [],
             selectedLabels: [],
             finalTargets: [],
