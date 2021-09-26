@@ -34,7 +34,7 @@ const run = async (chain, step, page, memory = []) => {
     if(step >= chain.length)     return;
 
     const action = chain[step];
-    const targets = action.selectSimilar ?  await populateSimilarTargets(action.selectedTargets, page) : action.selectedTargets;
+    const targets = await populateAllTargets(action, page);
 
     console.log(`Number of targets: ${targets.length}`);
     
@@ -156,6 +156,33 @@ const perform = async (action, target, page) => {
     }
     await removeXhrListener();
     removeNavigationListener(); 
+};
+
+const populateAllTargets = async (action, page) => {
+    if(action.selectSimilar) {
+        return  await populateSimilarTargets(action.selectedTargets, page);
+    }
+    else if(action.selectSiblings) {
+        return await populateSiblings(action.selectedTargets, page);
+    }
+    else {
+        return action.selectedTargets;
+    }
+};
+
+const populateSiblings = async (selectedTargets, page) => {
+    if(selectedTargets.length === 0)   return [];
+
+    const finalTargets =  await page.evaluate((selectedTargets) => { 
+        const targets = DomUtils.findSiblings(selectedTargets);
+        const targetSelectors = [];
+        targets.forEach(target => {
+            targetSelectors.push(DomUtils.getQuerySelector(target));
+        });
+        return targetSelectors;
+    }, selectedTargets);
+    
+    return finalTargets;  // target selectors, not elements
 };
 
 const populateSimilarTargets = async (selectedTargets, page) => {

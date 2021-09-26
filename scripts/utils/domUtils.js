@@ -118,16 +118,24 @@ const DomUtils = (() => {
         return similarElements;
     };
 
-    const unloadListener = () => {
+    const findSiblings = (selectorArr) => {
+        let siblings = [];
+        selectorArr.forEach(selector => {
+            siblings = siblings.concat(Array.from(document.querySelector(selector).parentElement.children));
+        });
+        return siblings;
+    };
+
+    const _unloadListener = () => {
         window.handlePageUnload();
     };
 
     const addUnloadListener = () => {
-        window.addEventListener("beforeunload", unloadListener);
+        window.addEventListener("beforeunload", _unloadListener);
     };
 
     const removeUnloadListener = () => {
-        window.removeEventListener("beforeunload", unloadListener);
+        window.removeEventListener("beforeunload", _unloadListener);
     };
 
 
@@ -135,6 +143,7 @@ const DomUtils = (() => {
     return {
         getQuerySelector,
         findSimilarElements,
+        findSiblings,
         addUnloadListener,
         removeUnloadListener,
     }
