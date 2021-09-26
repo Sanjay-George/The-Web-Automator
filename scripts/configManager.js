@@ -4,8 +4,6 @@ let actionMenu;  // todo: move this inside scope, kept here for debugging
 const ConfigManager = (() => {
     actionMenu = new ActionMenu();
 
-    // let configuration = [];
-
     let isConfigurationActive = false;
     let configuredElement = null;
 

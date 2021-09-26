@@ -1,3 +1,5 @@
+const { elementTypes } = require("../modules/common/enum");
+
 class ActionMenu extends Menu {
     constructor() {
         super();
@@ -10,7 +12,8 @@ class ActionMenu extends Menu {
             selectedLabels: [],
             finalTargets: [], 
             finalLabels: [],
-            selectSimilar: false,    
+            selectSimilar: false,
+            selectSiblings: false,    
             repeatCount: 0,
             maxTargetCount: -1
         }; 
@@ -57,11 +60,19 @@ class ActionMenu extends Menu {
                         <a id="clear-label"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
                 </div>
-                <div class="input-field col3" style="display: flex; align-items: center;">
-                    <label id="sel-similar">
-                        <input type="checkbox"/>
-                        <span>Select similar elements</span>
-                    </label>
+                <div class="input-field col3" style="display: flex; align-items: center; flex-wrap: wrap;">
+                    <div class="col12">
+                        <label id="sel-similar">
+                            <input type="checkbox"/>
+                            <span>Select similar elements</span>
+                        </label>
+                    </div>    
+                    <div class="col12">
+                        <label id="sel-siblings">
+                            <input type="checkbox"/>
+                            <span>Select siblings</span>
+                        </label>
+                    </div>    
                 </div>
 
                 <!-- <div class="input-field col12">
@@ -180,6 +191,22 @@ class ActionMenu extends Menu {
         return finalTargets;
     };
 
+    populateSiblings = (finalTargets, selectedTargets, elementType) => {
+        if(selectedTargets.length === 0)   return finalTargets;
+
+        finalTargets = DomUtils.findSiblings(selectedTargets);
+
+        finalTargets.forEach(item => {
+            Highlighter.highlightElement(item, elementType);
+        });
+
+        return finalTargets;
+    };
+
+    removeSiblings = (finalTargets, selectedTargets, elementType) => {
+        this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
+    };
+
 
     setBasicDetails = () => {
         this.configuration = {
@@ -240,11 +267,14 @@ class ActionMenu extends Menu {
         // select all similar siblings
         document.querySelector(`#${this.containerId} #sel-similar`).addEventListener("click", (e) => {
             e.stopPropagation();
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar } = this.configuration;
+            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+            const siblingCheckbox = document.querySelector(`#${this.containerId} #sel-siblings input`);
             if(e.target.checked) {
                 finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
                 finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = true;
+                selectSiblings = false;
+                siblingCheckbox.checked = false;
             }
             else {
                 finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
@@ -257,6 +287,36 @@ class ActionMenu extends Menu {
                 finalLabels,
                 selectedTargets,
                 selectSimilar,
+                selectSiblings,
+            };
+        });
+
+        // select siblings (DOM tree logic)
+        document.querySelector(`#${this.containerId} #sel-siblings`).addEventListener("click", (e) => {
+            e.stopPropagation();
+            const similarCheckbox = document.querySelector(`#${this.containerId} #sel-similar input`);
+            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+
+            if(e.target.checked) {
+                // todo: populate sibling
+                finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                selectSimilar = false;
+                selectSiblings = true;
+                similarCheckbox.checked = false;
+            }
+            else {
+                finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                selectSiblings = false;
+            }
+            this.configuration = {
+                ...this.configuration,
+                finalTargets,
+                finalLabels,
+                selectedTargets,
+                selectSimilar,
+                selectSiblings,
             };
         });
 
@@ -307,6 +367,7 @@ class ActionMenu extends Menu {
             finalTargets: [],
             finalLabels: [],
             selectSimilar: false,    
+            selectSiblings: false,    
             repeatCount: 0,
             maxTargetCount: -1
         }; 
