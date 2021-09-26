@@ -25,7 +25,7 @@ const initiate = async (url, configChain) => {
     await run(configChain, 0, page);
 
     await recorder.stop();
-    await page.close();
+    // await page.close();
 };
 
 
@@ -44,7 +44,7 @@ const run = async (chain, step, page, memory = []) => {
         
         const isActionPerformed = await performAction(action, target, memory, step, page);
         if(!isActionPerformed) {
-            console.error(`Unable to perform action "${action.actionName}" for target at index ${i}`);
+            console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
             break;
         }
         await run(chain, step + 1, page, memory);
@@ -52,7 +52,7 @@ const run = async (chain, step, page, memory = []) => {
 };
 
 const performAction = async (action, target, memory, step, page) => {
-    console.log(`performAction() - action: ${action.actionName}, target: ${target}`);
+    console.log(`performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
     try {
         await perform(action, target, page);
     }
@@ -91,12 +91,36 @@ const tryActionsInMemory = async (memory, step, page) => {
 };
 
 const tryActionOnPrevPage = async (action, target, memory, step, page) => {
-    console.log(`\ntryActionOnPrevPage() - action: ${action.actionName}, target: ${target}`);
+    console.log(`\ntryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
     
     if(await page.url() === rootUrl)  return false;
-    if(await page.goBack(pageHelper.getWaitOptions())  === null) {
-        return false;
+    await Promise.all([
+        addXhrListener(page),
+        addNavigationListener(page),
+    ]);
+    
+    const httpRes = await page.goBack(pageHelper.getWaitOptions());
+    await Promise.all([
+        awaitXhrResponse(),
+        awaitNavigation(),
+        page.waitForTimeout(500),
+    ]);
+
+    // console.log("going back, httpRes", httpRes);
+
+    if(httpRes  === null) {
+        await page.reload(pageHelper.getWaitOptions());
+        return await performAction(action, target, memory, step, page);
     }
+
+    await Promise.all([
+        removeXhrListener(),
+        removeNavigationListener(), 
+    ]);
+
+
+    // await page.goBack(pageHelper.getWaitOptions());
+    // await page.reload(pageHelper.getWaitOptions());
     return await performAction(action, target, memory, step, page);
 };
 
@@ -124,11 +148,8 @@ const perform = async (action, target, page) => {
             await Promise.all([
                 awaitXhrResponse(),
                 awaitNavigation(),
-                // page.waitForTimeout(5000),
+                page.waitForTimeout(500),
             ]);
-            
-
-            // page.waitForNavigation(pageHelper.getWaitOptions()),   
             break;
         default:
             break;
