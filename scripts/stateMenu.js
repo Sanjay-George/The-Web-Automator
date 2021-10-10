@@ -47,11 +47,11 @@ class StateMenu extends Menu {
                 </div>
 
                 <div class="input-field col12">
-                    <select id="state-type">
-                        <option value="" disabled selected>Perform After*</option>
-                        <option value="1">Perform first</option>
-                        <option value="2">A1 - Select Make</option>
-                        <option value="3">A2 - Select models</option>
+                    <select>
+                        <option value="" disabled selected>Select when to perform state*</option>
+                        <option value="1">Perform immediately</option>
+                        <optgroup label="Available actions" id="associated-action">
+                        </optgroup>
                     </select>
                 </div>
                 
@@ -388,6 +388,22 @@ class StateMenu extends Menu {
         ConfigManager.disableConfigurationMode();
     };
 
+    populateAssociatedActions = async () => {
+        const actions = (await ActionChain.get()).map((item, index) => [index, item.actionName]);
+        const assoActionContainer = document.querySelector("#associated-action");
+        assoActionContainer.innerHTML = "";
+        
+        if(!actions || !actions.length) {
+            assoActionContainer.innerHTML += `<option value="1" disabled>No actions configured yet</option>`;
+            return;
+        }
+
+        actions.forEach(item => {
+            assoActionContainer.innerHTML += `<option value="${item[0]}">A${parseInt(item[0]) + 1} - ${item[1]}</option>`;
+        });
+
+    } 
+
     open = (target) => {     
         ConfigManager.enableConfigurationMode(target, Enum.elementTypes.STATE);
 
@@ -395,6 +411,8 @@ class StateMenu extends Menu {
         let {selectedTargets, finalTargets} = this.configuration;
         finalTargets.push(target);
         selectedTargets.push(DomUtils.getQuerySelector(target));
+
+        this.populateAssociatedActions();
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
