@@ -1,5 +1,7 @@
 # Web Automator
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d0529b3d5b974981befa9dc5d536b7d6)](https://app.codacy.com/gh/Sanjay-George/Web-Automator?utm_source=github.com&utm_medium=referral&utm_content=Sanjay-George/Web-Automator&utm_campaign=Badge_Grade_Settings)
+
 This is a powerful, robust, and open-source tool to automate tasks on the web. It can also be used to fetch data from websites. 
 
 ### Uses
