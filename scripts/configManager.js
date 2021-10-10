@@ -80,7 +80,6 @@ const ConfigManager = (() => {
     }
 })();
 
-// TODO: COMBINE BOTH CHAINS
 const ActionChain = (() => {    
     const push = async (action) => {
         let actionChain = await get(); 
@@ -115,26 +114,26 @@ const ActionChain = (() => {
 
 const StateChain = (() => {    
     const push = async (action) => {
-        let actionChain = await get(); 
-        actionChain.push(action);
-        return await window.setActionChain(actionChain);
+        let stateChain = await get(); 
+        stateChain.push(action);
+        return await window.setStateChain(stateChain);
     };
     
     const get = async () => {
-        return await window.getActionChain(); 
+        return await window.getStateChain(); 
     };
 
     const pop = async () => {
         let actionChain = await get(); 
         actionChain.pop(); 
-        return await window.setActionChain(actionChain);
+        return await window.setStateChain(stateChain);
     }
     const removeAt = async (index = -1) => {
-        let actionChain = await get(); 
-        if(!actionChain.length || index < 0)     
+        let stateChain = await get(); 
+        if(!stateChain.length || index < 0)     
             return undefined;
-        actionChain.splice(index, 1);
-        return await window.setActionChain(actionChain);
+            stateChain.splice(index, 1);
+        return await window.setStateChain(stateChain);
     };  
 
     return {

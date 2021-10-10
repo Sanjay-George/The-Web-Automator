@@ -45,6 +45,15 @@ class StateMenu extends Menu {
                         <option value="3" disabled>Store console logs</option>
                     </select>
                 </div>
+
+                <div class="input-field col12">
+                    <select id="state-type">
+                        <option value="" disabled selected>Perform After*</option>
+                        <option value="1">Perform first</option>
+                        <option value="2">A1 - Select Make</option>
+                        <option value="3">A2 - Select models</option>
+                    </select>
+                </div>
                 
                 <div class="col9">
                     <div class="input-field">

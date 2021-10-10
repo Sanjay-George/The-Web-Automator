@@ -1,8 +1,7 @@
 const puppeteer = require('puppeteer');
 const pageHelper = require('./modules/common/pageHelper');
-let actionChain = [];
+let actionChain = [], stateChain = [];
 const automator = require('./modules/automation/automator');
-// const stateChain;
 
 const url = "https://www.bikewale.com";
 
@@ -51,11 +50,22 @@ const exposeFunctions = async (page) => {
 		await page.exposeFunction('getActionChain', () => actionChain);
 	}
 	catch(ex) {}
+	try {
+		await page.exposeFunction('getStateChain', () => stateChain);
+	}
+	catch(ex) {}
 
 	try {
 		await page.exposeFunction('setActionChain', chain => {
 			console.log(JSON.stringify(chain));
 			actionChain = chain ;
+		});
+	}
+	catch(ex) {}
+	try {
+		await page.exposeFunction('setStateChain', chain => {
+			console.log(JSON.stringify(chain));
+			stateChain = chain ;
 		});
 	}
 	catch(ex) {}

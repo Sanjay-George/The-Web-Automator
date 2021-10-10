@@ -74,6 +74,9 @@
     padding: 10px 0;
 }
 
+.profile-menu select{
+    width: 100%;
+}
 
 .profile-menu .profile-close {
     position: absolute;
