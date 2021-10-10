@@ -1,8 +1,9 @@
 // This is the start point of each page crawled in config mode
-let actionMenu;  // todo: move this inside scope, kept here for debugging
+let actionMenu, stateMenu;  // todo: move this inside scope, kept here for debugging
 
 const ConfigManager = (() => {
     actionMenu = new ActionMenu();
+    stateMenu = new StateMenu();
 
     let isConfigurationActive = false;
     let configuredElement = null;
@@ -29,6 +30,7 @@ const ConfigManager = (() => {
         !isConfigurationActive && Highlighter.resetHighlight(e.target);
     };
 
+    // TODO: MAKE OBSOLETE AND REMOVE AFTER TESTING
     const handleClick = (e) => {
         // console.log(e);
         
@@ -60,6 +62,7 @@ const ConfigManager = (() => {
 
     const registerEvents = () => {
         actionMenu.initialize();
+        stateMenu.initialize();
         ContextMenu.initialize();
 
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
@@ -77,7 +80,7 @@ const ConfigManager = (() => {
     }
 })();
 
-
+// TODO: COMBINE BOTH CHAINS
 const ActionChain = (() => {    
     const push = async (action) => {
         let actionChain = await get(); 
@@ -109,6 +112,39 @@ const ActionChain = (() => {
         removeAt: removeAt
     };
 })();
+
+const StateChain = (() => {    
+    const push = async (action) => {
+        let actionChain = await get(); 
+        actionChain.push(action);
+        return await window.setActionChain(actionChain);
+    };
+    
+    const get = async () => {
+        return await window.getActionChain(); 
+    };
+
+    const pop = async () => {
+        let actionChain = await get(); 
+        actionChain.pop(); 
+        return await window.setActionChain(actionChain);
+    }
+    const removeAt = async (index = -1) => {
+        let actionChain = await get(); 
+        if(!actionChain.length || index < 0)     
+            return undefined;
+        actionChain.splice(index, 1);
+        return await window.setActionChain(actionChain);
+    };  
+
+    return {
+        push: push,
+        get: get,
+        pop: pop,
+        removeAt: removeAt
+    };
+})();
+
 
 
 ConfigManager.registerEvents();

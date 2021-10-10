@@ -41,6 +41,9 @@ const ContextMenu = (() => {
             case options.CONFIGURE_ACTION:
                 actionMenu.open(currentTarget);
                 break;
+            case options.CONFIGURE_STATE:
+                stateMenu.open(currentTarget);
+                break;
             default:
                 break;
         }

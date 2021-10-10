@@ -4,7 +4,7 @@ let actionChain = [];
 const automator = require('./modules/automation/automator');
 // const stateChain;
 
-const url = "https://www.bikewale.com/";
+const url = "https://www.bikewale.com";
 
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
@@ -37,8 +37,10 @@ const url = "https://www.bikewale.com/";
 		await page.waitForTimeout(1000);
 		await automator.initiate(url, actionChain);
 	});
+
+	// actionChain = [{"actionName":"open model selector","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["div.container > div > div.innerContainer > div.modelsSection.priceRow > div.priceTab"],"selectSimilar":false},{"actionName":"select model ","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["div.container > div > div.innerContainer > div.modelsSection.priceRow.active > div.modelsList.priceModelsList > div:nth-child(1)"],"selectSimilar":true},{"actionName":"open location tab","actionType":"1","actionKey":"","selectedLabels":[], "selectedTargets":["div.container > div > div.innerContainer > div.locationSection.priceRow > div.priceTab"],"selectSimilar":false},{"actionName":"open state selector","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["input#txtState"],"selectSimilar":false},{"actionName":"Select state","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["li#\\31 "],"selectSimilar":false,"selectSiblings":true},{"actionName":"open city selector","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["input#txtCity"],"selectSimilar":false},{"actionName":"select city","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["ul#selectCityul > li:nth-child(1)"],"selectSimilar":true},{"actionName":"submit btn","actionType":"1","actionKey":"","selectedLabels":[],"selectedTargets":["div.container > div > div.innerContainer > div.carPrice.checkPrice.checkPriceBTN > a"],"selectSimilar":false}];
+	// await automator.initiate(url, actionChain);
 		
-  
 })();
 
 // exposed functions survives navigation, so no need to expose again on page refresh
@@ -68,6 +70,7 @@ const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/menu.js" });
 	await page.addScriptTag({ path: "./scripts/enum.js" });
 	await page.addScriptTag({ path: "./scripts/actionMenu.js" });
+	await page.addScriptTag({ path: "./scripts/stateMenu.js" });
 	await page.addScriptTag({ path: "./scripts/utils/domUtils.js" });
 	await page.addScriptTag({ path: "./scripts/utils/dynamicEventHandler.js" });
 	await page.addScriptTag({ path: "./scripts/utils/highlighter.js" });
