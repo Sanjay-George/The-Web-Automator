@@ -16,7 +16,13 @@ const actionTypes = {
     SELECT: 3,
 };
 
+const stateTypes = {
+    SCRAPE_DATA: 1,
+    MONITOR_DATA: 2,
+};
+
 module.exports = {
     elementTypes,
-    actionTypes
+    actionTypes,
+    stateTypes
 }

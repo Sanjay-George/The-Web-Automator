@@ -27,5 +27,69 @@ class Menu {
         this.menu = menu;
     };
 
+    showMenu = () => {
+        this.menu.classList.remove("hide");
+        this.overlay.classList.remove("hide");
+    };
+
+    hideMenu = () => {
+        this.overlay.classList.add("hide");
+        this.menu.classList.add("hide");
+    };
+
+    clearHighlight = (elements) => {
+        // TODO: something's wrong with colors. Fix 
+        elements.forEach(item => {
+            Highlighter.resetHighlight(item);
+        });
+    };
+
+    populateSimilarTargets = (finalTargets, selectedTargets, elementType) => {  // TODO: REFACTOR THIS, REMOVE finalTargets
+        if(selectedTargets.length === 0)   return finalTargets;
+
+        finalTargets = DomUtils.findSimilarElements(selectedTargets);
+
+        finalTargets.forEach(item => {
+            Highlighter.highlightElement(item, elementType);
+        });
+
+        return finalTargets;
+    };
+
+    removeSimilarTargets = (finalTargets, selectedTargets, elementType) => {
+        if(selectedTargets.length === 0 || finalTargets.length === 0)   return finalTargets;
+        
+        finalTargets.forEach(item => {
+            Highlighter.resetHighlight(item);
+        });
+
+        finalTargets = [];
+        selectedTargets.forEach(selector => {
+            finalTargets.push(document.querySelector(selector));
+        });
+
+        finalTargets.forEach(item => {
+            Highlighter.highlightElement(item, elementType);
+        });
+        return finalTargets;
+    };
+
+    populateSiblings = (finalTargets, selectedTargets, elementType) => {
+        if(selectedTargets.length === 0)   return finalTargets;
+
+        finalTargets = DomUtils.findSiblings(selectedTargets);
+
+        finalTargets.forEach(item => {
+            Highlighter.highlightElement(item, elementType);
+        });
+
+        return finalTargets;
+    };
+
+    removeSiblings = (finalTargets, selectedTargets, elementType) => {
+        this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
+    };
+
+
 }
 

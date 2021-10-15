@@ -12,8 +12,10 @@ class StateMenu extends Menu {
             finalLabels: [],
             selectSimilar: false,
             selectSiblings: false,    
-            repeatCount: 0,
-            maxTargetCount: -1
+            // repeatCount: 0,  
+            maxTargetCount: -1,
+            // index of action to perform after. -1 means collect data immediately
+            performAfter: -1,   
         }; 
     }
 
@@ -55,6 +57,10 @@ class StateMenu extends Menu {
                     </select>
                 </div>
                 
+                <!--TODO: SAME STATE (KEY) CAN HAVE MULTIPLE [TARGET, LABEL] PAIRS -->
+                <!--TODO: ADD PROVISION TO ADD OR REMOVE PAIRS -->\
+                <!--TODO: Also, label can be typed in. Create provision for it -->
+
                 <div class="col9">
                     <div class="input-field">
                         <label for="target-list">State Target(s)</label>
@@ -96,16 +102,6 @@ class StateMenu extends Menu {
     removeMenuListeners = () => {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
-    };
-    
-    showMenu = () => {
-        this.menu.classList.remove("hide");
-        this.overlay.classList.remove("hide");
-    };
-
-    hideMenu = () => {
-        this.overlay.classList.add("hide");
-        this.menu.classList.add("hide");
     };
 
     stateTargetHandlers = {
@@ -160,60 +156,6 @@ class StateMenu extends Menu {
             document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
-
-    clearHighlight = (elements) => {
-        // TODO: something's wrong with colors. Fix 
-        elements.forEach(item => {
-            Highlighter.resetHighlight(item);
-        });
-    };
-
-    populateSimilarTargets = (finalTargets, selectedTargets, elementType) => {  // TODO: REFACTOR THIS, REMOVE finalTargets
-        if(selectedTargets.length === 0)   return finalTargets;
-
-        finalTargets = DomUtils.findSimilarElements(selectedTargets);
-
-        finalTargets.forEach(item => {
-            Highlighter.highlightElement(item, elementType);
-        });
-
-        return finalTargets;
-    };
-
-    removeSimilarTargets = (finalTargets, selectedTargets, elementType) => {
-        if(selectedTargets.length === 0 || finalTargets.length === 0)   return finalTargets;
-        
-        finalTargets.forEach(item => {
-            Highlighter.resetHighlight(item);
-        });
-
-        finalTargets = [];
-        selectedTargets.forEach(selector => {
-            finalTargets.push(document.querySelector(selector));
-        });
-
-        finalTargets.forEach(item => {
-            Highlighter.highlightElement(item, elementType);
-        });
-        return finalTargets;
-    };
-
-    populateSiblings = (finalTargets, selectedTargets, elementType) => {
-        if(selectedTargets.length === 0)   return finalTargets;
-
-        finalTargets = DomUtils.findSiblings(selectedTargets);
-
-        finalTargets.forEach(item => {
-            Highlighter.highlightElement(item, elementType);
-        });
-
-        return finalTargets;
-    };
-
-    removeSiblings = (finalTargets, selectedTargets, elementType) => {
-        this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
-    };
-
 
     setBasicDetails = () => {
         this.configuration = {
@@ -392,7 +334,7 @@ class StateMenu extends Menu {
         const actions = (await ActionChain.get()).map((item, index) => [index, item.actionName]);
         const assoActionContainer = document.querySelector("#associated-action");
         assoActionContainer.innerHTML = "";
-        
+
         if(!actions || !actions.length) {
             assoActionContainer.innerHTML += `<option value="1" disabled>No actions configured yet</option>`;
             return;

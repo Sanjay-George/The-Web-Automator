@@ -16,9 +16,15 @@ const Enum = (() => {
         SELECT: 3,
     };
 
+    const stateTypes = {
+        SCRAPE_DATA: 1,
+        MONITOR_DATA: 2,
+    };
+
     return {
         elementTypes,
-        actionTypes
+        actionTypes,
+        stateTypes,
     }
 })();
 
