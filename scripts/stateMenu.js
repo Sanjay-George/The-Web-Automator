@@ -49,9 +49,9 @@ class StateMenu extends Menu {
                 </div>
 
                 <div class="input-field col12">
-                    <select>
+                    <select id="perform-after">
                         <option value="" disabled selected>Select when to perform state*</option>
-                        <option value="1">Perform immediately</option>
+                        <option value="-1">Perform immediately</option>
                         <optgroup label="Available actions" id="associated-action">
                         </optgroup>
                     </select>
@@ -162,7 +162,8 @@ class StateMenu extends Menu {
             ...this.configuration,
             stateName: document.querySelector("#state-name").value,
             stateKey: document.querySelector("#state-key").value,
-            stateType: document.querySelector("#state-type").value
+            stateType: document.querySelector("#state-type").value,
+            performAfter: document.querySelector("#perform-after").value,
         };
     };
 
@@ -293,7 +294,7 @@ class StateMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { stateName, stateType, stateKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+            const { stateName, stateType, stateKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings, performAfter } = this.configuration;
             await StateChain.push({
                 stateName, 
                 stateType,
@@ -302,6 +303,7 @@ class StateMenu extends Menu {
                 selectedTargets,
                 selectSimilar,
                 selectSiblings,
+                performAfter,
             });
             this.close();
         });
@@ -318,8 +320,9 @@ class StateMenu extends Menu {
             finalLabels: [],
             selectSimilar: false,    
             selectSiblings: false,    
-            repeatCount: 0,
-            maxTargetCount: -1
+            // repeatCount: 0,
+            maxTargetCount: -1,
+            performAfter: -1, 
         }; 
     }
 
