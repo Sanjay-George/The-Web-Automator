@@ -1,5 +1,8 @@
-// This is the start point of each page crawled in config mode
-let actionMenu, stateMenu;  // todo: move this inside scope, kept here for debugging
+/* global ActionMenu, StateMenu, Highlighter,DynamicEventHandler */
+
+
+// INFO: This is the start point of each page crawled in config mode
+let actionMenu, stateMenu;  // TODO: move this inside scope, kept here for debugging
 
 const ConfigManager = (() => {
     actionMenu = new ActionMenu();
@@ -81,16 +84,14 @@ const ConfigManager = (() => {
 })();
 
 const ActionChain = (() => {    
+    const get = async () => {
+        return await window.getActionChain(); 
+    };
     const push = async (action) => {
         let actionChain = await get(); 
         actionChain.push(action);
         return await window.setActionChain(actionChain);
     };
-    
-    const get = async () => {
-        return await window.getActionChain(); 
-    };
-
     const pop = async () => {
         let actionChain = await get(); 
         actionChain.pop(); 
@@ -113,19 +114,17 @@ const ActionChain = (() => {
 })();
 
 const StateChain = (() => {    
+    const get = async () => {
+        return await window.getStateChain(); 
+    };
     const push = async (action) => {
         let stateChain = await get(); 
         stateChain.push(action);
         return await window.setStateChain(stateChain);
     };
-    
-    const get = async () => {
-        return await window.getStateChain(); 
-    };
-
     const pop = async () => {
-        let actionChain = await get(); 
-        actionChain.pop(); 
+        let stateChain = await get(); 
+        stateChain.pop(); 
         return await window.setStateChain(stateChain);
     }
     const removeAt = async (index = -1) => {
