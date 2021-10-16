@@ -1,7 +1,7 @@
 const pageHelper = require('../common/pageHelper');
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
-const { elementTypes, actionTypes } = require('../common/enum');
+const { elementTypes, actionTypes, configTypes } = require('../common/enum');
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
 
@@ -33,22 +33,28 @@ const run = async (chain, step, page, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
-    const action = chain[step];
-    const targets = await populateAllTargets(action, page);
-
-    console.log(`Number of targets: ${targets.length}`);
+    if(chain[step].configType === configTypes.ACTION) {
+        const action = chain[step];
+        const targets = await populateAllTargets(action, page);
     
-    for(let i = 0; i < targets.length; i++) {
-        const target = targets[i];
-        memorize(memory, step, action, target);
+        console.log(`Number of targets: ${targets.length}`);
         
-        const isActionPerformed = await performAction(action, target, memory, step, page);
-        if(!isActionPerformed) {
-            console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
-            break;
+        for(let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            memorize(memory, step, action, target);
+            
+            const isActionPerformed = await performAction(action, target, memory, step, page);
+            if(!isActionPerformed) {
+                console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
+                break;
+            }
+            await run(chain, step + 1, page, memory);
         }
-        await run(chain, step + 1, page, memory);
     }
+    else if (chain[step].configType === configTypes.STATE) {
+        // TODO: collect state
+    }
+   
 };
 
 const performAction = async (action, target, memory, step, page) => {
@@ -75,6 +81,10 @@ const tryActionsInMemory = async (memory, step, page) => {
 
     let wasActionPerformed = true;
     for (let i = 0; i <= step; i++) {
+        // SKIP IF memory[i] is null i.e. state
+        if(memory[i] === null) {
+            continue;
+        }
         const { action, target } = memory[i];
         try{
             // console.log(target);
@@ -129,7 +139,13 @@ const memorize = (memory, step, action, target) => {
     if(memory[step]) {
         memory[step] = {action, target}; // tuple
     }
-    else {
+    else if(step === memory.length){
+        memory.push({action, target});
+    }
+    else{
+        // TODO: push null objects into memory in case of state, since memory is only for actions
+        const fillArr = new Array(step - memory.length).fill(null);
+        memory.concat(fillArr);
         memory.push({action, target});
     }
 };
