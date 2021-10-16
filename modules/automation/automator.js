@@ -22,39 +22,84 @@ const initiate = async (url, configChain) => {
 		await insertScripts(page);
 	});
 
-    await run(configChain, 0, page);
+    const json = {};
+    await run(configChain, 0, page, json);
+
+    console.log(JSON.stringify(json));
 
     await recorder.stop();
     // await page.close();
 };
 
 
-const run = async (chain, step, page, memory = []) => {
+const run = async (chain, step, page, json, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
-        const targets = await populateAllTargets(action, page);
+        const { targets, labels } = await populateAllTargetsAndLabels(action, page);
+
+        json[action.actionKey] = [];  // TODO: CHANGE THIS TO OBJ IF SINGLE TARGET. 
     
         console.log(`Number of targets: ${targets.length}`);
         
         for(let i = 0; i < targets.length; i++) {
             const target = targets[i];
+            const label = labels[i];
             memorize(memory, step, action, target);
+            
+            const innerJson = {};
+            innerJson["label"] = await getInnerText(label, page);
             
             const isActionPerformed = await performAction(action, target, memory, step, page);
             if(!isActionPerformed) {
                 console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
                 break;
             }
-            await run(chain, step + 1, page, memory);
+            await run(chain, step + 1, page, innerJson, memory);
+
+            json[action.actionKey].push(innerJson);
         }
     }
     else if (chain[step].configType === configTypes.STATE) {
         // TODO: collect state
+        const state = chain[step];
+        const { targets, labels } = await populateAllTargetsAndLabels(state, page);
+
+        json[state.stateKey] = [];
+
+        for(let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            const label = labels[i];
+            
+            const innerJson = {};
+            const labelText = await getInnerText(label, page);
+            const targetText = await getInnerText(target, page);
+
+            if(!labelText || !targetText)   continue;
+
+            innerJson[labelText] = targetText;
+            json[state.stateKey].push(innerJson);
+        }
+
+        await run(chain, step + 1, page, json, memory);
+
     }
    
+};
+
+const getInnerText = async (selector, page) => {
+    console.log(`\ngetInnerText() - selector: ${selector}`);
+    return await page.evaluate((selector) => {
+        let element = document.querySelector(selector);
+        if(element){
+            return element.innerText.trim();  // TODO: sanitize further 
+        }
+        else {
+            return null;
+        }
+    }, selector);
 };
 
 const performAction = async (action, target, memory, step, page) => {
@@ -81,7 +126,6 @@ const tryActionsInMemory = async (memory, step, page) => {
 
     let wasActionPerformed = true;
     for (let i = 0; i <= step; i++) {
-        // SKIP IF memory[i] is null i.e. state
         if(memory[i] === null) {
             continue;
         }
@@ -174,15 +218,19 @@ const perform = async (action, target, page) => {
     removeNavigationListener(); 
 };
 
-const populateAllTargets = async (action, page) => {
+const populateAllTargetsAndLabels = async (action, page) => {
     if(action.selectSimilar) {
-        return  await populateSimilarTargets(action.selectedTargets, page);
+        const targets = await populateSimilarTargets(action.selectedTargets, page);
+        const labels = await populateSimilarTargets(action.selectedLabels, page);
+        return {targets, labels};
     }
     else if(action.selectSiblings) {
-        return await populateSiblings(action.selectedTargets, page);
+        const targets = await populateSiblings(action.selectedTargets, page);
+        const labels = await populateSiblings(action.selectedLabels, page);
+        return {targets, labels};
     }
     else {
-        return action.selectedTargets;
+        return { targets: action.selectedTargets, labels: action.selectedLabels };
     }
 };
 
