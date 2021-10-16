@@ -3,6 +3,7 @@ class StateMenu extends Menu {
         super();
         this.containerId = "state-menu";
         this.configuration = {
+            configType: Enum.configTypes.STATE,
             stateName: "",
             stateType: null,
             stateKey: "",
@@ -294,8 +295,9 @@ class StateMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { stateName, stateType, stateKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings, performAfter } = this.configuration;
-            await StateChain.push({
+            const { configType, stateName, stateType, stateKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings, performAfter } = this.configuration;
+            await ConfigChain.push({
+                configType,
                 stateName, 
                 stateType,
                 stateKey,
@@ -319,9 +321,7 @@ class StateMenu extends Menu {
             finalTargets: [],
             finalLabels: [],
             selectSimilar: false,    
-            selectSiblings: false,    
-            // repeatCount: 0,
-            maxTargetCount: -1,
+            selectSiblings: false,   
             performAfter: -1, 
         }; 
     }
@@ -334,7 +334,7 @@ class StateMenu extends Menu {
     };
 
     populateAssociatedActions = async () => {
-        const actions = (await ActionChain.get()).map((item, index) => [index, item.actionName]);
+        const actions = (await ConfigChain.get()).map((item, index) => [index, item.actionName]);
         const assoActionContainer = document.querySelector("#associated-action");
         assoActionContainer.innerHTML = "";
 

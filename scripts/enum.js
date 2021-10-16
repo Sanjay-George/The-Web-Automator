@@ -1,4 +1,8 @@
 const Enum = (() => {
+    const configTypes = {
+        ACTION: 1,
+        STATE: 2
+    }; 
     
     const elementTypes = {
         DEFAULT: 0,
@@ -25,6 +29,7 @@ const Enum = (() => {
         elementTypes,
         actionTypes,
         stateTypes,
+        configTypes,
     }
 })();
 

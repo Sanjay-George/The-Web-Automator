@@ -57,11 +57,11 @@ const ConfigManager = (() => {
         }
     };
 
-    handleRightClick = (e) => {
+    const handleRightClick = (e) => {
         console.log(e);
         e.preventDefault();
         ContextMenu.open(e.pageX, e.pageY, e.target);
-    }
+    };
 
     const registerEvents = () => {
         actionMenu.initialize();
@@ -73,7 +73,7 @@ const ConfigManager = (() => {
         // DynamicEventHandler.addHandler("click", handleClick);
 
         document.addEventListener('contextmenu', handleRightClick, false);
-    }
+    };
 
     return {
         registerEvents: registerEvents,
@@ -83,26 +83,26 @@ const ConfigManager = (() => {
     }
 })();
 
-const ActionChain = (() => {    
+const ConfigChain = (() => {    
     const get = async () => {
-        return await window.getActionChain(); 
+        return await window.getConfigChain(); 
     };
-    const push = async (action) => {
-        let actionChain = await get(); 
-        actionChain.push(action);
-        return await window.setActionChain(actionChain);
+    const push = async (item) => {
+        let chain = await get(); 
+        chain.push(item);
+        return await window.setConfigChain(chain);
     };
     const pop = async () => {
-        let actionChain = await get(); 
-        actionChain.pop(); 
-        return await window.setActionChain(actionChain);
+        let chain = await get(); 
+        chain.pop(); 
+        return await window.setConfigChain(chain);
     }
     const removeAt = async (index = -1) => {
-        let actionChain = await get(); 
-        if(!actionChain.length || index < 0)     
+        let chain = await get(); 
+        if(!chain.length || index < 0)     
             return undefined;
-        actionChain.splice(index, 1);
-        return await window.setActionChain(actionChain);
+            chain.splice(index, 1);
+        return await window.setConfigChain(chain);
     };  
 
     return {
@@ -112,37 +112,5 @@ const ActionChain = (() => {
         removeAt: removeAt
     };
 })();
-
-const StateChain = (() => {    
-    const get = async () => {
-        return await window.getStateChain(); 
-    };
-    const push = async (action) => {
-        let stateChain = await get(); 
-        stateChain.push(action);
-        return await window.setStateChain(stateChain);
-    };
-    const pop = async () => {
-        let stateChain = await get(); 
-        stateChain.pop(); 
-        return await window.setStateChain(stateChain);
-    }
-    const removeAt = async (index = -1) => {
-        let stateChain = await get(); 
-        if(!stateChain.length || index < 0)     
-            return undefined;
-            stateChain.splice(index, 1);
-        return await window.setStateChain(stateChain);
-    };  
-
-    return {
-        push: push,
-        get: get,
-        pop: pop,
-        removeAt: removeAt
-    };
-})();
-
-
 
 ConfigManager.registerEvents();

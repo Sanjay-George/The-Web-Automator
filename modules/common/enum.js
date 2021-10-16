@@ -1,4 +1,7 @@
-
+const configTypes = {
+    ACTION: 1,
+    STATE: 2
+};
 
 const elementTypes = {
     DEFAULT: 0,
@@ -24,5 +27,6 @@ const stateTypes = {
 module.exports = {
     elementTypes,
     actionTypes,
-    stateTypes
+    stateTypes,
+    configTypes,
 }

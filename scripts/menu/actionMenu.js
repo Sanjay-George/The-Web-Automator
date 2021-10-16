@@ -3,6 +3,7 @@ class ActionMenu extends Menu {
         super();
         this.containerId = "action-menu";
         this.configuration = {
+            configType: Enum.configTypes.ACTION,
             actionName: "",
             actionType: null,
             actionKey: "",
@@ -278,8 +279,9 @@ class ActionMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
-            await ActionChain.push({
+            const { configType, actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+            await ConfigChain.push({
+                configType,
                 actionName, 
                 actionType,
                 actionKey,
