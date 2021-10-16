@@ -296,14 +296,15 @@ class ActionMenu extends Menu {
 
     resetConfiguration = () => {
         this.configuration = {
+            configType: Enum.configTypes.ACTION,
             actionName: "",
             actionType: null,
             actionKey: "",
             selectedTargets: [],
             selectedLabels: [],
-            finalTargets: [],
+            finalTargets: [], 
             finalLabels: [],
-            selectSimilar: false,    
+            selectSimilar: false,
             selectSiblings: false,    
             repeatCount: 0,
             maxTargetCount: -1

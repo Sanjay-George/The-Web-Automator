@@ -40,7 +40,8 @@ const run = async (chain, step, page, json, memory = []) => {
         const action = chain[step];
         const { targets, labels } = await populateAllTargetsAndLabels(action, page);
 
-        json[action.actionKey] = [];  // TODO: CHANGE THIS TO OBJ IF SINGLE TARGET. 
+        const isActionKeyPresent = action.actionKey.length;
+        isActionKeyPresent && (json[action.actionKey] = []);
     
         console.log(`Number of targets: ${targets.length}`);
         
@@ -50,7 +51,9 @@ const run = async (chain, step, page, json, memory = []) => {
             memorize(memory, step, action, target);
             
             const innerJson = {};
-            innerJson["label"] = await getInnerText(label, page);
+            const labelText = await getInnerText(label, page);
+            const targetText = await getInnerText(target, page);
+            innerJson["name"] = labelText || targetText;
             
             const isActionPerformed = await performAction(action, target, memory, step, page);
             if(!isActionPerformed) {
@@ -59,7 +62,7 @@ const run = async (chain, step, page, json, memory = []) => {
             }
             await run(chain, step + 1, page, innerJson, memory);
 
-            json[action.actionKey].push(innerJson);
+            isActionKeyPresent && (json[action.actionKey].push(innerJson));
         }
     }
     else if (chain[step].configType === configTypes.STATE) {
@@ -90,7 +93,7 @@ const run = async (chain, step, page, json, memory = []) => {
 };
 
 const getInnerText = async (selector, page) => {
-    console.log(`\ngetInnerText() - selector: ${selector}`);
+    console.log(`getInnerText() - selector: ${selector}`);
     return await page.evaluate((selector) => {
         let element = document.querySelector(selector);
         if(element){

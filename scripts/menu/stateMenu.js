@@ -313,16 +313,20 @@ class StateMenu extends Menu {
 
     resetConfiguration = () => {
         this.configuration = {
+            configType: Enum.configTypes.STATE,
             stateName: "",
             stateType: null,
             stateKey: "",
             selectedTargets: [],
             selectedLabels: [],
-            finalTargets: [],
+            finalTargets: [], 
             finalLabels: [],
-            selectSimilar: false,    
-            selectSiblings: false,   
-            performAfter: -1, 
+            selectSimilar: false,
+            selectSiblings: false,    
+            // repeatCount: 0,  
+            maxTargetCount: -1,
+            // index of action to perform after. -1 means collect data immediately
+            performAfter: -1,
         }; 
     }
 
