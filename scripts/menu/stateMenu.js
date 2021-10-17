@@ -17,7 +17,20 @@ class StateMenu extends Menu {
             maxTargetCount: -1,
             // index of action to perform after. -1 means collect data immediately
             performAfter: -1,   
-        }; 
+
+            // TODO: NEW PROPERTIES 
+            collectionKey: "",
+            selectedProperties: [],  // [{key: 'selector/text', value: 'selector'}, {}, ...]
+            finalProperties: [],    // [{key: text/element, value: element}, {}, ...]
+        };
+        
+        this.eventListenerTargets = {
+            editKey: null,
+            editValue: null,
+            deleteProp: null,
+            selectSimilar: null,
+            selectSiblings: null
+        };
     }
 
     renderMenu = () => {
@@ -30,17 +43,12 @@ class StateMenu extends Menu {
             </div>
 
             <form id='configure-state' class="row">
-                <div class="input-field col5">
-                    <label for="state-name">State*</label>
+                <div class="input-field col6">
+                    <label for="state-name">Name*</label>
                     <input id="state-name" type="text">
                 </div>
 
                 <div class="input-field col4">
-                    <label for="state-key">Key</label>
-                    <input id="state-key" type="text">
-                </div>
-
-                <div class="input-field col3">
                     <select id="state-type">
                         <option value="" disabled selected>State Type</option>
                         <option value="1">Scrape Data</option>
@@ -49,7 +57,12 @@ class StateMenu extends Menu {
                     </select>
                 </div>
 
-                <div class="input-field col12">
+                <div class="input-field col8">
+                    <label for="state-key">Collection Key*</label>
+                    <input id="state-key" type="text">
+                </div>
+
+                <div class="input-field col4">
                     <select id="perform-after">
                         <option value="" disabled selected>Select when to perform state*</option>
                         <option value="-1">Perform immediately</option>
@@ -57,42 +70,45 @@ class StateMenu extends Menu {
                         </optgroup>
                     </select>
                 </div>
+
+                <div class="row no-padding" style="text-align: center; align-items: center;">
+                    <div class="col4">Key</div>
+                    <div class="col5">Value</div>
+                    <div class="col1">Delete</div>
+                    <div class="col1">Sel. Similar</div>
+                    <div class="col1">Sel. Sibling</div>
+                </div>
+
+                <div id="properties" class="row no-padding">
+                    <div class="row no-padding"  style="text-align: center; align-items: center; margin:5px 0px;">
+                        <div class="col4">
+                            <input class="js-label-list" type="text" style="width: 84%;">
+                            <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
+                        </div>
+                        <div class="col5">
+                            <input class="js-target-list" type="text"  style="width: 92%;" value="${this.configuration.selectedTargets[0]}">
+                            <a class="js-edit-value"><i class="tiny material-icons icon-btn">edit_note</i></a>
+                        </div>
+                        <div class="col1">
+                            <a class="js-delete-prop"><i class="tiny material-icons icon-btn">delete</i></a>
+                        </div>
+                        <div class="col1">
+                            <label class="js-sel-similar">
+                                <input type="checkbox"/>
+                            </label>
+                        </div>
+                        <div class="col1">
+                            <label class="js-sel-siblings">
+                                <input type="checkbox"/>
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 
-                <!--TODO: SAME STATE (KEY) CAN HAVE MULTIPLE [TARGET, LABEL] PAIRS -->
-                <!--TODO: ADD PROVISION TO ADD OR REMOVE PAIRS -->\
-                <!--TODO: Also, label can be typed in. Create provision for it -->
 
-                <div class="col9">
-                    <div class="input-field">
-                        <label for="target-list">State Target(s)</label>
-                        <input id="target-list" type="text" readonly value="${this.configuration.selectedTargets[0]}">
-                        <a id="clear-target"><i class="tiny material-icons clear-all">delete</i></a>
-                    </div>
-                    <div class="input-field">
-                        <label for="label-list">Label Target(s)</label>
-                        <input id="label-list" type="text" readonly>
-                        <a id="clear-label"><i class="tiny material-icons clear-all">delete</i></a>
-                    </div>
+                <div class="row" style="justify-content: center">
+                    <a id="add-prop"><i class="tiny material-icons icon-btn">add_circle</i></a>
                 </div>
-                <div class="input-field col3" style="display: flex; align-items: center; flex-wrap: wrap;">
-                    <div class="col12">
-                        <label id="sel-similar">
-                            <input type="checkbox"/>
-                            <span>Select similar elements</span>
-                        </label>
-                    </div>    
-                    <div class="col12">
-                        <label id="sel-siblings">
-                            <input type="checkbox"/>
-                            <span>Select siblings</span>
-                        </label>
-                    </div>    
-                </div>
-
-                <!-- <div class="input-field col12">
-                    <label for="custom-input">Custom Input (for autocomplete input)</label>
-                    <input id="custom-input" type="text" class="validate">
-                </div> -->
 
                 <a id="configure" class="button">Configure</a>
                 <div style="padding-left: 10px; padding-top: 10px; color: red" id="error-msg"></div>
@@ -129,7 +145,7 @@ class StateMenu extends Menu {
                 this.configuration.selectedTargets.push(targetQuerySelector);
                 this.configuration.finalTargets.push(e.target);
             }
-            document.querySelector("#target-list").value = targetQuerySelector;
+            document.querySelector("#target-list").value = targetQuerySelector;  // TODO: CHANGE THIS TO NEW SELECTOR
         }
     };
 
@@ -192,100 +208,119 @@ class StateMenu extends Menu {
         document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
 
         // select state targets
-        document.querySelector(`#${this.containerId} #target-list`).addEventListener("click", (e) => {
-            e.stopPropagation();
-            console.log("Individual target input clicked");
-
-            this.hideMenu();
-
-            DynamicEventHandler.addHandler("mouseover", this.stateTargetHandlers.handleMouseOver);
-            DynamicEventHandler.addHandler("mouseout", this.stateTargetHandlers.handleMouseOut);
-            DynamicEventHandler.addHandler("click", this.stateTargetHandlers.handleSelection);
+        Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-value`)).forEach(item => {
+            item.addEventListener("click", (e) => {
+                e.stopPropagation();
+                console.log("Individual target input clicked");
+                this.eventListenerTargets.editValue = e.target;
+    
+                this.hideMenu();
+    
+                DynamicEventHandler.addHandler("mouseover", this.stateTargetHandlers.handleMouseOver);
+                DynamicEventHandler.addHandler("mouseout", this.stateTargetHandlers.handleMouseOut);
+                DynamicEventHandler.addHandler("click", this.stateTargetHandlers.handleSelection);
+            });
         });
 
         // select label targets
-        document.querySelector(`#${this.containerId} #label-list`).addEventListener("click", (e) => {
-            e.stopPropagation();
-            console.log("Individual label input clicked");
+        Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-key`)).forEach(item => {
+            item.addEventListener("click", (e) => {
+                e.stopPropagation();
+                console.log("Individual label input clicked");
+                this.eventListenerTargets.editKey = e.target;
 
-            this.hideMenu();
+                this.hideMenu();
 
-            DynamicEventHandler.addHandler("mouseover", this.stateLabelHandlers.handleMouseOver);
-            DynamicEventHandler.addHandler("mouseout", this.stateLabelHandlers.handleMouseOut);
-            DynamicEventHandler.addHandler("click", this.stateLabelHandlers.handleSelection);
+                DynamicEventHandler.addHandler("mouseover", this.stateLabelHandlers.handleMouseOver);
+                DynamicEventHandler.addHandler("mouseout", this.stateLabelHandlers.handleMouseOut);
+                DynamicEventHandler.addHandler("click", this.stateLabelHandlers.handleSelection);
+            });
         });
 
-        // select all similar siblings
-        document.querySelector(`#${this.containerId} #sel-similar`).addEventListener("click", (e) => {
-            e.stopPropagation();
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
-            const siblingCheckbox = document.querySelector(`#${this.containerId} #sel-siblings input`);
-            if(e.target.checked) {
-                finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
-                selectSimilar = true;
-                selectSiblings = false;
-                siblingCheckbox.checked = false;
-            }
-            else {
-                finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
-                selectSimilar = false;
-            }
-            this.configuration = {
-                ...this.configuration,
-                finalTargets,
-                finalLabels,
-                selectedTargets,
-                selectSimilar,
-                selectSiblings,
-            };
+        // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY
+        Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
+            item.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.eventListenerTargets.selectSimilar = e.target;
+
+                let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+                const siblingCheckbox = e.target.parentElement.parentElement.parentElement.querySelector(".js-sel-siblings input");
+
+                if(e.target.checked) {
+                    finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                    // finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
+                    selectSimilar = true;
+                    selectSiblings = false;
+                    siblingCheckbox.checked = false;
+                }
+                else {
+                    finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                    // finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
+                    selectSimilar = false;
+                }
+                this.configuration = {
+                    ...this.configuration,
+                    finalTargets,
+                    finalLabels,
+                    selectedTargets,
+                    selectSimilar,
+                    selectSiblings,
+                };
+            });
         });
 
-        // select siblings (DOM tree logic)
-        document.querySelector(`#${this.containerId} #sel-siblings`).addEventListener("click", (e) => {
-            e.stopPropagation();
-            const similarCheckbox = document.querySelector(`#${this.containerId} #sel-similar input`);
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+        // select siblings (DOM tree logic)  TODO: DO THIS ONLY FOR VALUES, NOT THE KEY
+        Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-siblings input`)).forEach(item => {
+            item.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.eventListenerTargets.selectSiblings = e.target;
 
-            if(e.target.checked) {
-                // todo: populate sibling
-                finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
-                selectSimilar = false;
-                selectSiblings = true;
-                similarCheckbox.checked = false;
-            }
-            else {
-                finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
-                selectSiblings = false;
-            }
-            this.configuration = {
-                ...this.configuration,
-                finalTargets,
-                finalLabels,
-                selectedTargets,
-                selectSimilar,
-                selectSiblings,
-            };
+                const similarCheckbox = e.target.parentElement.parentElement.parentElement.querySelector(".js-sel-similar input");
+                let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+
+                if(e.target.checked) {
+                    // todo: populate sibling
+                    finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                    // finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
+                    selectSimilar = false;
+                    selectSiblings = true;
+                    similarCheckbox.checked = false;
+                }
+                else {
+                    finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                    // finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
+                    selectSiblings = false;
+                }
+                this.configuration = {
+                    ...this.configuration,
+                    finalTargets,
+                    finalLabels,
+                    selectedTargets,
+                    selectSimilar,
+                    selectSiblings,
+                };
+            });
         });
 
-        // clear state targets
-        document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
-            this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
-            this.configuration.finalTargets = [];
-            this.configuration.selectedTargets = [];
-            document.querySelector("#target-list").value = "";
-        });
+        // TODO: ADD LISTNER FOR js-delete-prop
+
+        // TODO: ADD LISTENER TO ADD PROP BUTTON (REMOVE ALL LISTENERS AND ADD AGAIN)
+
+        // // clear state targets
+        // document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
+        //     this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
+        //     this.configuration.finalTargets = [];
+        //     this.configuration.selectedTargets = [];
+        //     document.querySelector("#target-list").value = "";
+        // });
         
-        // clear label targets
-        document.querySelector("#clear-label").addEventListener("click", (e) => {
-            this.clearHighlight(this.configuration.finalLabels); // TODO: not working properly
-            this.configuration.finalLabels = [];
-            this.configuration.selectedLabels = [];
-            document.querySelector("#label-list").value = "";
-        });
+        // // clear label targets
+        // document.querySelector("#clear-label").addEventListener("click", (e) => {
+        //     this.clearHighlight(this.configuration.finalLabels); // TODO: not working properly
+        //     this.configuration.finalLabels = [];
+        //     this.configuration.selectedLabels = [];
+        //     document.querySelector("#label-list").value = "";
+        // });
 
         // save state config
         document.querySelector("#configure-state > a#configure").addEventListener("click", async e => {
