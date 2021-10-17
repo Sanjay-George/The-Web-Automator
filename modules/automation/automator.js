@@ -1,6 +1,7 @@
-const pageHelper = require('../common/pageHelper');
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
+
+const pageHelper = require('../common/pageHelper');
 const { elementTypes, actionTypes, configTypes } = require('../common/enum');
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
@@ -22,7 +23,7 @@ const initiate = async (url, configChain) => {
 		await insertScripts(page);
 	});
 
-    const json = {};
+    let json = {};
     await run(configChain, 0, page, json);
 
     console.log(JSON.stringify(json));
@@ -36,12 +37,15 @@ const run = async (chain, step, page, json, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
+    console.log(`\nJSON: ${JSON.stringify(json)}\n`);
+
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
         const { targets, labels } = await populateAllTargetsAndLabels(action, page);
 
         const isActionKeyPresent = action.actionKey.length;
-        isActionKeyPresent && (json[action.actionKey] = []);
+        isActionKeyPresent && 
+            (json[action.actionKey] = []);
     
         console.log(`Number of targets: ${targets.length}`);
         
@@ -50,10 +54,13 @@ const run = async (chain, step, page, json, memory = []) => {
             const label = labels[i];
             memorize(memory, step, action, target);
             
-            const innerJson = {};
-            const labelText = await getInnerText(label, page);
-            const targetText = await getInnerText(target, page);
-            innerJson["name"] = labelText || targetText;
+            let innerJson = {};
+            if(isActionKeyPresent)
+            {
+                const labelText = await getInnerText(label, page);
+                const targetText = await getInnerText(target, page);
+                innerJson["name"] = labelText || targetText;
+            }
             
             const isActionPerformed = await performAction(action, target, memory, step, page);
             if(!isActionPerformed) {
@@ -62,7 +69,22 @@ const run = async (chain, step, page, json, memory = []) => {
             }
             await run(chain, step + 1, page, innerJson, memory);
 
-            isActionKeyPresent && (json[action.actionKey].push(innerJson));
+            console.log(`\ninnerJSON inside action condition: ${JSON.stringify(innerJson)} \nactionKeyPresent: ${isActionKeyPresent}\n`);
+
+            if(isActionKeyPresent){
+                json[action.actionKey].push(innerJson);
+            }
+            else {
+                // INFO: 
+                // Copying each property of innerJSON into json, coz of recursive call stack. 
+                // Deep or shallow copy won't work
+
+                // TODO: TEST THIS. 
+                for (prop in innerJson) { 
+                    json[prop] = innerJson[prop];
+                }
+            }
+                
         }
     }
     else if (chain[step].configType === configTypes.STATE) {
@@ -80,11 +102,16 @@ const run = async (chain, step, page, json, memory = []) => {
             const labelText = await getInnerText(label, page);
             const targetText = await getInnerText(target, page);
 
-            if(!labelText || !targetText)   continue;
+            if(!labelText || !targetText) {
+                console.error(`No label or target text found for state: ${state.stateName}`);
+                continue; 
+            }  
 
             innerJson[labelText] = targetText;
             json[state.stateKey].push(innerJson);
         }
+
+        console.log(`\nJSON inside state condtiion: ${JSON.stringify(json)}\n`);
 
         await run(chain, step + 1, page, json, memory);
 
@@ -93,7 +120,7 @@ const run = async (chain, step, page, json, memory = []) => {
 };
 
 const getInnerText = async (selector, page) => {
-    console.log(`getInnerText() - selector: ${selector}`);
+    // console.log(`getInnerText() - selector: ${selector}`);
     return await page.evaluate((selector) => {
         let element = document.querySelector(selector);
         if(element){
