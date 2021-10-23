@@ -80,29 +80,7 @@ class StateMenu extends Menu {
                 </div>
 
                 <div id="properties" class="row no-padding">
-                    <div class="row no-padding"  style="text-align: center; align-items: center; margin:5px 0px;">
-                        <div class="col4">
-                            <input class="js-label-list" type="text" style="width: 84%;">
-                            <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
-                        </div>
-                        <div class="col5">
-                            <input class="js-target-list" type="text"  style="width: 92%;" value="${this.configuration.selectedTargets[0]}">
-                            <a class="js-edit-value"><i class="tiny material-icons icon-btn">edit_note</i></a>
-                        </div>
-                        <div class="col1">
-                            <a class="js-delete-prop"><i class="tiny material-icons icon-btn">delete</i></a>
-                        </div>
-                        <div class="col1">
-                            <label class="js-sel-similar">
-                                <input type="checkbox"/>
-                            </label>
-                        </div>
-                        <div class="col1">
-                            <label class="js-sel-siblings">
-                                <input type="checkbox"/>
-                            </label>
-                        </div>
-                    </div>
+                    ${this.addPropRow(this.configuration.selectedTargets[0])}
                 </div>
                 
 
@@ -116,9 +94,41 @@ class StateMenu extends Menu {
         `;
     };
 
+
+    addPropRow = (target = "", label = "") => {
+        return `
+        <div class="row no-padding"  style="text-align: center; align-items: center; margin:5px 0px;">
+            <div class="col4">
+                <input class="js-label-list" type="text" style="width: 84%;">
+                <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
+            </div>
+            <div class="col5">
+                <input class="js-target-list" type="text"  style="width: 92%;" value="${target}">
+                <a class="js-edit-value"><i class="tiny material-icons icon-btn">edit_note</i></a>
+            </div>
+            <div class="col1">
+                <a class="js-delete-prop"><i class="tiny material-icons icon-btn">delete</i></a>
+            </div>
+            <div class="col1">
+                <label class="js-sel-similar">
+                    <input type="checkbox"/>
+                </label>
+            </div>
+            <div class="col1">
+                <label class="js-sel-siblings">
+                    <input type="checkbox"/>
+                </label>
+            </div>
+        </div>
+        
+        `
+    };
+
     removeMenuListeners = () => {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
+        document.querySelector("#add-prop").addEventListener("click", this.handleAddProp);
+
     };
 
     stateTargetHandlers = {
@@ -201,6 +211,13 @@ class StateMenu extends Menu {
             isValid: errorMsg.length === 0,
             errorMsg  
         };
+    };
+
+    handleAddProp = (e) => {
+        const propertyContainer = document.querySelector("#properties");
+        propertyContainer.innerHTML += this.addPropRow();
+        this.removeMenuListeners();
+        this.setMenuListeners();
     };
 
     setMenuListeners = () => {
@@ -303,8 +320,19 @@ class StateMenu extends Menu {
         });
 
         // TODO: ADD LISTNER FOR js-delete-prop
+        Array.from(document.querySelectorAll(`#${this.containerId} .js-delete-prop`)).forEach(item => {
+            item.addEventListener("click", (e) => {
+                // console.log(e.target);
+    
+                const propertyContainer = document.querySelector("#properties");
+                const currRow = e.target.parentElement.parentElement.parentElement;
+                propertyContainer.removeChild(currRow);
+    
+            });
+        });
 
         // TODO: ADD LISTENER TO ADD PROP BUTTON (REMOVE ALL LISTENERS AND ADD AGAIN)
+        document.querySelector("#add-prop").addEventListener("click", this.handleAddProp);
 
         // // clear state targets
         // document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
