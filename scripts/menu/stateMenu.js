@@ -2,6 +2,9 @@ class StateMenu extends Menu {
     constructor() {
         super();
         this.containerId = "state-menu";
+    }
+
+    initConfiguration = () => {
         this.configuration = {
             configType: Enum.configTypes.STATE,
             stateName: "",
@@ -20,18 +23,19 @@ class StateMenu extends Menu {
 
             // TODO: NEW PROPERTIES 
             collectionKey: "",
-            selectedProperties: [],  // [{key: 'selector/text', value: 'selector'}, {}, ...]
-            finalProperties: [],    // [{key: text/element, value: element}, {}, ...]
-        };
-        
-        this.eventListenerTargets = {
-            editKey: null,
-            editValue: null,
-            deleteProp: null,
-            selectSimilar: null,
-            selectSiblings: null
-        };
-    }
+            selectedProperties: [],  // [{key: 'selector/text', value: 'selector', selectSimilar, selectSiblings}, {}, ...]
+        }; 
+
+        // this.eventListenerTargets = {
+        //     editKey: null,
+        //     editValue: null,
+        //     deleteProp: null,
+        //     selectSimilar: null,
+        //     selectSiblings: null
+        // };
+
+        this.currentPropTarget = null;
+    };
 
     renderMenu = () => {
         return `
@@ -80,7 +84,7 @@ class StateMenu extends Menu {
                 </div>
 
                 <div id="properties" class="row no-padding">
-                    ${this.addPropRow(this.configuration.selectedTargets[0])}
+                    
                 </div>
                 
 
@@ -96,8 +100,12 @@ class StateMenu extends Menu {
 
 
     addPropRow = (target = "", label = "") => {
-        return `
-        <div class="row no-padding"  style="text-align: center; align-items: center; margin:5px 0px;">
+        const row = document.createElement("div");
+        row.dataset.propId = this.configuration.selectedProperties.length || 0;
+        row.classList.add('row', 'no-padding', 'js-property');
+        row.style="text-align: center; align-items: center; margin:5px 0px;";
+
+        const innerHTML = `
             <div class="col4">
                 <input class="js-label-list" type="text" style="width: 84%;">
                 <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
@@ -119,9 +127,10 @@ class StateMenu extends Menu {
                     <input type="checkbox"/>
                 </label>
             </div>
-        </div>
-        
         `
+
+        row.innerHTML = innerHTML;
+        return row;
     };
 
     removeMenuListeners = () => {
@@ -150,12 +159,20 @@ class StateMenu extends Menu {
             DynamicEventHandler.removeHandler("click");
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
+
+            const { selectedProperties, finalTargets, selectedTargets } = this.configuration;
+            
             // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
             if(!this.configuration.finalTargets.includes(e.target)) {
-                this.configuration.selectedTargets.push(targetQuerySelector);
-                this.configuration.finalTargets.push(e.target);
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId); 
+                const targetSelector = DomUtils.getQuerySelector(e.target);
+                
+                selectedProperties[propIndex].value = targetSelector;
+                this.currentPropTarget.querySelector('.js-target-list').value = targetSelector;
+                
+                finalTargets.push(e.target);
             }
-            document.querySelector("#target-list").value = targetQuerySelector;  // TODO: CHANGE THIS TO NEW SELECTOR
+            // document.querySelector("#target-list").value = targetQuerySelector;  // TODO: CHANGE THIS TO NEW SELECTOR
         }
     };
 
@@ -180,7 +197,7 @@ class StateMenu extends Menu {
                 this.configuration.selectedLabels.push(labelQuerySelector);
                 this.configuration.finalLabels.push(e.target);
             }
-            document.querySelector("#label-list").value = labelQuerySelector;
+            // document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
 
@@ -215,7 +232,12 @@ class StateMenu extends Menu {
 
     handleAddProp = (e) => {
         const propertyContainer = document.querySelector("#properties");
-        propertyContainer.innerHTML += this.addPropRow();
+        propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector())); 
+
+        const { selectedProperties, finalTargets } = this.configuration;
+        selectedProperties.push(new StateProperty({ key: "", value: DomUtils.getQuerySelector(e.target)}));
+        finalTargets.push(e.target);
+
         this.removeMenuListeners();
         this.setMenuListeners();
     };
@@ -224,12 +246,12 @@ class StateMenu extends Menu {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
 
-        // select state targets
+        // edit property value
         Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-value`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
                 console.log("Individual target input clicked");
-                this.eventListenerTargets.editValue = e.target;
+                this.currentPropTarget = e.target.closest('.js-property');
     
                 this.hideMenu();
     
@@ -239,12 +261,12 @@ class StateMenu extends Menu {
             });
         });
 
-        // select label targets
+        // edit property key
         Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-key`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
                 console.log("Individual label input clicked");
-                this.eventListenerTargets.editKey = e.target;
+                this.currentPropTarget = e.target.closest('.js-property');
 
                 this.hideMenu();
 
@@ -258,7 +280,7 @@ class StateMenu extends Menu {
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
-                this.eventListenerTargets.selectSimilar = e.target;
+                // this.eventListenerTargets.selectSimilar = e.target;
 
                 let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
                 const siblingCheckbox = e.target.parentElement.parentElement.parentElement.querySelector(".js-sel-siblings input");
@@ -290,7 +312,7 @@ class StateMenu extends Menu {
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-siblings input`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
-                this.eventListenerTargets.selectSiblings = e.target;
+                // this.eventListenerTargets.selectSiblings = e.target;
 
                 const similarCheckbox = e.target.parentElement.parentElement.parentElement.querySelector(".js-sel-similar input");
                 let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
@@ -322,10 +344,9 @@ class StateMenu extends Menu {
         // TODO: ADD LISTNER FOR js-delete-prop
         Array.from(document.querySelectorAll(`#${this.containerId} .js-delete-prop`)).forEach(item => {
             item.addEventListener("click", (e) => {
-                // console.log(e.target);
     
                 const propertyContainer = document.querySelector("#properties");
-                const currRow = e.target.parentElement.parentElement.parentElement;
+                const currRow = e.target.closest('.js-property');
                 propertyContainer.removeChild(currRow);
     
             });
@@ -374,25 +395,6 @@ class StateMenu extends Menu {
         });
     };
 
-    resetConfiguration = () => {
-        this.configuration = {
-            configType: Enum.configTypes.STATE,
-            stateName: "",
-            stateType: null,
-            stateKey: "",
-            selectedTargets: [],
-            selectedLabels: [],
-            finalTargets: [], 
-            finalLabels: [],
-            selectSimilar: false,
-            selectSiblings: false,    
-            // repeatCount: 0,  
-            maxTargetCount: -1,
-            // index of action to perform after. -1 means collect data immediately
-            performAfter: -1,
-        }; 
-    }
-
     close = () => {
         this.resetConfiguration();
         this.hideMenu();
@@ -420,19 +422,38 @@ class StateMenu extends Menu {
         ConfigManager.enableConfigurationMode(target, Enum.elementTypes.STATE);
 
         // initialize configuration values 
-        let {selectedTargets, finalTargets} = this.configuration;
+        let {selectedTargets, finalTargets, selectedProperties} = this.configuration;
+        
         finalTargets.push(target);
         selectedTargets.push(DomUtils.getQuerySelector(target));
+        selectedProperties.push(new StateProperty({ key: "", value: DomUtils.getQuerySelector(target)}));
 
         this.populateAssociatedActions();
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
+        
+        const propertyContainer = document.querySelector(`#${this.containerId} #properties`);
+        propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector(target))); 
+        
         this.setMenuListeners();
+        
     };
 
     initialize = () => {
         this.createMenuElement(this.containerId);
         this.createOverlay();
+        this.initConfiguration();
     };
+}
+
+
+class StateProperty
+{
+    constructor({key, value, selectSimilar = false, selectSiblings = false}){
+        this.key = key;
+        this.value = value;
+        this.selectSimilar = selectSimilar;
+        this.selectSiblings = selectSiblings;
+    }
 }
