@@ -101,13 +101,15 @@ class StateMenu extends Menu {
 
     addPropRow = (target = "", label = "") => {
         const row = document.createElement("div");
-        row.dataset.propId = this.configuration.selectedProperties.length || 0;
+        const id = this.configuration.selectedProperties.length || 0;
+        row.dataset.propId = id;
         row.classList.add('row', 'no-padding', 'js-property');
         row.style="text-align: center; align-items: center; margin:5px 0px;";
+        label = label || `key${id}`;
 
         const innerHTML = `
             <div class="col4">
-                <input class="js-label-list" type="text" style="width: 84%;">
+                <input class="js-label-list" type="text" style="width: 84%;" value="${label}">
                 <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
             </div>
             <div class="col5">
@@ -165,10 +167,9 @@ class StateMenu extends Menu {
             // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
             if(!this.configuration.finalTargets.includes(e.target)) {
                 const propIndex = parseInt(this.currentPropTarget.dataset.propId); 
-                const targetSelector = DomUtils.getQuerySelector(e.target);
                 
-                selectedProperties[propIndex].value = targetSelector;
-                this.currentPropTarget.querySelector('.js-target-list').value = targetSelector;
+                selectedProperties[propIndex - 1].value = targetQuerySelector;
+                this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
                 
                 finalTargets.push(e.target);
             }
@@ -231,13 +232,12 @@ class StateMenu extends Menu {
     };
 
     handleAddProp = (e) => {
-        const propertyContainer = document.querySelector("#properties");
-        propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector())); 
-
         const { selectedProperties, finalTargets } = this.configuration;
         selectedProperties.push(new StateProperty({ key: "", value: DomUtils.getQuerySelector(e.target)}));
         finalTargets.push(e.target);
 
+        const propertyContainer = document.querySelector("#properties");
+        propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector())); 
         this.removeMenuListeners();
         this.setMenuListeners();
     };
@@ -396,7 +396,7 @@ class StateMenu extends Menu {
     };
 
     close = () => {
-        this.resetConfiguration();
+        this.initConfiguration();
         this.hideMenu();
         this.removeMenuListeners();  // TODO: Not implemented properly yet
         ConfigManager.disableConfigurationMode();
