@@ -1,7 +1,8 @@
-const pageHelper = require('../common/pageHelper');
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
-const { elementTypes, actionTypes } = require('../common/enum');
+
+const pageHelper = require('../common/pageHelper');
+const { elementTypes, actionTypes, configTypes } = require('../common/enum');
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
 
@@ -22,33 +23,113 @@ const initiate = async (url, configChain) => {
 		await insertScripts(page);
 	});
 
-    await run(configChain, 0, page);
+    let json = {};
+    await run(configChain, 0, page, json);
+
+    console.log(JSON.stringify(json));
 
     await recorder.stop();
     // await page.close();
 };
 
 
-const run = async (chain, step, page, memory = []) => {
+const run = async (chain, step, page, json, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
-    const action = chain[step];
-    const targets = await populateAllTargets(action, page);
+    console.log(`\nJSON: ${JSON.stringify(json)}\n`);
 
-    console.log(`Number of targets: ${targets.length}`);
+    if(chain[step].configType === configTypes.ACTION) {
+        const action = chain[step];
+        const { targets, labels } = await populateAllTargetsAndLabels(action, page);
+
+        const isActionKeyPresent = action.actionKey.length;
+        isActionKeyPresent && 
+            (json[action.actionKey] = []);
     
-    for(let i = 0; i < targets.length; i++) {
-        const target = targets[i];
-        memorize(memory, step, action, target);
+        console.log(`Number of targets: ${targets.length}`);
         
-        const isActionPerformed = await performAction(action, target, memory, step, page);
-        if(!isActionPerformed) {
-            console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
-            break;
+        for(let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            const label = labels[i];
+            memorize(memory, step, action, target);
+            
+            let innerJson = {};
+            if(isActionKeyPresent)
+            {
+                const labelText = await getInnerText(label, page);
+                const targetText = await getInnerText(target, page);
+                innerJson["name"] = labelText || targetText;
+            }
+            
+            const isActionPerformed = await performAction(action, target, memory, step, page);
+            if(!isActionPerformed) {
+                console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
+                break;
+            }
+            await run(chain, step + 1, page, innerJson, memory);
+
+            console.log(`\ninnerJSON inside action condition: ${JSON.stringify(innerJson)} \nactionKeyPresent: ${isActionKeyPresent}\n`);
+
+            if(isActionKeyPresent){
+                json[action.actionKey].push(innerJson);
+            }
+            else {
+                // INFO: 
+                // Copying each property of innerJSON into json, coz of recursive call stack. 
+                // Deep or shallow copy won't work
+
+                // TODO: TEST THIS. 
+                for (prop in innerJson) { 
+                    json[prop] = innerJson[prop];
+                }
+            }
+                
         }
-        await run(chain, step + 1, page, memory);
     }
+    else if (chain[step].configType === configTypes.STATE) {
+        // TODO: collect state
+        const state = chain[step];
+        const { targets, labels } = await populateAllTargetsAndLabels(state, page);
+
+        json[state.stateKey] = [];
+
+        for(let i = 0; i < targets.length; i++) {
+            const target = targets[i];
+            const label = labels[i];
+            
+            const innerJson = {};
+            const labelText = await getInnerText(label, page);
+            const targetText = await getInnerText(target, page);
+
+            if(!labelText || !targetText) {
+                console.error(`No label or target text found for state: ${state.stateName}`);
+                continue; 
+            }  
+
+            innerJson[labelText] = targetText;
+            json[state.stateKey].push(innerJson);
+        }
+
+        console.log(`\nJSON inside state condtiion: ${JSON.stringify(json)}\n`);
+
+        await run(chain, step + 1, page, json, memory);
+
+    }
+   
+};
+
+const getInnerText = async (selector, page) => {
+    // console.log(`getInnerText() - selector: ${selector}`);
+    return await page.evaluate((selector) => {
+        let element = document.querySelector(selector);
+        if(element){
+            return element.innerText.trim();  // TODO: sanitize further 
+        }
+        else {
+            return null;
+        }
+    }, selector);
 };
 
 const performAction = async (action, target, memory, step, page) => {
@@ -75,6 +156,9 @@ const tryActionsInMemory = async (memory, step, page) => {
 
     let wasActionPerformed = true;
     for (let i = 0; i <= step; i++) {
+        if(memory[i] === null) {
+            continue;
+        }
         const { action, target } = memory[i];
         try{
             // console.log(target);
@@ -129,7 +213,13 @@ const memorize = (memory, step, action, target) => {
     if(memory[step]) {
         memory[step] = {action, target}; // tuple
     }
-    else {
+    else if(step === memory.length){
+        memory.push({action, target});
+    }
+    else{
+        // TODO: push null objects into memory in case of state, since memory is only for actions
+        const fillArr = new Array(step - memory.length).fill(null);
+        memory.concat(fillArr);
         memory.push({action, target});
     }
 };
@@ -158,15 +248,19 @@ const perform = async (action, target, page) => {
     removeNavigationListener(); 
 };
 
-const populateAllTargets = async (action, page) => {
+const populateAllTargetsAndLabels = async (action, page) => {
     if(action.selectSimilar) {
-        return  await populateSimilarTargets(action.selectedTargets, page);
+        const targets = await populateSimilarTargets(action.selectedTargets, page);
+        const labels = await populateSimilarTargets(action.selectedLabels, page);
+        return {targets, labels};
     }
     else if(action.selectSiblings) {
-        return await populateSiblings(action.selectedTargets, page);
+        const targets = await populateSiblings(action.selectedTargets, page);
+        const labels = await populateSiblings(action.selectedLabels, page);
+        return {targets, labels};
     }
     else {
-        return action.selectedTargets;
+        return { targets: action.selectedTargets, labels: action.selectedLabels };
     }
 };
 

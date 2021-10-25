@@ -1,4 +1,8 @@
 const Enum = (() => {
+    const configTypes = {
+        ACTION: 1,
+        STATE: 2
+    }; 
     
     const elementTypes = {
         DEFAULT: 0,
@@ -16,9 +20,16 @@ const Enum = (() => {
         SELECT: 3,
     };
 
+    const stateTypes = {
+        SCRAPE_DATA: 1,
+        MONITOR_DATA: 2,
+    };
+
     return {
         elementTypes,
-        actionTypes
+        actionTypes,
+        stateTypes,
+        configTypes,
     }
 })();
 

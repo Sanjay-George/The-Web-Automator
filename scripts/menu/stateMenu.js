@@ -1,19 +1,22 @@
-class ActionMenu extends Menu {
+class StateMenu extends Menu {
     constructor() {
         super();
-        this.containerId = "action-menu";
+        this.containerId = "state-menu";
         this.configuration = {
-            actionName: "",
-            actionType: null,
-            actionKey: "",
+            configType: Enum.configTypes.STATE,
+            stateName: "",
+            stateType: null,
+            stateKey: "",
             selectedTargets: [],
             selectedLabels: [],
             finalTargets: [], 
             finalLabels: [],
             selectSimilar: false,
             selectSiblings: false,    
-            repeatCount: 0,
-            maxTargetCount: -1
+            // repeatCount: 0,  
+            maxTargetCount: -1,
+            // index of action to perform after. -1 means collect data immediately
+            performAfter: -1,   
         }; 
     }
 
@@ -21,34 +24,47 @@ class ActionMenu extends Menu {
         return `
             <div class="row">
                 <div class="col12">
-                    <h4>Configure Action</h4>
+                    <h4>Configure State</h4>
                 </div>
                 <i class="small material-icons profile-close">close</i>
             </div>
 
-            <form id='configure-action' class="row">
+            <form id='configure-state' class="row">
                 <div class="input-field col5">
-                    <label for="action-name">Action*</label>
-                    <input id="action-name" type="text">
+                    <label for="state-name">State*</label>
+                    <input id="state-name" type="text">
                 </div>
 
                 <div class="input-field col4">
-                    <label for="action-key">Key</label>
-                    <input id="action-key" type="text">
+                    <label for="state-key">Key</label>
+                    <input id="state-key" type="text">
                 </div>
 
                 <div class="input-field col3">
-                    <select id="action-type">
-                        <option value="" disabled selected>Action Type</option>
-                        <option value="1">Click</option>
-                        <option value="2" disabled>Text input</option>
-                        <option value="3" disabled>Select</option>
+                    <select id="state-type">
+                        <option value="" disabled selected>State Type</option>
+                        <option value="1">Scrape Data</option>
+                        <option value="2" disabled>Monitor Data</option>
+                        <option value="3" disabled>Store console logs</option>
+                    </select>
+                </div>
+
+                <div class="input-field col12">
+                    <select id="perform-after">
+                        <option value="" disabled selected>Select when to perform state*</option>
+                        <option value="-1">Perform immediately</option>
+                        <optgroup label="Available actions" id="associated-action">
+                        </optgroup>
                     </select>
                 </div>
                 
+                <!--TODO: SAME STATE (KEY) CAN HAVE MULTIPLE [TARGET, LABEL] PAIRS -->
+                <!--TODO: ADD PROVISION TO ADD OR REMOVE PAIRS -->\
+                <!--TODO: Also, label can be typed in. Create provision for it -->
+
                 <div class="col9">
                     <div class="input-field">
-                        <label for="target-list">Action Target(s)</label>
+                        <label for="target-list">State Target(s)</label>
                         <input id="target-list" type="text" readonly value="${this.configuration.selectedTargets[0]}">
                         <a id="clear-target"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
@@ -88,20 +104,10 @@ class ActionMenu extends Menu {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
     };
-    
-    showMenu = () => {
-        this.menu.classList.remove("hide");
-        this.overlay.classList.remove("hide");
-    };
 
-    hideMenu = () => {
-        this.overlay.classList.add("hide");
-        this.menu.classList.add("hide");
-    };
-
-    actionTargetHandlers = {
+    stateTargetHandlers = {
         handleMouseOver: (e) => {
-            Highlighter.highlightElement(e.target, Enum.elementTypes.ACTION_TARGET);
+            Highlighter.highlightElement(e.target, Enum.elementTypes.STATE_TARGET);
         },
     
         handleMouseOut: (e) => {
@@ -127,9 +133,9 @@ class ActionMenu extends Menu {
         }
     };
 
-    actionLabelHandlers = {
+    stateLabelHandlers = {
         handleMouseOver: (e) => {
-            Highlighter.highlightElement(e.target, Enum.elementTypes.ACTION_LABEL);
+            Highlighter.highlightElement(e.target, Enum.elementTypes.STATE_LABEL);
         },
         handleMouseOut: (e) => {
             Highlighter.resetHighlight(e.target);
@@ -152,80 +158,27 @@ class ActionMenu extends Menu {
         }
     };
 
-    clearHighlight = (elements) => {
-        // TODO: something's wrong with colors. Fix 
-        elements.forEach(item => {
-            Highlighter.resetHighlight(item);
-        });
-    };
-
-    populateSimilarTargets = (finalTargets, selectedTargets, elementType) => {  // TODO: REFACTOR THIS, REMOVE finalTargets
-        if(selectedTargets.length === 0)   return finalTargets;
-
-        finalTargets = DomUtils.findSimilarElements(selectedTargets);
-
-        finalTargets.forEach(item => {
-            Highlighter.highlightElement(item, elementType);
-        });
-
-        return finalTargets;
-    };
-
-    removeSimilarTargets = (finalTargets, selectedTargets, elementType) => {
-        if(selectedTargets.length === 0 || finalTargets.length === 0)   return finalTargets;
-        
-        finalTargets.forEach(item => {
-            Highlighter.resetHighlight(item);
-        });
-
-        finalTargets = [];
-        selectedTargets.forEach(selector => {
-            finalTargets.push(document.querySelector(selector));
-        });
-
-        finalTargets.forEach(item => {
-            Highlighter.highlightElement(item, elementType);
-        });
-        return finalTargets;
-    };
-
-    populateSiblings = (finalTargets, selectedTargets, elementType) => {
-        if(selectedTargets.length === 0)   return finalTargets;
-
-        finalTargets = DomUtils.findSiblings(selectedTargets);
-
-        finalTargets.forEach(item => {
-            Highlighter.highlightElement(item, elementType);
-        });
-
-        return finalTargets;
-    };
-
-    removeSiblings = (finalTargets, selectedTargets, elementType) => {
-        this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
-    };
-
-
     setBasicDetails = () => {
         this.configuration = {
             ...this.configuration,
-            actionName: document.querySelector("#action-name").value,
-            actionKey: document.querySelector("#action-key").value,
-            actionType: document.querySelector("#action-type").value
+            stateName: document.querySelector("#state-name").value,
+            stateKey: document.querySelector("#state-key").value,
+            stateType: document.querySelector("#state-type").value,
+            performAfter: document.querySelector("#perform-after").value,
         };
     };
 
     validateConfig = () => {
-        const {actionName, actionType, selectedTargets} = this.configuration;
+        const {stateName, stateType, selectedTargets} = this.configuration;
         let errorMsg = "";
-        if(!actionName.length) {
-            errorMsg = "Enter actionName";
+        if(!stateName.length) {
+            errorMsg = "Enter stateName";
         }
-        else if(!actionType) {
-            errorMsg = "Select actionType"
+        else if(!stateType) {
+            errorMsg = "Select stateType"
         }
         else if(!selectedTargets.length) {
-            errorMsg = "Select atleast one Action Target";
+            errorMsg = "Select atleast one State Target";
         }
 
         return {
@@ -238,16 +191,16 @@ class ActionMenu extends Menu {
         // close btn
         document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
 
-        // select action targets
+        // select state targets
         document.querySelector(`#${this.containerId} #target-list`).addEventListener("click", (e) => {
             e.stopPropagation();
             console.log("Individual target input clicked");
 
             this.hideMenu();
 
-            DynamicEventHandler.addHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
-            DynamicEventHandler.addHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
-            DynamicEventHandler.addHandler("click", this.actionTargetHandlers.handleSelection);
+            DynamicEventHandler.addHandler("mouseover", this.stateTargetHandlers.handleMouseOver);
+            DynamicEventHandler.addHandler("mouseout", this.stateTargetHandlers.handleMouseOut);
+            DynamicEventHandler.addHandler("click", this.stateTargetHandlers.handleSelection);
         });
 
         // select label targets
@@ -257,9 +210,9 @@ class ActionMenu extends Menu {
 
             this.hideMenu();
 
-            DynamicEventHandler.addHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
-            DynamicEventHandler.addHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
-            DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleSelection);
+            DynamicEventHandler.addHandler("mouseover", this.stateLabelHandlers.handleMouseOver);
+            DynamicEventHandler.addHandler("mouseout", this.stateLabelHandlers.handleMouseOut);
+            DynamicEventHandler.addHandler("click", this.stateLabelHandlers.handleSelection);
         });
 
         // select all similar siblings
@@ -268,15 +221,15 @@ class ActionMenu extends Menu {
             let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
             const siblingCheckbox = document.querySelector(`#${this.containerId} #sel-siblings input`);
             if(e.target.checked) {
-                finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
                 selectSimilar = true;
                 selectSiblings = false;
                 siblingCheckbox.checked = false;
             }
             else {
-                finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
                 selectSimilar = false;
             }
             this.configuration = {
@@ -297,15 +250,15 @@ class ActionMenu extends Menu {
 
             if(e.target.checked) {
                 // todo: populate sibling
-                finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
                 selectSimilar = false;
                 selectSiblings = true;
                 similarCheckbox.checked = false;
             }
             else {
-                finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
+                finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
                 selectSiblings = false;
             }
             this.configuration = {
@@ -318,7 +271,7 @@ class ActionMenu extends Menu {
             };
         });
 
-        // clear action targets
+        // clear state targets
         document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
             this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
             this.configuration.finalTargets = [];
@@ -334,23 +287,25 @@ class ActionMenu extends Menu {
             document.querySelector("#label-list").value = "";
         });
 
-        // save action config
-        document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
+        // save state config
+        document.querySelector("#configure-state > a#configure").addEventListener("click", async e => {
             this.setBasicDetails();
             const {isValid, errorMsg} = this.validateConfig();
             if(!isValid) {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
-            await ActionChain.push({
-                actionName, 
-                actionType,
-                actionKey,
+            const { configType, stateName, stateType, stateKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings, performAfter } = this.configuration;
+            await ConfigChain.push({
+                configType,
+                stateName, 
+                stateType,
+                stateKey,
                 selectedLabels,
                 selectedTargets,
                 selectSimilar,
                 selectSiblings,
+                performAfter,
             });
             this.close();
         });
@@ -358,17 +313,20 @@ class ActionMenu extends Menu {
 
     resetConfiguration = () => {
         this.configuration = {
-            actionName: "",
-            actionType: null,
-            actionKey: "",
+            configType: Enum.configTypes.STATE,
+            stateName: "",
+            stateType: null,
+            stateKey: "",
             selectedTargets: [],
             selectedLabels: [],
-            finalTargets: [],
+            finalTargets: [], 
             finalLabels: [],
-            selectSimilar: false,    
+            selectSimilar: false,
             selectSiblings: false,    
-            repeatCount: 0,
-            maxTargetCount: -1
+            // repeatCount: 0,  
+            maxTargetCount: -1,
+            // index of action to perform after. -1 means collect data immediately
+            performAfter: -1,
         }; 
     }
 
@@ -379,13 +337,31 @@ class ActionMenu extends Menu {
         ConfigManager.disableConfigurationMode();
     };
 
+    populateAssociatedActions = async () => {
+        const actions = (await ConfigChain.get()).map((item, index) => [index, item.actionName]);
+        const assoActionContainer = document.querySelector("#associated-action");
+        assoActionContainer.innerHTML = "";
+
+        if(!actions || !actions.length) {
+            assoActionContainer.innerHTML += `<option value="1" disabled>No actions configured yet</option>`;
+            return;
+        }
+
+        actions.forEach(item => {
+            assoActionContainer.innerHTML += `<option value="${item[0]}">A${parseInt(item[0]) + 1} - ${item[1]}</option>`;
+        });
+
+    } 
+
     open = (target) => {     
-        ConfigManager.enableConfigurationMode(target, Enum.elementTypes.ACTION);
+        ConfigManager.enableConfigurationMode(target, Enum.elementTypes.STATE);
 
         // initialize configuration values 
         let {selectedTargets, finalTargets} = this.configuration;
         finalTargets.push(target);
         selectedTargets.push(DomUtils.getQuerySelector(target));
+
+        this.populateAssociatedActions();
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();

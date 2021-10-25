@@ -1,6 +1,6 @@
 
 function getWaitOptions() {
-	return { waitUntil: 'domcontentloaded', timeout: 60000 };
+	return { waitUntil: 'networkidle0', timeout: 60000 };
 } 
 
 async function openTab(browser, url) {
@@ -9,7 +9,7 @@ async function openTab(browser, url) {
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
     // getConfigValue("performanceMode") && 
-	// await disableHeavyResources(page);
+	await disableHeavyResources(page);
     await page.goto(url, getWaitOptions());
     // await warmUpPage(page);
     return page;
