@@ -1,3 +1,11 @@
+/*
+TODO: 
+1. Issue - Coloring issue with property key & value (once a property is selected, try with another one. Somewhere listener is failing)
+2. Issue - select similar / sibling doesn't work per property
+3. Migrate completely to properties and propertiesMeta
+*/
+
+
 class StateMenu extends Menu {
     constructor() {
         super();
@@ -74,8 +82,8 @@ class StateMenu extends Menu {
                 </div>
 
                 <div class="row no-padding" style="text-align: center; align-items: center;">
-                    <div class="col4">Key</div>
-                    <div class="col5">Value</div>
+                    <div class="col3">Key</div>
+                    <div class="col6">Value</div>
                     <div class="col1">Delete</div>
                     <div class="col1">Sel. Similar</div>
                     <div class="col1">Sel. Sibling</div>
@@ -106,11 +114,11 @@ class StateMenu extends Menu {
         label = label || `key${id}`;
 
         const innerHTML = `
-            <div class="col4">
+            <div class="col3">
                 <input class="js-label-list" type="text" style="width: 84%;" value="${label}">
-                <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
+                <!-- <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a> -->
             </div>
-            <div class="col5">
+            <div class="col6">
                 <input class="js-target-list" type="text"  style="width: 92%;" value="${target}">
                 <a class="js-edit-value"><i class="tiny material-icons icon-btn">edit_note</i></a>
             </div>
@@ -169,9 +177,9 @@ class StateMenu extends Menu {
             // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
             // if(!this.configuration.finalTargets.includes(e.target)) {
 
-            const propIndex = parseInt(this.currentPropTarget.dataset.propId); 
-            properties[propIndex - 1].value = targetQuerySelector;
-            propertiesMeta[propIndex - 1].value = [ e.target ];
+            const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
+            properties[propIndex].value = targetQuerySelector;
+            propertiesMeta[propIndex].value = [ e.target ];
             this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
             
             finalTargets.push(e.target);
@@ -181,30 +189,43 @@ class StateMenu extends Menu {
         }
     };
 
-    stateLabelHandlers = {
-        handleMouseOver: (e) => {
-            Highlighter.highlightElement(e.target, Enum.elementTypes.STATE_LABEL);
-        },
-        handleMouseOut: (e) => {
-            Highlighter.resetHighlight(e.target);
-        },
-        handleSelection: (e) => {
-            // TODO: HOW TO PREVENT routing?
-            // event listener is on document, hence routing already in progress by the time handler is hit
-            e.preventDefault();
-            this.showMenu();
-            DynamicEventHandler.removeHandler("mouseover");
-            DynamicEventHandler.removeHandler("mouseout");
-            DynamicEventHandler.removeHandler("click");
+    // stateLabelHandlers = {
+    //     handleMouseOver: (e) => {
+    //         Highlighter.highlightElement(e.target, Enum.elementTypes.STATE_LABEL);
+    //     },
+    //     handleMouseOut: (e) => {
+    //         Highlighter.resetHighlight(e.target);
+    //     },
+    //     handleSelection: (e) => {
+    //         // TODO: HOW TO PREVENT routing?
+    //         // event listener is on document, hence routing already in progress by the time handler is hit
+    //         e.preventDefault();
+    //         this.showMenu();
 
-            const labelQuerySelector = DomUtils.getQuerySelector(e.target);
-            if(!this.configuration.finalLabels.includes(labelQuerySelector)) { 
-                this.configuration.selectedLabels.push(labelQuerySelector);
-                this.configuration.finalLabels.push(e.target);
-            }
-            // document.querySelector("#label-list").value = labelQuerySelector;
-        }
-    };
+    //         DynamicEventHandler.removeHandler("mouseover");
+    //         DynamicEventHandler.removeHandler("mouseout");
+    //         DynamicEventHandler.removeHandler("click");
+
+    //         const targetQuerySelector = DomUtils.getQuerySelector(e.target);
+
+    //         const { properties, propertiesMeta, finalLabels } = this.configuration;
+
+    //         const propIndex = parseInt(this.currentPropTarget.dataset.propId); 
+    //         properties[propIndex - 1].key = targetQuerySelector;
+    //         propertiesMeta[propIndex - 1].key = e.target;
+    //         this.currentPropTarget.querySelector('.js-label-list').value = targetQuerySelector;
+            
+    //         finalLabels.push(e.target);
+
+
+    //         // if(!this.configuration.finalLabels.includes(labelQuerySelector)) { 
+    //         //     this.configuration.selectedLabels.push(labelQuerySelector);
+    //         //     this.configuration.finalLabels.push(e.target);
+    //         // }
+
+    //         // document.querySelector("#label-list").value = labelQuerySelector;
+    //     }
+    // };
 
     setBasicDetails = () => {
         this.configuration = {
@@ -265,47 +286,54 @@ class StateMenu extends Menu {
             });
         });
 
-        // edit property key
-        Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-key`)).forEach(item => {
-            item.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.currentPropTarget = e.target.closest('.js-property');
+        // // edit property key
+        // Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-key`)).forEach(item => {
+        //     item.addEventListener("click", (e) => {
+        //         e.stopPropagation();
+        //         this.currentPropTarget = e.target.closest('.js-property');
 
-                this.hideMenu();
+        //         this.hideMenu();
 
-                DynamicEventHandler.addHandler("mouseover", this.stateLabelHandlers.handleMouseOver);
-                DynamicEventHandler.addHandler("mouseout", this.stateLabelHandlers.handleMouseOut);
-                DynamicEventHandler.addHandler("click", this.stateLabelHandlers.handleSelection);
-            });
-        });
+        //         DynamicEventHandler.addHandler("mouseover", this.stateLabelHandlers.handleMouseOver);
+        //         DynamicEventHandler.addHandler("mouseout", this.stateLabelHandlers.handleMouseOut);
+        //         DynamicEventHandler.addHandler("click", this.stateLabelHandlers.handleSelection);
+        //     });
+        // });
 
         // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
 
-                let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
-                const siblingCheckbox = e.target.parentElement.parentElement.parentElement.querySelector(".js-sel-siblings input");
+                let { finalTargets, selectedTargets, selectSimilar, selectSiblings } = this.configuration;
+                let { properties, propertiesMeta } = this.configuration;
+
+                this.currentPropTarget = e.target.closest('.js-property');
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
+                const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
 
                 if(e.target.checked) {
                     finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                    // finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
-                    selectSimilar = true;
-                    selectSiblings = false;
+                    
+                    propertiesMeta[propIndex].value = this.populateSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].selectSimilar = true;
+                    propertiesMeta[propIndex].selectSiblings = false;
                     siblingCheckbox.checked = false;
                 }
                 else {
                     finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                    // finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
+
+                    propertiesMeta[propIndex].value = this.removeSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
                     selectSimilar = false;
                 }
                 this.configuration = {
                     ...this.configuration,
                     finalTargets,
-                    finalLabels,
                     selectedTargets,
                     selectSimilar,
                     selectSiblings,
+                    properties,
+                    propertiesMeta,
                 };
             });
         });
@@ -315,29 +343,39 @@ class StateMenu extends Menu {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
 
-                const similarCheckbox = e.target.parentElement.parentElement.parentElement.querySelector(".js-sel-similar input");
-                let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+
+                let { finalTargets, selectedTargets, selectSimilar, selectSiblings } = this.configuration;
+                let { properties, propertiesMeta } = this.configuration;
+
+                this.currentPropTarget = e.target.closest('.js-property');
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
+                const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
+
+
 
                 if(e.target.checked) {
                     // todo: populate sibling
                     finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                    // finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.STATE_LABEL);
+                    
+                    propertiesMeta[propIndex].value = this.populateSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
                     selectSimilar = false;
                     selectSiblings = true;
                     similarCheckbox.checked = false;
                 }
                 else {
                     finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                    // finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.STATE_LABEL);
+
+                    propertiesMeta[propIndex].value = this.removeSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
                     selectSiblings = false;
                 }
                 this.configuration = {
                     ...this.configuration,
                     finalTargets,
-                    finalLabels,
                     selectedTargets,
                     selectSimilar,
                     selectSiblings,
+                    properties,
+                    propertiesMeta,
                 };
             });
         });
@@ -356,21 +394,6 @@ class StateMenu extends Menu {
         // TODO: ADD LISTENER TO ADD PROP BUTTON (REMOVE ALL LISTENERS AND ADD AGAIN)
         document.querySelector("#add-prop").addEventListener("click", this.handleAddProp);
 
-        // // clear state targets
-        // document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
-        //     this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
-        //     this.configuration.finalTargets = [];
-        //     this.configuration.selectedTargets = [];
-        //     document.querySelector("#target-list").value = "";
-        // });
-        
-        // // clear label targets
-        // document.querySelector("#clear-label").addEventListener("click", (e) => {
-        //     this.clearHighlight(this.configuration.finalLabels); // TODO: not working properly
-        //     this.configuration.finalLabels = [];
-        //     this.configuration.selectedLabels = [];
-        //     document.querySelector("#label-list").value = "";
-        // });
 
         // save state config
         document.querySelector("#configure-state > a#configure").addEventListener("click", async e => {
@@ -462,3 +485,4 @@ class StateProperty
         this.selectSiblings = selectSiblings;
     }
 }
+
