@@ -24,7 +24,7 @@ const DynamicEventHandler = (() => {
         document.addEventListener(eventType, handler);
     };
 
-    const removeHandler = (eventType) =>  {
+    const removeHandler = eventType =>  {
         if(!eventType)  return;
         if(handlers[eventType].length === 0)        return;
 

@@ -40,7 +40,7 @@ const getAllCrawlers = () => {
     });
 };
 
-const getCrawler = (id) => {
+const getCrawler = id => {
     return new Promise((resolve, reject) => {
         connection.query(`SELECT * FROM ${dbConfig["schema"]}.${dbConfig["table"]} WHERE id=${id} LIMIT 1`, function (error, result, fields) {
             if (error)  reject(error);
@@ -63,7 +63,7 @@ const getCrawler = (id) => {
     });
 };
 
-const addCrawler = (crawlerDetails) => {
+const addCrawler = crawlerDetails => {
     return new Promise((resolve, reject) => {
         let data = {
             name: crawlerDetails.name,
@@ -103,7 +103,7 @@ const updateCrawler = (id, crawlerDetails) => {
     });
 };
 
-const deleteCrawler = (id) => {
+const deleteCrawler = id => {
     return new Promise((resolve, reject) => {
         connection.query(
           `DELETE FROM ${dbConfig["schema"]}.${dbConfig["table"]} WHERE id=${id}`,

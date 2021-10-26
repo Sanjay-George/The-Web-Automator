@@ -175,7 +175,7 @@ class StateMenu extends Menu {
             
             // TODO: CHECK FOR DUPLICATE TARGETS
 
-            const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
+            const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
             properties[propIndex].value = targetQuerySelector;
             propertiesMeta[propIndex].value = [ e.target ];
             this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
@@ -205,7 +205,7 @@ class StateMenu extends Menu {
 
             const { properties, propertiesMeta } = this.configuration;
 
-            const propIndex = parseInt(this.currentPropTarget.dataset.propId); 
+            const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10); 
             properties[propIndex - 1].key = targetQuerySelector;
             propertiesMeta[propIndex - 1].key = e.target;
             this.currentPropTarget.querySelector('.js-label-list').value = targetQuerySelector;
@@ -260,11 +260,11 @@ class StateMenu extends Menu {
 
         // edit property value
         Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-value`)).forEach(item => {
-            item.addEventListener("click", (e) => {
+            item.addEventListener("click", e => {
                 e.stopPropagation();
                 this.currentPropTarget = e.target.closest('.js-property');
     
-                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1;
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1;
                 Highlighter.resetHighlight(this.configuration.propertiesMeta[propIndex].value[0]); 
                 this.hideMenu();
     
@@ -280,7 +280,7 @@ class StateMenu extends Menu {
                 e.stopPropagation();
                 this.currentPropTarget = e.target.closest('.js-property');
 
-                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1;
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1;
                 Highlighter.resetHighlight(this.configuration.propertiesMeta[propIndex].key);
                 this.hideMenu();
 
@@ -299,7 +299,7 @@ class StateMenu extends Menu {
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
-                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
                 const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
 
                 if(e.target.checked) {
@@ -329,7 +329,7 @@ class StateMenu extends Menu {
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
-                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
                 const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
 
                 if(e.target.checked) {
@@ -404,7 +404,7 @@ class StateMenu extends Menu {
         }
 
         actions.forEach(item => {
-            assoActionContainer.innerHTML += `<option value="${item[0]}">A${parseInt(item[0]) + 1} - ${item[1]}</option>`;
+            assoActionContainer.innerHTML += `<option value="${item[0]}">A${parseInt(item[0], 10) + 1} - ${item[1]}</option>`;
         });
 
     } 
