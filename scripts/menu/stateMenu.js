@@ -152,15 +152,15 @@ class StateMenu extends Menu {
 
 
     stateTargetHandlers = {
-        handleMouseOver: (e) => {
+        handleMouseOver: e => {
             Highlighter.highlightElement(e.target, Enum.elementTypes.STATE_TARGET);
         },
     
-        handleMouseOut: (e) => {
+        handleMouseOut: e => {
             Highlighter.resetHighlight(e.target);
         },
     
-        handleSelection: (e) => {
+        handleSelection: e => {
             // TODO: HOW TO PREVENT REACT ROUTER?
             e.preventDefault();
             this.showMenu();
@@ -185,13 +185,13 @@ class StateMenu extends Menu {
     };
 
     stateLabelHandlers = {
-        handleMouseOver: (e) => {
+        handleMouseOver: e => {
             Highlighter.highlightElement(e.target, Enum.elementTypes.STATE_LABEL);
         },
-        handleMouseOut: (e) => {
+        handleMouseOut: e => {
             Highlighter.resetHighlight(e.target);
         },
-        handleSelection: (e) => {
+        handleSelection: e => {
             // TODO: HOW TO PREVENT routing?
             // event listener is on document, hence routing already in progress by the time handler is hit
             e.preventDefault();
@@ -243,7 +243,7 @@ class StateMenu extends Menu {
         };
     };
 
-    handleAddProp = (e) => {
+    handleAddProp = e => {
         const { properties, propertiesMeta } = this.configuration;
         properties.push(new StateProperty({ value: DomUtils.getQuerySelector(e.target)}));
         propertiesMeta.push(new StateProperty({ value: [ e.target ] }));
@@ -276,7 +276,7 @@ class StateMenu extends Menu {
 
         // edit property key
         Array.from(document.querySelectorAll(`#${this.containerId} .js-edit-key`)).forEach(item => {
-            item.addEventListener("click", (e) => {
+            item.addEventListener("click", e => {
                 e.stopPropagation();
                 this.currentPropTarget = e.target.closest('.js-property');
 
@@ -292,7 +292,7 @@ class StateMenu extends Menu {
 
         // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
-            item.addEventListener("click", (e) => {
+            item.addEventListener("click", e => {
                 e.stopPropagation();
 
                 let { selectSimilar, selectSiblings } = this.configuration;
@@ -322,7 +322,7 @@ class StateMenu extends Menu {
 
         // select siblings (DOM tree logic)  TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-siblings input`)).forEach(item => {
-            item.addEventListener("click", (e) => {
+            item.addEventListener("click", e => {
                 e.stopPropagation();
 
                 let { selectSimilar, selectSiblings } = this.configuration;
@@ -353,7 +353,7 @@ class StateMenu extends Menu {
 
         // TODO: ADD LISTNER FOR js-delete-prop
         Array.from(document.querySelectorAll(`#${this.containerId} .js-delete-prop`)).forEach(item => {
-            item.addEventListener("click", (e) => {
+            item.addEventListener("click", e => {
                 const propertyContainer = document.querySelector("#properties");
                 const currRow = e.target.closest('.js-property');
                 propertyContainer.removeChild(currRow);
