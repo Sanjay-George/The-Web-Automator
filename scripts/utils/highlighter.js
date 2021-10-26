@@ -31,7 +31,7 @@ const Highlighter = (() => {
     
 
     const highlightElement = (element, elementType, customColor = null) => {
-        if(element === null || element === undefined)   return;
+        if(element === null || element === undefined || element.style === undefined)   return;
         highlightedElements.push(element);
 
         const rgbValues = customColor || getColorsByType(elementType);
@@ -51,7 +51,7 @@ const Highlighter = (() => {
     };
 
     const resetHighlight = (element) => {
-        if(element === null || element === undefined)       return;
+        if(element === null || element === undefined || element.style === undefined)       return;
         element.style.border = element.style.prevBorder ? element.style.prevBorder.pop() : "transparent";
         element.style.backgroundColor = element.style.prevBackgroundColor ? element.style.prevBackgroundColor.pop() : "transparent";
 

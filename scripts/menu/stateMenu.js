@@ -19,9 +19,9 @@ class StateMenu extends Menu {
             configType: Enum.configTypes.STATE,
             stateName: "",
             stateType: null,
-            stateKey: "",
 
             // TODO: to be removed
+            stateKey: "",
             selectedTargets: [],
             selectedLabels: [],
             finalTargets: [], 
@@ -37,7 +37,7 @@ class StateMenu extends Menu {
 
             // TODO: NEW PROPERTIES 
             collectionKey: "",
-            properties: [],  // [{key: 'selector/text', value: 'selector', selectSimilar, selectSiblings}, {}, ...]
+            properties: [],  // [{key: 'selector/text', value: 'selector', selectSimilar: bool, selectSiblings: bool}, {}, ...]
             propertiesMeta: [],  // [{ key: 'element/text', value: ['element1', 'element2', ...] }, {}, ...]
 
         }; 
@@ -150,9 +150,6 @@ class StateMenu extends Menu {
 
     };
 
-    // isElementAlreadySelected = () => {
-
-    // };
 
     stateTargetHandlers = {
         handleMouseOver: (e) => {
@@ -174,19 +171,15 @@ class StateMenu extends Menu {
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
 
-            const { properties, propertiesMeta, finalTargets } = this.configuration;
+            const { properties, propertiesMeta } = this.configuration;
             
-            // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
-            // if(!this.configuration.finalTargets.includes(e.target)) {
+            // TODO: CHECK FOR DUPLICATE TARGETS
 
             const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
             properties[propIndex].value = targetQuerySelector;
             propertiesMeta[propIndex].value = [ e.target ];
             this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
             
-            finalTargets.push(e.target);
-
-            // }
             // document.querySelector("#target-list").value = targetQuerySelector;  // TODO: CHANGE THIS TO NEW SELECTOR
         }
     };
@@ -210,21 +203,13 @@ class StateMenu extends Menu {
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
 
-            const { properties, propertiesMeta, finalLabels } = this.configuration;
+            const { properties, propertiesMeta } = this.configuration;
 
             const propIndex = parseInt(this.currentPropTarget.dataset.propId); 
             properties[propIndex - 1].key = targetQuerySelector;
             propertiesMeta[propIndex - 1].key = e.target;
             this.currentPropTarget.querySelector('.js-label-list').value = targetQuerySelector;
             
-            finalLabels.push(e.target);
-
-
-            // if(!this.configuration.finalLabels.includes(labelQuerySelector)) { 
-            //     this.configuration.selectedLabels.push(labelQuerySelector);
-            //     this.configuration.finalLabels.push(e.target);
-            // }
-
             // document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
@@ -240,7 +225,7 @@ class StateMenu extends Menu {
     };
 
     validateConfig = () => {
-        const {stateName, stateType, selectedTargets} = this.configuration;
+        const {stateName, stateType} = this.configuration;
         let errorMsg = "";
         if(!stateName.length) {
             errorMsg = "Enter stateName";
@@ -248,9 +233,9 @@ class StateMenu extends Menu {
         else if(!stateType) {
             errorMsg = "Select stateType"
         }
-        else if(!selectedTargets.length) {
-            errorMsg = "Select atleast one State Target";
-        }
+        // else if(!selectedTargets.length) {
+        //     errorMsg = "Select atleast one State Target";
+        // }
 
         return {
             isValid: errorMsg.length === 0,
@@ -259,10 +244,9 @@ class StateMenu extends Menu {
     };
 
     handleAddProp = (e) => {
-        const { properties, propertiesMeta, finalTargets } = this.configuration;
+        const { properties, propertiesMeta } = this.configuration;
         properties.push(new StateProperty({ value: DomUtils.getQuerySelector(e.target)}));
         propertiesMeta.push(new StateProperty({ value: [ e.target ] }));
-        finalTargets.push(e.target);
 
         const propertyContainer = document.querySelector("#properties");
         propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector())); 
@@ -280,6 +264,8 @@ class StateMenu extends Menu {
                 e.stopPropagation();
                 this.currentPropTarget = e.target.closest('.js-property');
     
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1;
+                Highlighter.resetHighlight(this.configuration.propertiesMeta[propIndex].value[0]); 
                 this.hideMenu();
     
                 DynamicEventHandler.addHandler("mouseover", this.stateTargetHandlers.handleMouseOver);
@@ -294,6 +280,8 @@ class StateMenu extends Menu {
                 e.stopPropagation();
                 this.currentPropTarget = e.target.closest('.js-property');
 
+                const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1;
+                Highlighter.resetHighlight(this.configuration.propertiesMeta[propIndex].key);
                 this.hideMenu();
 
                 DynamicEventHandler.addHandler("mouseover", this.stateLabelHandlers.handleMouseOver);
@@ -302,12 +290,12 @@ class StateMenu extends Menu {
             });
         });
 
-        // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY
+        // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
 
-                let { finalTargets, selectedTargets, selectSimilar, selectSiblings } = this.configuration;
+                let { selectSimilar, selectSiblings } = this.configuration;
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
@@ -315,68 +303,48 @@ class StateMenu extends Menu {
                 const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
 
                 if(e.target.checked) {
-                    finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                    
                     propertiesMeta[propIndex].value = this.populateSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].selectSimilar = true;
-                    propertiesMeta[propIndex].selectSiblings = false;
+                    properties[propIndex].selectSimilar = true;
+                    properties[propIndex].selectSiblings = false;
                     siblingCheckbox.checked = false;
                 }
                 else {
-                    finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-
                     propertiesMeta[propIndex].value = this.removeSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    selectSimilar = false;
+                    properties[propIndex].selectSimilar = false;
                 }
                 this.configuration = {
                     ...this.configuration,
-                    finalTargets,
-                    selectedTargets,
-                    selectSimilar,
-                    selectSiblings,
                     properties,
                     propertiesMeta,
                 };
             });
         });
 
-        // select siblings (DOM tree logic)  TODO: DO THIS ONLY FOR VALUES, NOT THE KEY
+        // select siblings (DOM tree logic)  TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-siblings input`)).forEach(item => {
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
 
-
-                let { finalTargets, selectedTargets, selectSimilar, selectSiblings } = this.configuration;
+                let { selectSimilar, selectSiblings } = this.configuration;
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
                 const propIndex = parseInt(this.currentPropTarget.dataset.propId) - 1; 
                 const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
 
-
-
                 if(e.target.checked) {
-                    // todo: populate sibling
-                    finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-                    
                     propertiesMeta[propIndex].value = this.populateSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    selectSimilar = false;
-                    selectSiblings = true;
+                    properties[propIndex].selectSimilar = false;
+                    properties[propIndex].selectSiblings = true;
                     similarCheckbox.checked = false;
                 }
                 else {
-                    finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.STATE_TARGET);
-
                     propertiesMeta[propIndex].value = this.removeSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    selectSiblings = false;
+                    properties[propIndex].selectSiblings = false;
                 }
 
                 this.configuration = {
                     ...this.configuration,
-                    finalTargets,
-                    selectedTargets,
-                    selectSimilar,
-                    selectSiblings,
                     properties,
                     propertiesMeta,
                 };
@@ -386,11 +354,9 @@ class StateMenu extends Menu {
         // TODO: ADD LISTNER FOR js-delete-prop
         Array.from(document.querySelectorAll(`#${this.containerId} .js-delete-prop`)).forEach(item => {
             item.addEventListener("click", (e) => {
-    
                 const propertyContainer = document.querySelector("#properties");
                 const currRow = e.target.closest('.js-property');
                 propertyContainer.removeChild(currRow);
-    
             });
         });
 
@@ -406,16 +372,14 @@ class StateMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { configType, stateName, stateType, stateKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings, performAfter } = this.configuration;
+            const { configType, stateName, stateType, stateKey, collectionKey, properties, performAfter } = this.configuration;
             await ConfigChain.push({
                 configType,
                 stateName, 
                 stateType,
                 stateKey,
-                selectedLabels,
-                selectedTargets,
-                selectSimilar,
-                selectSiblings,
+                collectionKey,
+                properties,
                 performAfter,
             });
             this.close();
@@ -449,12 +413,7 @@ class StateMenu extends Menu {
         ConfigManager.enableConfigurationMode(target, Enum.elementTypes.STATE);
 
         // initialize configuration values 
-        let {selectedTargets, finalTargets, properties, propertiesMeta} = this.configuration;
-        
-        // TODO: REMOVE THESE
-        finalTargets.push(target);
-        selectedTargets.push(DomUtils.getQuerySelector(target));
-
+        const { properties, propertiesMeta } = this.configuration;
         properties.push(new StateProperty({ value: DomUtils.getQuerySelector(target) }));
         propertiesMeta.push(new StateProperty({ value: [ target ]}));
 

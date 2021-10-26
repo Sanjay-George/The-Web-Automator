@@ -1,4 +1,4 @@
-/* global ActionMenu, StateMenu, Highlighter,DynamicEventHandler */
+/* global ActionMenu, StateMenu, Highlighter, DynamicEventHandler */
 
 
 // INFO: This is the start point of each page crawled in config mode
