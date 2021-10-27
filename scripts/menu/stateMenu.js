@@ -218,7 +218,7 @@ class StateMenu extends Menu {
         this.configuration = {
             ...this.configuration,
             stateName: document.querySelector("#state-name").value,
-            stateKey: document.querySelector("#state-key").value,
+            collectionKey: document.querySelector("#state-key").value,
             stateType: document.querySelector("#state-type").value,
             performAfter: document.querySelector("#perform-after").value,
         };
@@ -249,7 +249,7 @@ class StateMenu extends Menu {
         propertiesMeta.push(new StateProperty({ value: [ e.target ] }));
 
         const propertyContainer = document.querySelector("#properties");
-        propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector())); 
+        propertyContainer.append(this.addPropRow()); 
         this.removeMenuListeners();
         this.setMenuListeners();
     };
@@ -304,12 +304,14 @@ class StateMenu extends Menu {
 
                 if(e.target.checked) {
                     propertiesMeta[propIndex].value = this.populateSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.populateSimilarTargets(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = true;
                     properties[propIndex].selectSiblings = false;
                     siblingCheckbox.checked = false;
                 }
                 else {
                     propertiesMeta[propIndex].value = this.removeSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.removeSimilarTargets(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = false;
                 }
                 this.configuration = {
@@ -334,12 +336,14 @@ class StateMenu extends Menu {
 
                 if(e.target.checked) {
                     propertiesMeta[propIndex].value = this.populateSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.populateSiblings(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = false;
                     properties[propIndex].selectSiblings = true;
                     similarCheckbox.checked = false;
                 }
                 else {
                     propertiesMeta[propIndex].value = this.removeSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.removeSiblings(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSiblings = false;
                 }
 
@@ -377,7 +381,6 @@ class StateMenu extends Menu {
                 configType,
                 stateName, 
                 stateType,
-                stateKey,
                 collectionKey,
                 properties,
                 performAfter,
@@ -394,7 +397,7 @@ class StateMenu extends Menu {
     };
 
     populateAssociatedActions = async () => {
-        const actions = (await ConfigChain.get()).map((item, index) => [index, item.actionName]);
+        const actions = (await ConfigChain.get()).map((item, index) => [index, item.actionName || item.stateName]); // TODO: populate only actions, but maintain index of configChain
         const assoActionContainer = document.querySelector("#associated-action");
         assoActionContainer.innerHTML = "";
 

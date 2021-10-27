@@ -37,8 +37,6 @@ const run = async (chain, step, page, json, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
-    console.log(`\nJSON: ${JSON.stringify(json)}\n`);
-
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
         const { targets, labels } = await populateAllTargetsAndLabels(action, page);
@@ -90,25 +88,28 @@ const run = async (chain, step, page, json, memory = []) => {
     else if (chain[step].configType === configTypes.STATE) {
         // TODO: collect state
         const state = chain[step];
-        const { targets, labels } = await populateAllTargetsAndLabels(state, page);
+        json[state.collectionKey] = [];
 
-        json[state.stateKey] = [];
+        for(let i = 0; i < state.properties.length; i++) {
+            const property = state.properties[i];
+            const { keys, values } = await populateAllKeysAndValues(property, page);
 
-        for(let i = 0; i < targets.length; i++) {
-            const target = targets[i];
-            const label = labels[i];
-            
-            const innerJson = {};
-            const labelText = await getInnerText(label, page);
-            const targetText = await getInnerText(target, page);
+            for (let j = 0; j < values.length; j++ ) {
+                let key = keys[j] || keys[0];
+                let value = values[j];
 
-            if(!labelText || !targetText) {
-                console.error(`No label or target text found for state: ${state.stateName}`);
-                continue; 
-            }  
+                const innerJson = {};
+                const labelText = await getInnerText(key, page);
+                const targetText = await getInnerText(value, page);
 
-            innerJson[labelText] = targetText;
-            json[state.stateKey].push(innerJson);
+                if(!labelText || !targetText) {
+                    continue; 
+                }  
+
+                innerJson[labelText] = targetText;
+                json[state.collectionKey].push(innerJson);
+
+            }
         }
 
         console.log(`\nJSON inside state condtiion: ${JSON.stringify(json)}\n`);
@@ -119,8 +120,23 @@ const run = async (chain, step, page, json, memory = []) => {
    
 };
 
+const populateAllKeysAndValues = async (property, page) => {
+    if(property.selectSimilar) {
+        const keys = await populateSimilarTargets([ property.key ], page);
+        const values = await populateSimilarTargets([ property.value ], page);
+        return {keys, values};
+    }
+    else if(property.selectSiblings) {
+        const keys = await populateSiblings([ property.key ], page);
+        const values = await populateSiblings([ property.value ], page);
+        return {keys, values};
+    }
+    else {
+        return { keys: [ property.key ], values: [ property.value ] };
+    }
+};
+
 const getInnerText = async (selector, page) => {
-    // console.log(`getInnerText() - selector: ${selector}`);
     return await page.evaluate((selector) => {
         let element = document.querySelector(selector);
         if(element){
