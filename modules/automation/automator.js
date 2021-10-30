@@ -95,12 +95,12 @@ const run = async (chain, step, page, json, memory = []) => {
         for(let i = 0; i < state.properties.length; i++) {
             const property = state.properties[i];
             const { keys, values } = await populateAllKeysAndValues(property, page);
-
+            const innerJson = {};
+            
             for (let j = 0; j < values.length; j++ ) {
                 let key = keys[j] || keys[0];
                 let value = values[j];
 
-                const innerJson = {};
                 const labelText = await getInnerText(key, page);
                 const targetText = await getInnerText(value, page);
 
@@ -109,9 +109,8 @@ const run = async (chain, step, page, json, memory = []) => {
                 }  
 
                 innerJson[labelText] = targetText;
-                json[state.collectionKey].push(innerJson);
-
             }
+            json[state.collectionKey].push(innerJson);
         }
 
         console.log(`\nJSON inside state: ${JSON.stringify(json)}\n`);
