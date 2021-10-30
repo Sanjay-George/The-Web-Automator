@@ -1,10 +1,10 @@
 const DomUtils = (() => {
 
-    const _startsWithNumber = (str) => {
+    const _startsWithNumber = str => {
         return !isNaN(parseInt(str[0]));   // first char in str is parseable 
     };
 
-    const _buildId = (element) => {
+    const _buildId = element => {
         if(element.id === "")
             return "";
 
@@ -17,7 +17,7 @@ const DomUtils = (() => {
         return "#"+ id;
     }
 
-    const _buildClassList = (element) => {
+    const _buildClassList = element => {
         if(element.classList.length === 0)
             return "";
 
@@ -29,19 +29,19 @@ const DomUtils = (() => {
         return finalString;
     };
 
-    const _buildNthChild = (element) => {
+    const _buildNthChild = element => {
         let childIndex = Array.from(element.parentElement.children).indexOf(element);
         return `:nth-child(${childIndex+1})`;
     };
 
-    const hasSiblingsOfSameType = (element) => {
+    const hasSiblingsOfSameType = element => {
         let parent = element.parentElement;
         let currentType  = element.nodeName;
         let similarTypeChildren = Array.from(parent.children).map(ele => ele.nodeName).filter(nodeName => nodeName === currentType);
         return similarTypeChildren.length > 1;
     };
 
-    const hasSiblingsWithSameClassList = (element) => {
+    const hasSiblingsWithSameClassList = element => {
         if(element.parentElement.children.length === 1) return false;
 
         const parent = element.parentElement;
@@ -51,15 +51,15 @@ const DomUtils = (() => {
         return (siblingsWithSameClassList.length > 0);
     }; 
 
-    const hasClasses = (element) => {
+    const hasClasses = element => {
         return element.classList.length > 0;
     };
 
-    const hasId = (element) => {
+    const hasId = element => {
         return element.id.length > 0;
     };
 
-    const getQuerySelector = (element) => {
+    const getQuerySelector = element => {
         if(element === undefined  || element === null)  return "";
         /*
         Logic: 
@@ -102,7 +102,7 @@ const DomUtils = (() => {
         return path.reverse().join(" > ");
     }
 
-    const findSimilarElements = (selectorArr) => {
+    const findSimilarElements = selectorArr => {
         let similarElements = [];
         selectorArr.forEach(selector => {
             const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
@@ -118,7 +118,7 @@ const DomUtils = (() => {
         return similarElements;
     };
 
-    const findSiblings = (selectorArr) => {
+    const findSiblings = selectorArr => {
         let siblings = [];
         selectorArr.forEach(selector => {
             siblings = siblings.concat(Array.from(document.querySelector(selector).parentElement.children));

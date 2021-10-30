@@ -87,7 +87,7 @@ class Menu {
     };
 
     removeSiblings = (finalTargets, selectedTargets, elementType) => {
-        this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
+        return this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
     };
 
 

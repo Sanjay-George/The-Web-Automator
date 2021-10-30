@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const fs = require('fs');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 
 const pageHelper = require('../common/pageHelper');
@@ -29,7 +30,9 @@ const initiate = async (url, configChain) => {
     console.log(JSON.stringify(json));
 
     await recorder.stop();
-    // await page.close();
+    await saveData(`data-${+ new Date}`, JSON.stringify(json));
+    
+    await page.close();
 };
 
 
@@ -37,17 +40,16 @@ const run = async (chain, step, page, json, memory = []) => {
     console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
-    console.log(`\nJSON: ${JSON.stringify(json)}\n`);
-
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
-        const { targets, labels } = await populateAllTargetsAndLabels(action, page);
 
-        const isActionKeyPresent = action.actionKey.length;
+        const isActionKeyPresent = action.actionKey.length > 0;
         isActionKeyPresent && 
             (json[action.actionKey] = []);
-    
-        console.log(`Number of targets: ${targets.length}`);
+
+        const { targets, labels } = await populateAllTargetsAndLabels(action, page);
+        const jsonKeys = await getActionJsonKeys(targets, labels, page) || [];
+
         
         for(let i = 0; i < targets.length; i++) {
             const target = targets[i];
@@ -55,11 +57,9 @@ const run = async (chain, step, page, json, memory = []) => {
             memorize(memory, step, action, target);
             
             let innerJson = {};
-            if(isActionKeyPresent)
+            if(isActionKeyPresent && jsonKeys[i].length)
             {
-                const labelText = await getInnerText(label, page);
-                const targetText = await getInnerText(target, page);
-                innerJson["name"] = labelText || targetText;
+                innerJson["name"] = jsonKeys[i];
             }
             
             const isActionPerformed = await performAction(action, target, memory, step, page);
@@ -69,7 +69,7 @@ const run = async (chain, step, page, json, memory = []) => {
             }
             await run(chain, step + 1, page, innerJson, memory);
 
-            console.log(`\ninnerJSON inside action condition: ${JSON.stringify(innerJson)} \nactionKeyPresent: ${isActionKeyPresent}\n`);
+            console.log(`\ninnerJSON inside action: ${JSON.stringify(innerJson)}`);
 
             if(isActionKeyPresent){
                 json[action.actionKey].push(innerJson);
@@ -90,28 +90,31 @@ const run = async (chain, step, page, json, memory = []) => {
     else if (chain[step].configType === configTypes.STATE) {
         // TODO: collect state
         const state = chain[step];
-        const { targets, labels } = await populateAllTargetsAndLabels(state, page);
+        json[state.collectionKey] = [];
 
-        json[state.stateKey] = [];
+        for(let i = 0; i < state.properties.length; i++) {
+            const property = state.properties[i];
+            const { keys, values } = await populateAllKeysAndValues(property, page);
 
-        for(let i = 0; i < targets.length; i++) {
-            const target = targets[i];
-            const label = labels[i];
-            
-            const innerJson = {};
-            const labelText = await getInnerText(label, page);
-            const targetText = await getInnerText(target, page);
+            for (let j = 0; j < values.length; j++ ) {
+                let key = keys[j] || keys[0];
+                let value = values[j];
 
-            if(!labelText || !targetText) {
-                console.error(`No label or target text found for state: ${state.stateName}`);
-                continue; 
-            }  
+                const innerJson = {};
+                const labelText = await getInnerText(key, page);
+                const targetText = await getInnerText(value, page);
 
-            innerJson[labelText] = targetText;
-            json[state.stateKey].push(innerJson);
+                if(!labelText || !targetText) {
+                    continue; 
+                }  
+
+                innerJson[labelText] = targetText;
+                json[state.collectionKey].push(innerJson);
+
+            }
         }
 
-        console.log(`\nJSON inside state condtiion: ${JSON.stringify(json)}\n`);
+        console.log(`\nJSON inside state: ${JSON.stringify(json)}\n`);
 
         await run(chain, step + 1, page, json, memory);
 
@@ -119,8 +122,36 @@ const run = async (chain, step, page, json, memory = []) => {
    
 };
 
+const getActionJsonKeys = async (targets, labels, page) => {
+    if(targets.length === 0)    return [];
+
+    const jsonKeys = [];
+    for(let i = 0; i < targets.length; i++) {
+        const labelText = await getInnerText(labels[i], page);
+        const targetText = await getInnerText(targets[i], page);
+        jsonKeys.push(labelText || targetText || "");
+    }
+
+    return jsonKeys;
+};
+
+const populateAllKeysAndValues = async (property, page) => {
+    if(property.selectSimilar) {
+        const keys = await populateSimilarTargets([ property.key ], page);
+        const values = await populateSimilarTargets([ property.value ], page);
+        return {keys, values};
+    }
+    else if(property.selectSiblings) {
+        const keys = await populateSiblings([ property.key ], page);
+        const values = await populateSiblings([ property.value ], page);
+        return {keys, values};
+    }
+    else {
+        return { keys: [ property.key ], values: [ property.value ] };
+    }
+};
+
 const getInnerText = async (selector, page) => {
-    // console.log(`getInnerText() - selector: ${selector}`);
     return await page.evaluate((selector) => {
         let element = document.querySelector(selector);
         if(element){
@@ -311,6 +342,15 @@ const takeScreenShot = async (page) => {
         type: 'jpeg',
         quality: 30,
     });
+}
+
+async function saveData(pageName, json) {
+    const dir = './data';
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+	const fileName = `${dir}/${pageName}.json`;
+	await fs.writeFile(fileName, json, (err) => {});
 }
 
 

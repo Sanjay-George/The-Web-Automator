@@ -48,6 +48,12 @@
     flex-wrap: wrap;
 }
 
+.profile-menu .col1 {
+    width: 8.33%;
+}
+.profile-menu .col2 {
+    width: 16.67%;
+}
 .profile-menu .col3 {
     width: 25%;
 }
@@ -106,6 +112,16 @@
     width: 70%;
 }
 
+.profile-menu i.icon-btn{
+    font-size: 1rem;
+    cursor: pointer;
+    position: relative; 
+    top: 3px; 
+}
+
+.no-padding{
+    padding: 0px !important;
+}
 
 .context-menu {
     display: flex;
