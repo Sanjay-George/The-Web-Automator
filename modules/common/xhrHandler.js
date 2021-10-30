@@ -27,7 +27,7 @@ function handleResponse(response) {
 }
 
 function clearUnprocessedRequests() {
-    console.log('xhrRequest count: ', xhrRequests.length);
+    // console.log('xhrRequest count: ', xhrRequests.length);
     if(xhrRequests.length > 0)
         xhrRequests = xhrRequests.slice(1, xhrRequests.length);    // remove first entry    
     if(xhrRequests.length === 0)    
