@@ -1,10 +1,9 @@
 /*
 TODO: 
 1. Issue - Coloring issue with property key & value (once a property is selected, try with another one. Somewhere listener is failing)
-2. Issue - select similar / sibling doesn't work per property
-3. Migrate completely to properties and propertiesMeta
 4. Handle colors when property is deleted
-5. Add provision for setting key as selector
+5. Add provision for setting key as selector - if key is text, don't colorize / search for similar elements
+6. Improve similar search logic, especially for property keys.  
 */
 
 
