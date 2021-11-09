@@ -139,28 +139,6 @@ const run = async (chain, step, page, json, memory = []) => {
 
             json[state.collectionKey].push(innerJson);
         }
-        
-
-        // for(let i = 0; i < state.properties.length; i++) {
-        //     const property = state.properties[i];
-        //     const { keys, values } = await populateAllKeysAndValues(property, page);
-        //     const innerJson = {};
-            
-        //     for (let j = 0; j < values.length; j++ ) {
-        //         let key = keys[j] || keys[0];
-        //         let value = values[j];
-
-        //         const labelText = await getInnerText(key, page);
-        //         const targetText = await getInnerText(value, page);
-
-        //         if(!labelText || !targetText) {
-        //             continue; 
-        //         }  
-
-        //         innerJson[labelText] = targetText;
-        //     }
-        //     json[state.collectionKey].push(innerJson);
-        // }
 
         console.log(`\nJSON inside state: ${JSON.stringify(json)}\n`);
 
