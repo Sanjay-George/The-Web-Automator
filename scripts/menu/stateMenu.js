@@ -74,7 +74,7 @@ class StateMenu extends Menu {
 
                 <div class="input-field col4">
                     <select id="perform-after">
-                        <option value="" disabled selected>Select when to perform state*</option>
+                        <option value="-1" disabled selected>Select when to perform state*</option>
                         <option value="0">Perform immediately</option>
                         <optgroup label="Perform after action" id="associated-action">
                         </optgroup>
@@ -218,22 +218,25 @@ class StateMenu extends Menu {
             stateName: document.querySelector("#state-name").value,
             collectionKey: document.querySelector("#state-key").value,
             stateType: document.querySelector("#state-type").value,
-            performAfter: document.querySelector("#perform-after").value,
+            performAfter: parseInt(document.querySelector("#perform-after").value, 10),
         };
     };
 
     validateConfig = () => {
-        const {stateName, stateType} = this.configuration;
+        const {stateName, collectionKey, stateType, performAfter, properties} = this.configuration;
         let errorMsg = "";
-        if(!stateName.length) {
-            errorMsg = "Enter stateName";
+        if(!stateName.length || !collectionKey.length) {
+            errorMsg = "Enter stateName and collectionKey";
         }
         else if(!stateType) {
-            errorMsg = "Select stateType"
+            errorMsg = "Select stateType";
         }
-        // else if(!selectedTargets.length) {
-        //     errorMsg = "Select atleast one State Target";
-        // }
+        else if(performAfter < 0) {
+            errorMsg = "Select when to collect the state";
+        }
+        else if(!properties.length) {
+            errorMsg = "Configure at least one property";
+        }
 
         return {
             isValid: errorMsg.length === 0,
@@ -374,15 +377,18 @@ class StateMenu extends Menu {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { configType, stateName, stateType, stateKey, collectionKey, properties, performAfter } = this.configuration;
-            await ConfigChain.push({
+
+            const { configType, stateName, stateType, collectionKey, properties, performAfter } = this.configuration;
+            const index = performAfter > 0 ? performAfter + 1 : performAfter;
+            const item = {
                 configType,
                 stateName, 
                 stateType,
                 collectionKey,
                 properties,
                 performAfter,
-            });
+            }
+            await ConfigChain.insertAt(item, index);
             this.close();
         });
     };
