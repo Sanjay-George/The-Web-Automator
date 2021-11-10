@@ -6,7 +6,6 @@ TODO:
 6. Improve similar search logic, especially for property keys. [sort of handled in automator] 
 */
 
-
 class StateMenu extends Menu {
     constructor() {
         super();
@@ -76,8 +75,8 @@ class StateMenu extends Menu {
                 <div class="input-field col4">
                     <select id="perform-after">
                         <option value="" disabled selected>Select when to perform state*</option>
-                        <option value="-1">Perform immediately</option>
-                        <optgroup label="Available actions" id="associated-action">
+                        <option value="0">Perform immediately</option>
+                        <optgroup label="Perform after action" id="associated-action">
                         </optgroup>
                     </select>
                 </div>
@@ -289,7 +288,7 @@ class StateMenu extends Menu {
             });
         });
 
-        // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
+        // select all similar siblings
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
             item.addEventListener("click", e => {
                 e.stopPropagation();
@@ -321,7 +320,7 @@ class StateMenu extends Menu {
             });
         });
 
-        // select siblings (DOM tree logic)  TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
+        // select siblings (DOM tree logic) 
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-siblings input`)).forEach(item => {
             item.addEventListener("click", e => {
                 e.stopPropagation();
@@ -396,17 +395,28 @@ class StateMenu extends Menu {
     };
 
     populateAssociatedActions = async () => {
-        const actions = (await ConfigChain.get()).map((item, index) => [index, item.actionName || item.stateName]); // TODO: populate only actions, but maintain index of configChain
+        const configChain = (await ConfigChain.get());
+        const actions = [];
+        
         const assoActionContainer = document.querySelector("#associated-action");
         assoActionContainer.innerHTML = "";
+        
+        configChain.forEach((item, index) => {
+            if(item.configType === Enum.configTypes.ACTION) {
+                actions.push({
+                    index: index, 
+                    name: item.actionName
+                });
+            }
+        });
 
-        if(!actions || !actions.length) {
-            assoActionContainer.innerHTML += `<option value="1" disabled>No actions configured yet</option>`;
+        if(!actions.length) {
+            assoActionContainer.innerHTML += `<option value="-1" disabled>No actions configured yet</option>`;
             return;
         }
 
-        actions.forEach(item => {
-            assoActionContainer.innerHTML += `<option value="${item[0]}">A${parseInt(item[0], 10) + 1} - ${item[1]}</option>`;
+        actions.forEach((item, index) => {
+            assoActionContainer.innerHTML += `<option value="${item.index}">A${parseInt(index, 10) + 1} - ${item.name}</option>`;
         });
 
     } 

@@ -10,7 +10,7 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 let rootUrl = "";
 
 const initiate = async (url, configChain) => {
-    const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
+    const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
     rootUrl = url;
     
@@ -81,7 +81,12 @@ const run = async (chain, step, page, json, memory = []) => {
 
                 // TODO: TEST THIS. 
                 for (prop in innerJson) { 
-                    json[prop] = innerJson[prop];
+                    if(Array.isArray(json[prop])) {
+                        json[prop].push(innerJson[prop]);
+                    }
+                    else {
+                        json[prop] = innerJson[prop];
+                    }
                 }
             }
                 
