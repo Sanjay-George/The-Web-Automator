@@ -138,6 +138,11 @@ const DomUtils = (() => {
         window.removeEventListener("beforeunload", _unloadListener);
     };
 
+    const isValidQuerySelector = selector => {
+        if(!selector || !selector.length)   return false;
+        return document.querySelector(selector) !== null;
+    };
+
 
 
     return {
@@ -146,5 +151,6 @@ const DomUtils = (() => {
         findSiblings,
         addUnloadListener,
         removeUnloadListener,
+        isValidQuerySelector,
     }
 })();

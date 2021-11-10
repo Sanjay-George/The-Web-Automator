@@ -1,5 +1,5 @@
 
-const DEFAULT_TIMEOUT = 60000;
+const DEFAULT_TIMEOUT = 10000;
 const MAX_ATTEMPTS = 3;
 
 function getWaitOptions(customTimeout) {

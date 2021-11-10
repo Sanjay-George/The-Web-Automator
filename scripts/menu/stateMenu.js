@@ -193,7 +193,6 @@ class StateMenu extends Menu {
             propertiesMeta[propIndex - 1].key = e.target;
             this.currentPropTarget.querySelector('.js-label-list').value = targetQuerySelector;
             
-            // document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
 
@@ -287,15 +286,15 @@ class StateMenu extends Menu {
                 const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
 
                 if(e.target.checked) {
-                    propertiesMeta[propIndex].value = this.populateSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.populateSimilarTargets(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.populateSimilarElements(this.populateSimilarTargets, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.populateSimilarElements(this.populateSimilarTargets, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = true;
                     properties[propIndex].selectSiblings = false;
                     siblingCheckbox.checked = false;
                 }
                 else {
-                    propertiesMeta[propIndex].value = this.removeSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.removeSimilarTargets(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.removeSimilarElements(this.removeSimilarTargets, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.removeSimilarElements(this.removeSimilarTargets, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = false;
                 }
                 this.configuration = {
@@ -311,7 +310,6 @@ class StateMenu extends Menu {
             item.addEventListener("click", e => {
                 e.stopPropagation();
 
-                let { selectSimilar, selectSiblings } = this.configuration;
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
@@ -319,15 +317,15 @@ class StateMenu extends Menu {
                 const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
 
                 if(e.target.checked) {
-                    propertiesMeta[propIndex].value = this.populateSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.populateSiblings(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.populateSimilarElements(this.populateSiblings, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.populateSimilarElements(this.populateSiblings, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = false;
                     properties[propIndex].selectSiblings = true;
                     similarCheckbox.checked = false;
                 }
                 else {
-                    propertiesMeta[propIndex].value = this.removeSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.removeSiblings(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.removeSimilarElements(this.removeSiblings, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.removeSimilarElements(this.removeSiblings, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSiblings = false;
                 }
 
@@ -374,7 +372,7 @@ class StateMenu extends Menu {
             await ConfigChain.insertAt(item, index);
             this.close();
         });
-    };
+    };    
 
     close = () => {
         this.initConfiguration();
