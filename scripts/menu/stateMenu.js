@@ -17,27 +17,13 @@ class StateMenu extends Menu {
             configType: Enum.configTypes.STATE,
             stateName: "",
             stateType: null,
-
-            // TODO: to be removed
-            stateKey: "",
-            selectedTargets: [],
-            selectedLabels: [],
-            finalTargets: [], 
-            finalLabels: [],
-            selectSimilar: false,
-            selectSiblings: false,    
-
-            // TODO: KEEP THIS
-            // repeatCount: 0,  
-            maxTargetCount: -1,
-            // index of action to perform after. -1 means collect data immediately
-            performAfter: -1,   
-
-            // TODO: NEW PROPERTIES 
             collectionKey: "",
             properties: [],  // [{key: 'selector/text', value: 'selector', selectSimilar: bool, selectSiblings: bool}, {}, ...]
             propertiesMeta: [],  // [{ key: 'element/text', value: ['element1', 'element2', ...] }, {}, ...]
-
+            repeatCount: 0,  
+            maxTargetCount: -1,
+            // index of action (in config chain) to perform/collect state after
+            performAfter: -1,   
         }; 
 
         this.currentPropTarget = null;
@@ -178,7 +164,6 @@ class StateMenu extends Menu {
             propertiesMeta[propIndex].value = [ e.target ];
             this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
             
-            // document.querySelector("#target-list").value = targetQuerySelector;  // TODO: CHANGE THIS TO NEW SELECTOR
         }
     };
 
@@ -295,8 +280,6 @@ class StateMenu extends Menu {
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
             item.addEventListener("click", e => {
                 e.stopPropagation();
-
-                let { selectSimilar, selectSiblings } = this.configuration;
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');

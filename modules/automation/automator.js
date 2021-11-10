@@ -122,7 +122,7 @@ const run = async (chain, step, page, json, memory = []) => {
                 maxElemPropertyIndex = i;
                 maxElemCount = values.length;
             }
-        };
+        }
 
         const refProperty = propertiesArr[maxElemPropertyIndex];
         for (let i = 0; i < refProperty.values.length; i++) {  // ROW-WISE

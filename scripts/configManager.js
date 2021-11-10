@@ -117,11 +117,11 @@ const ConfigChain = (() => {
     }; 
 
     return {
-        push: push,
-        get: get,
-        pop: pop,
-        removeAt: removeAt,
-        insertAt: insertAt,
+        push,
+        get,
+        pop,
+        removeAt,
+        insertAt,
     };
 })();
 
