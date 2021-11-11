@@ -12,7 +12,7 @@ async function openTab(browser, url, attempt = 0, timeout = 0) {
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
     // getConfigValue("performanceMode") &&  
-	await disableHeavyResources(page);
+	// await disableHeavyResources(page);
 	try {
 		await page.goto(url, getWaitOptions(attempt * DEFAULT_TIMEOUT));
 	}

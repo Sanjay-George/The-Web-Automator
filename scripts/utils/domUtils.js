@@ -102,14 +102,38 @@ const DomUtils = (() => {
         return path.reverse().join(" > ");
     }
 
+    const formulateBestSelector = selector => {
+        let matchedElementsCount = 0;
+        const potentialSelectors = [];
+        const selectorArr = selector.split(" > ");
+        for(let i = 0; i < selectorArr.length; i++) {
+            if(!selectorArr[i].includes("nth-child")){
+                continue;
+            }
+            const newSelector = selectorArr.slice(0, i).concat(selectorArr.slice(i, i+1)[0].split(":")[0], selectorArr.slice(i+1, selectorArr.length)).join(" > ");  // Don't touch this. 
+            potentialSelectors.push(newSelector);
+        }
+
+        let bestSelector = selector;
+        for(let i = 0; i < potentialSelectors.length; i++) {
+            const potentialSelector = potentialSelectors[i];
+            const matchedElements = Array.from(document.querySelectorAll(potentialSelector));
+            if(matchedElements.length >= matchedElementsCount) {
+                bestSelector = potentialSelector;
+                matchedElementsCount = matchedElements.length;
+            }
+        }
+
+        return bestSelector;
+    };
+
     const findSimilarElements = selectorArr => {
         let similarElements = [];
         selectorArr.forEach(selector => {
             const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
             let newSelector;
             if(nthChildElem.length) {
-                const replaceElem = nthChildElem[nthChildElem.length - 1];
-                newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
+                newSelector = formulateBestSelector(selector);
             } else {
                 newSelector = selector;
             }   
