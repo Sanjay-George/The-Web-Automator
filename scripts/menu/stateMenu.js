@@ -23,7 +23,7 @@ class StateMenu extends Menu {
             repeatCount: 0,  
             maxTargetCount: -1,
             // index of action (in config chain) to perform/collect state after
-            performAfter: -1,   
+            configChainIndex: -1,   
         }; 
 
         this.currentPropTarget = null;
@@ -60,8 +60,8 @@ class StateMenu extends Menu {
 
                 <div class="input-field col4">
                     <select id="perform-after">
-                        <option value="-1" disabled selected>Select when to perform state*</option>
-                        <option value="0">Perform immediately</option>
+                        <option value="" disabled selected>Select when to perform state*</option>
+                        <option value="-1">Perform immediately</option>
                         <optgroup label="Perform after action" id="associated-action">
                         </optgroup>
                     </select>
@@ -197,17 +197,29 @@ class StateMenu extends Menu {
     };
 
     setBasicDetails = () => {
+        const performAfter =  parseInt(document.querySelector("#perform-after").value, 10);
         this.configuration = {
             ...this.configuration,
             stateName: document.querySelector("#state-name").value,
             collectionKey: document.querySelector("#state-key").value,
             stateType: document.querySelector("#state-type").value,
-            performAfter: parseInt(document.querySelector("#perform-after").value, 10),
+            configChainIndex: isNaN(performAfter) ? null : performAfter + 1,
         };
     };
 
+    setPropertyKeys = () => {
+        const propertyKeys = Array.from(document.querySelectorAll(`#${this.containerId} .js-label-list`));
+
+        const { properties } = this.configuration;
+
+        propertyKeys.forEach((element, index) => {
+            properties[index].key = properties[index].key || element.value;
+        });
+    };
+
+
     validateConfig = () => {
-        const {stateName, collectionKey, stateType, performAfter, properties} = this.configuration;
+        const {stateName, collectionKey, stateType, configChainIndex, properties} = this.configuration;
         let errorMsg = "";
         if(!stateName.length || !collectionKey.length) {
             errorMsg = "Enter stateName and collectionKey";
@@ -215,7 +227,7 @@ class StateMenu extends Menu {
         else if(!stateType) {
             errorMsg = "Select stateType";
         }
-        else if(performAfter < 0) {
+        else if(configChainIndex < 0) {
             errorMsg = "Select when to collect the state";
         }
         else if(!properties.length) {
@@ -337,7 +349,7 @@ class StateMenu extends Menu {
             });
         });
 
-        // TODO: ADD LISTNER FOR js-delete-prop
+        // delete property
         Array.from(document.querySelectorAll(`#${this.containerId} .js-delete-prop`)).forEach(item => {
             item.addEventListener("click", e => {
                 const propertyContainer = document.querySelector("#properties");
@@ -346,32 +358,35 @@ class StateMenu extends Menu {
             });
         });
 
-        // TODO: ADD LISTENER TO ADD PROP BUTTON (REMOVE ALL LISTENERS AND ADD AGAIN)
+        // add property
         document.querySelector("#add-prop").addEventListener("click", this.handleAddProp);
-
 
         // save state config
         document.querySelector("#configure-state > a#configure").addEventListener("click", async e => {
             this.setBasicDetails();
+            // todo: set key for all properties 
+            this.setPropertyKeys();
+
             const {isValid, errorMsg} = this.validateConfig();
             if(!isValid) {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
 
-            const { configType, stateName, stateType, collectionKey, properties, performAfter } = this.configuration;
-            const index = performAfter > 0 ? performAfter + 1 : performAfter;
+            const { configType, stateName, stateType, collectionKey, properties, configChainIndex } = this.configuration;
+            // const index = performAfter >= 0 ? performAfter + 1 : performAfter;
             const item = {
                 configType,
                 stateName, 
                 stateType,
                 collectionKey,
                 properties,
-                performAfter,
+                // performAfter,
             }
-            await ConfigChain.insertAt(item, index);
+            await ConfigChain.insertAt(item, configChainIndex);
             this.close();
         });
+
     };    
 
     close = () => {
@@ -398,7 +413,7 @@ class StateMenu extends Menu {
         });
 
         if(!actions.length) {
-            assoActionContainer.innerHTML += `<option value="-1" disabled>No actions configured yet</option>`;
+            assoActionContainer.innerHTML += `<option value="" disabled>No actions configured yet</option>`;
             return;
         }
 

@@ -10,7 +10,7 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 let rootUrl = "";
 
 const initiate = async (url, configChain) => {
-    const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+    const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
     rootUrl = url;
     
@@ -129,10 +129,10 @@ const run = async (chain, step, page, json, memory = []) => {
             const innerJson = {};
 
             for (let j = 0; j < propertiesArr.length; j++) {   // COLUMN-WISE
-                let key = propertiesArr[j].keys[i] || propertiesArr[j].keys[0];
+                let key = propertiesArr[j].keys[i] || propertiesArr[j].keys[0] || propertiesArr[j].key;
                 let value = propertiesArr[j].values[i];
 
-                const labelText = await getInnerText(key, page);
+                const labelText = await getInnerText(key, page) || key;
                 const targetText = await getInnerText(value, page);
 
                 if(!labelText || !targetText) {
