@@ -44,6 +44,29 @@ class Menu {
         });
     };
 
+    populateSimilarElements = (fn, elementArr, selectorArr, elementType) => {
+        if(selectorArr.length === 0)   return elementArr;
+        
+        const areSelectorsValid = selectorArr.reduce((prev, curr) => {
+                return prev && DomUtils.isValidQuerySelector(curr);
+        });  
+        if(!areSelectorsValid)  return elementArr;
+        
+        return fn(elementArr, selectorArr, elementType);
+    };
+
+    removeSimilarElements = (fn, elementArr, selectorArr, elementType) => {
+        if(selectorArr.length === 0 || elementArr.length === 0)   return elementArr;
+
+        const areSelectorsValid = selectorArr.reduce((prev, curr) => {
+                return prev && DomUtils.isValidQuerySelector(curr);
+        }); 
+        if(!areSelectorsValid)  return elementArr;
+
+        return fn(elementArr, selectorArr, elementType);
+    };
+
+    // TODO: RENAME THIS METHOD
     populateSimilarTargets = (finalTargets, selectedTargets, elementType) => {  // TODO: REFACTOR THIS, REMOVE finalTargets
         if(selectedTargets.length === 0)   return finalTargets;
 
@@ -86,6 +109,7 @@ class Menu {
         return finalTargets;
     };
 
+    // todo: remove this
     removeSiblings = (finalTargets, selectedTargets, elementType) => {
         return this.removeSimilarTargets(finalTargets, selectedTargets, elementType);
     };

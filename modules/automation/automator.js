@@ -10,7 +10,7 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 let rootUrl = "";
 
 const initiate = async (url, configChain) => {
-    const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+    const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
     rootUrl = url;
     
@@ -27,7 +27,7 @@ const initiate = async (url, configChain) => {
     let json = {};
     await run(configChain, 0, page, json);
 
-    console.log(JSON.stringify(json));
+    // console.log(JSON.stringify(json));
 
     await recorder.stop();
     await saveData(`data-${+ new Date}`, JSON.stringify(json));
@@ -81,27 +81,58 @@ const run = async (chain, step, page, json, memory = []) => {
 
                 // TODO: TEST THIS. 
                 for (prop in innerJson) { 
-                    json[prop] = innerJson[prop];
+                    if(Array.isArray(json[prop])) {
+                        json[prop].push(innerJson[prop]);
+                    }
+                    else {
+                        json[prop] = innerJson[prop];
+                    }
                 }
             }
                 
         }
     }
     else if (chain[step].configType === configTypes.STATE) {
-        // TODO: collect state
         const state = chain[step];
         json[state.collectionKey] = [];
 
-        for(let i = 0; i < state.properties.length; i++) {
+        let maxElemCount = 0;
+        let maxElemPropertyIndex = 0; 
+        const propertiesArr = [];
+
+        for (let i = 0; i < state.properties.length; i++) {
             const property = state.properties[i];
-            const { keys, values } = await populateAllKeysAndValues(property, page);
+            let { keys, values } = await populateAllKeysAndValues(property, page);
 
-            for (let j = 0; j < values.length; j++ ) {
-                let key = keys[j] || keys[0];
-                let value = values[j];
+            // if the number of selectors for keys and values aren't exactly same,
+            // set the key to that of current iterator. 
+            // Coz there should be only one key for each value / group of values.
+            if(keys.length !== values.length) {
+                keys = [keys[i]];
+            }
 
-                const innerJson = {};
-                const labelText = await getInnerText(key, page);
+            propertyObj = {
+                ...property,
+                keys,
+                values,
+            };
+            propertiesArr.push(propertyObj);    
+
+            if(values.length > maxElemCount) {
+                maxElemPropertyIndex = i;
+                maxElemCount = values.length;
+            }
+        }
+
+        const refProperty = propertiesArr[maxElemPropertyIndex];
+        for (let i = 0; i < refProperty.values.length; i++) {  // ROW-WISE
+            const innerJson = {};
+
+            for (let j = 0; j < propertiesArr.length; j++) {   // COLUMN-WISE
+                let key = propertiesArr[j].keys[i] || propertiesArr[j].keys[0] || propertiesArr[j].key;
+                let value = propertiesArr[j].values[i];
+
+                const labelText = await getInnerText(key, page) || key;
                 const targetText = await getInnerText(value, page);
 
                 if(!labelText || !targetText) {
@@ -109,9 +140,9 @@ const run = async (chain, step, page, json, memory = []) => {
                 }  
 
                 innerJson[labelText] = targetText;
-                json[state.collectionKey].push(innerJson);
-
             }
+
+            json[state.collectionKey].push(innerJson);
         }
 
         console.log(`\nJSON inside state: ${JSON.stringify(json)}\n`);

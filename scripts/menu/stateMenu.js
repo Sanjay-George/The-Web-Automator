@@ -1,12 +1,10 @@
 /*
 TODO: 
 1. Issue - Coloring issue with property key & value (once a property is selected, try with another one. Somewhere listener is failing)
-2. Issue - select similar / sibling doesn't work per property
-3. Migrate completely to properties and propertiesMeta
 4. Handle colors when property is deleted
-5. Add provision for setting key as selector
+5. Add provision for setting key as selector - if key is text, don't colorize / search for similar elements
+6. Improve similar search logic, especially for property keys. [sort of handled in automator] 
 */
-
 
 class StateMenu extends Menu {
     constructor() {
@@ -19,27 +17,13 @@ class StateMenu extends Menu {
             configType: Enum.configTypes.STATE,
             stateName: "",
             stateType: null,
-
-            // TODO: to be removed
-            stateKey: "",
-            selectedTargets: [],
-            selectedLabels: [],
-            finalTargets: [], 
-            finalLabels: [],
-            selectSimilar: false,
-            selectSiblings: false,    
-
-            // TODO: KEEP THIS
-            // repeatCount: 0,  
-            maxTargetCount: -1,
-            // index of action to perform after. -1 means collect data immediately
-            performAfter: -1,   
-
-            // TODO: NEW PROPERTIES 
             collectionKey: "",
             properties: [],  // [{key: 'selector/text', value: 'selector', selectSimilar: bool, selectSiblings: bool}, {}, ...]
             propertiesMeta: [],  // [{ key: 'element/text', value: ['element1', 'element2', ...] }, {}, ...]
-
+            repeatCount: 0,  
+            maxTargetCount: -1,
+            // index of action (in config chain) to perform/collect state after
+            configChainIndex: -1,   
         }; 
 
         this.currentPropTarget = null;
@@ -78,7 +62,7 @@ class StateMenu extends Menu {
                     <select id="perform-after">
                         <option value="" disabled selected>Select when to perform state*</option>
                         <option value="-1">Perform immediately</option>
-                        <optgroup label="Available actions" id="associated-action">
+                        <optgroup label="Perform after action" id="associated-action">
                         </optgroup>
                     </select>
                 </div>
@@ -180,7 +164,6 @@ class StateMenu extends Menu {
             propertiesMeta[propIndex].value = [ e.target ];
             this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
             
-            // document.querySelector("#target-list").value = targetQuerySelector;  // TODO: CHANGE THIS TO NEW SELECTOR
         }
     };
 
@@ -210,32 +193,46 @@ class StateMenu extends Menu {
             propertiesMeta[propIndex - 1].key = e.target;
             this.currentPropTarget.querySelector('.js-label-list').value = targetQuerySelector;
             
-            // document.querySelector("#label-list").value = labelQuerySelector;
         }
     };
 
     setBasicDetails = () => {
+        const performAfter =  parseInt(document.querySelector("#perform-after").value, 10);
         this.configuration = {
             ...this.configuration,
             stateName: document.querySelector("#state-name").value,
             collectionKey: document.querySelector("#state-key").value,
             stateType: document.querySelector("#state-type").value,
-            performAfter: document.querySelector("#perform-after").value,
+            configChainIndex: isNaN(performAfter) ? null : performAfter + 1,
         };
     };
 
+    setPropertyKeys = () => {
+        const propertyKeys = Array.from(document.querySelectorAll(`#${this.containerId} .js-label-list`));
+
+        const { properties } = this.configuration;
+
+        propertyKeys.forEach((element, index) => {
+            properties[index].key = properties[index].key || element.value;
+        });
+    };
+
+
     validateConfig = () => {
-        const {stateName, stateType} = this.configuration;
+        const {stateName, collectionKey, stateType, configChainIndex, properties} = this.configuration;
         let errorMsg = "";
-        if(!stateName.length) {
-            errorMsg = "Enter stateName";
+        if(!stateName.length || !collectionKey.length) {
+            errorMsg = "Enter stateName and collectionKey";
         }
         else if(!stateType) {
-            errorMsg = "Select stateType"
+            errorMsg = "Select stateType";
         }
-        // else if(!selectedTargets.length) {
-        //     errorMsg = "Select atleast one State Target";
-        // }
+        else if(configChainIndex < 0) {
+            errorMsg = "Select when to collect the state";
+        }
+        else if(!properties.length) {
+            errorMsg = "Configure at least one property";
+        }
 
         return {
             isValid: errorMsg.length === 0,
@@ -290,12 +287,10 @@ class StateMenu extends Menu {
             });
         });
 
-        // select all similar siblings TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
+        // select all similar siblings
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-similar input`)).forEach(item => {
             item.addEventListener("click", e => {
                 e.stopPropagation();
-
-                let { selectSimilar, selectSiblings } = this.configuration;
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
@@ -303,15 +298,15 @@ class StateMenu extends Menu {
                 const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
 
                 if(e.target.checked) {
-                    propertiesMeta[propIndex].value = this.populateSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.populateSimilarTargets(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.populateSimilarElements(this.populateSimilarTargets, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.populateSimilarElements(this.populateSimilarTargets, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = true;
                     properties[propIndex].selectSiblings = false;
                     siblingCheckbox.checked = false;
                 }
                 else {
-                    propertiesMeta[propIndex].value = this.removeSimilarTargets(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.removeSimilarTargets(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.removeSimilarElements(this.removeSimilarTargets, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.removeSimilarElements(this.removeSimilarTargets, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = false;
                 }
                 this.configuration = {
@@ -322,12 +317,11 @@ class StateMenu extends Menu {
             });
         });
 
-        // select siblings (DOM tree logic)  TODO: DO THIS ONLY FOR VALUES, NOT THE KEY?
+        // select siblings (DOM tree logic) 
         Array.from(document.querySelectorAll(`#${this.containerId} .js-sel-siblings input`)).forEach(item => {
             item.addEventListener("click", e => {
                 e.stopPropagation();
 
-                let { selectSimilar, selectSiblings } = this.configuration;
                 let { properties, propertiesMeta } = this.configuration;
 
                 this.currentPropTarget = e.target.closest('.js-property');
@@ -335,15 +329,15 @@ class StateMenu extends Menu {
                 const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
 
                 if(e.target.checked) {
-                    propertiesMeta[propIndex].value = this.populateSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.populateSiblings(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.populateSimilarElements(this.populateSiblings, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.populateSimilarElements(this.populateSiblings, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSimilar = false;
                     properties[propIndex].selectSiblings = true;
                     similarCheckbox.checked = false;
                 }
                 else {
-                    propertiesMeta[propIndex].value = this.removeSiblings(propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.removeSiblings(propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = this.removeSimilarElements(this.removeSiblings, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
+                    propertiesMeta[propIndex].key = this.removeSimilarElements(this.removeSiblings, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
                     properties[propIndex].selectSiblings = false;
                 }
 
@@ -355,7 +349,7 @@ class StateMenu extends Menu {
             });
         });
 
-        // TODO: ADD LISTNER FOR js-delete-prop
+        // delete property
         Array.from(document.querySelectorAll(`#${this.containerId} .js-delete-prop`)).forEach(item => {
             item.addEventListener("click", e => {
                 const propertyContainer = document.querySelector("#properties");
@@ -364,30 +358,36 @@ class StateMenu extends Menu {
             });
         });
 
-        // TODO: ADD LISTENER TO ADD PROP BUTTON (REMOVE ALL LISTENERS AND ADD AGAIN)
+        // add property
         document.querySelector("#add-prop").addEventListener("click", this.handleAddProp);
-
 
         // save state config
         document.querySelector("#configure-state > a#configure").addEventListener("click", async e => {
             this.setBasicDetails();
+            // todo: set key for all properties 
+            this.setPropertyKeys();
+
             const {isValid, errorMsg} = this.validateConfig();
             if(!isValid) {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { configType, stateName, stateType, stateKey, collectionKey, properties, performAfter } = this.configuration;
-            await ConfigChain.push({
+
+            const { configType, stateName, stateType, collectionKey, properties, configChainIndex } = this.configuration;
+            // const index = performAfter >= 0 ? performAfter + 1 : performAfter;
+            const item = {
                 configType,
                 stateName, 
                 stateType,
                 collectionKey,
                 properties,
-                performAfter,
-            });
+                // performAfter,
+            }
+            await ConfigChain.insertAt(item, configChainIndex);
             this.close();
         });
-    };
+
+    };    
 
     close = () => {
         this.initConfiguration();
@@ -397,17 +397,28 @@ class StateMenu extends Menu {
     };
 
     populateAssociatedActions = async () => {
-        const actions = (await ConfigChain.get()).map((item, index) => [index, item.actionName || item.stateName]); // TODO: populate only actions, but maintain index of configChain
+        const configChain = (await ConfigChain.get());
+        const actions = [];
+        
         const assoActionContainer = document.querySelector("#associated-action");
         assoActionContainer.innerHTML = "";
+        
+        configChain.forEach((item, index) => {
+            if(item.configType === Enum.configTypes.ACTION) {
+                actions.push({
+                    index: index, 
+                    name: item.actionName
+                });
+            }
+        });
 
-        if(!actions || !actions.length) {
-            assoActionContainer.innerHTML += `<option value="1" disabled>No actions configured yet</option>`;
+        if(!actions.length) {
+            assoActionContainer.innerHTML += `<option value="" disabled>No actions configured yet</option>`;
             return;
         }
 
-        actions.forEach(item => {
-            assoActionContainer.innerHTML += `<option value="${item[0]}">A${parseInt(item[0], 10) + 1} - ${item[1]}</option>`;
+        actions.forEach((item, index) => {
+            assoActionContainer.innerHTML += `<option value="${item.index}">A${parseInt(index, 10) + 1} - ${item.name}</option>`;
         });
 
     } 

@@ -97,20 +97,29 @@ const ConfigChain = (() => {
         let chain = await get(); 
         chain.pop(); 
         return await window.setConfigChain(chain);
-    }
+    };
     const removeAt = async (index = -1) => {
         let chain = await get(); 
-        if(!chain.length || index < 0)     
+        if(!chain.length || index < 0) {     
             return undefined;
-            chain.splice(index, 1);
+        }
+        chain.splice(index, 1);
         return await window.setConfigChain(chain);
-    };  
+    };
+    const insertAt = async (item, index = -1) => {
+        let chain = await get();
+        if(chain.length === 0 || index < 0)   return await push(item);
+
+        chain = chain.slice(0, index).concat(item, chain.slice(index));
+        return await window.setConfigChain(chain);
+    }; 
 
     return {
-        push: push,
-        get: get,
-        pop: pop,
-        removeAt: removeAt
+        push,
+        get,
+        pop,
+        removeAt,
+        insertAt,
     };
 })();
 

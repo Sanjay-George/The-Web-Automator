@@ -1,16 +1,29 @@
 
-function getWaitOptions() {
-	return { waitUntil: 'networkidle0', timeout: 60000 };
+const DEFAULT_TIMEOUT = 10000;
+const MAX_ATTEMPTS = 3;
+
+function getWaitOptions(customTimeout) {
+	return { waitUntil: 'load', timeout: customTimeout || DEFAULT_TIMEOUT };
 } 
 
-async function openTab(browser, url) {
+async function openTab(browser, url, attempt = 0, timeout = 0) {
     console.log(`\nOpening URL : ${url}`);
     let page = await browser.newPage();
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
-    // getConfigValue("performanceMode") && 
+    // getConfigValue("performanceMode") &&  
 	await disableHeavyResources(page);
-    await page.goto(url, getWaitOptions());
+	try {
+		await page.goto(url, getWaitOptions(attempt * DEFAULT_TIMEOUT));
+	}
+	catch(ex) {
+		console.error(ex);
+		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
+			await closeTab(page);
+			return await openTab(browser, url, attempt+1);
+		}
+		return null;
+	}
     // await warmUpPage(page);
     return page;
 }
@@ -21,7 +34,7 @@ function getUserAgent() {
 }
 
 async function closeTab(page) {
-    if(page === undefined || !getConfigValue("debugMode")) return;  
+    if(page === undefined) return;  
     return page.close();
 }
 
