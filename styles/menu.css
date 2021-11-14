@@ -15,6 +15,15 @@
     padding-bottom: 20px;
 }
 
+.profile-menu * {
+    font-size: 13px;
+}
+
+.profile-menu .material-icons {
+    color: rgb(2, 136, 209);
+    font-size: 20px;
+}
+
 .profile-overlay {
     display: block;
     width: 100vw;
@@ -34,6 +43,8 @@
 .profile-menu h4 {
     padding: 10px 20px; 
     text-align: center;
+    font-size: 16px;
+    margin: 0;
 }
 /* 
 .profile-menu .row {
@@ -78,6 +89,7 @@
 
 .profile-menu .input-field {
     padding: 10px 0;
+    font-size: 13px;
 }
 
 .profile-menu select{
@@ -88,11 +100,12 @@
     position: absolute;
     right: 0px;
     cursor: pointer;
+    color: black;
 }
 
 .profile-menu .clear-all {
     cursor: pointer;
-    font-size: 20px; 
+    font-size: 16px; 
     position: relative; 
     top: 2px; 
 }
@@ -106,6 +119,7 @@
     letter-spacing: 1px;
     margin: 5px 0;
     cursor: pointer;
+    font-size: 13px;
 }
 
 .profile-menu input[type="text"] {
@@ -113,7 +127,7 @@
 }
 
 .profile-menu i.icon-btn{
-    font-size: 1rem;
+    font-size: 16px;
     cursor: pointer;
     position: relative; 
     top: 3px; 
@@ -138,6 +152,8 @@
 .context-menu ul{
     list-style: none;
     width: 100%;
+    padding: 0;
+    margin: 0;
 }
 .context-menu ul li {
     padding: 15px 10px;
