@@ -41,7 +41,7 @@ const configure = async (crawler) => {
             configChain: JSON.stringify(configChain),
             status: crawlerStatus.CONFIGURED,
         }
-        await crawlersDL.update(crawler.id, crawlerData)
+        await crawlersDL.update(crawler.id, crawlerData);
 
 		browser !== null && await browser.close();
 	});

@@ -7,12 +7,21 @@ const { elementTypes, actionTypes, configTypes } = require('../common/enum');
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
 
+const crawlersDL = require("../database/crawlersDL");
+const { crawlerStatus } = require('../common/enum');
+
+
 let rootUrl = "";
 
-const run = async (url, configChain) => {
+const init = async (crawler) => {
+    let { id, url, configChain } = crawler;
+    configChain = JSON.parse(configChain);
+
     const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
     rootUrl = url;
+
+    await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
     
     const recorder = new PuppeteerScreenRecorder(page);
     await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
@@ -33,6 +42,8 @@ const run = async (url, configChain) => {
     await saveData(`data-${+ new Date}`, JSON.stringify(json));
     
     await page.close();
+
+    await crawlersDL.updateStatus(id, crawlerStatus.COMPLETED);
 
     return json;
 };
@@ -388,5 +399,5 @@ async function saveData(pageName, json) {
 
 
 module.exports = {
-    run,
+    init,
 }

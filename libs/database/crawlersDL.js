@@ -62,7 +62,7 @@ const add = crawlerDetails => {
 
 const updateStatus = (id, status) => {
     return new Promise((resolve, reject) => {
-        connection.query(`UPDATE ${SCHEMA}.${TABLE} SET lastStatus = ? WHERE id = ?`, [status, id], function (error, results, fields) {
+        connection.query(`UPDATE ${SCHEMA}.${TABLE} SET status = ? WHERE id = ?`, [status, id], function (error, results, fields) {
             if (error)  reject(error);
             resolve(results);
         });

@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const { crawlerStatus } = require("./libs/common/enum");
 const {configure} = require("./libs/configuration/index");
+const {init} = require("./libs/automation/web-scraper");
 
 app.use(express.json()); 
 
@@ -24,7 +25,15 @@ app.post('/api/crawlers/configure/:id', async (req, res) => {
     let crawler = await crawlersDL.get(req.params.id);
 
     if(crawler === undefined)    return;
-    await configure(crawler);
+    configure(crawler);
+	res.sendStatus(200);
+});
+
+app.post('/api/crawlers/run/:id', async (req, res) => {
+    let crawler = await crawlersDL.get(req.params.id);
+
+    if(crawler === undefined)    return;
+	init(crawler);
 	res.sendStatus(200);
 });
 
