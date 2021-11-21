@@ -9,13 +9,15 @@ const configure = async (crawler) => {
 	const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, crawler.url);
 
+    configChain = [];
+
 	if(page === null)	return;
 
 	await insertStyles(page);
 	await insertScripts(page);
 	await exposeFunctions(page);
 
-	page.on('domcontentloaded', async () => {
+	page.on('load', async () => {
 		// insert all styles and scripts
 		console.log(`DOM loaded: ${page.url()}`);
 		await insertStyles(page);
@@ -36,7 +38,7 @@ const configure = async (crawler) => {
 
         let crawlerData = {
             ...crawler,
-            configChain: configChain,
+            configChain: JSON.stringify(configChain),
             status: crawlerStatus.CONFIGURED,
         }
         await crawlersDL.update(crawler.id, crawlerData)

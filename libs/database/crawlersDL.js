@@ -19,7 +19,7 @@ const closeConnection = () => {
 
 const getAll = (pageNumber = 1, pageSize = 10) => {
     return new Promise((resolve, reject) => {
-        connection.query(`SELECT * FROM ${SCHEMA}.${TABLE}`, function (error, results, fields) {
+        connection.query(`SELECT id, name, url, configChain, status, status+0 as statusId, lastRun, isActive FROM ${SCHEMA}.${TABLE}`, function (error, results, fields) {
             if (error)  reject(error);
             try{
                 resolve(results);

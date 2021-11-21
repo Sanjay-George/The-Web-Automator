@@ -25,11 +25,11 @@ const stateTypes = {
 };
 
 const crawlerStatus = {
-    NOT_CONFIGURED: 0,
-    CONFIGURED: 1,
-    IN_PROGRESS: 2,
-    COMPLETED: 3,
-    FAILED: 4,
+    NOT_CONFIGURED: 1,
+    CONFIGURED: 2,
+    IN_PROGRESS: 3,
+    COMPLETED: 4,
+    FAILED: 5,
 };
 
 module.exports = {
