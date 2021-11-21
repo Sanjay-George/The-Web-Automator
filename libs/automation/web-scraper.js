@@ -9,7 +9,7 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 
 let rootUrl = "";
 
-const initiate = async (url, configChain) => {
+const run = async (url, configChain) => {
     const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
     let page = await pageHelper.openTab(browser, url);
     rootUrl = url;
@@ -33,6 +33,8 @@ const initiate = async (url, configChain) => {
     await saveData(`data-${+ new Date}`, JSON.stringify(json));
     
     await page.close();
+
+    return json;
 };
 
 
@@ -386,5 +388,5 @@ async function saveData(pageName, json) {
 
 
 module.exports = {
-    initiate
+    run,
 }
