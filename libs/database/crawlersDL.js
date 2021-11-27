@@ -19,7 +19,7 @@ const closeConnection = () => {
 
 const getAll = (pageNumber = 1, pageSize = 10) => {
     return new Promise((resolve, reject) => {
-        connection.query(`SELECT id, name, url, configChain, status, status+0 as statusId, lastRun, isActive FROM ${SCHEMA}.${TABLE}`, function (error, results, fields) {
+        connection.query(`SELECT id, name, url, configChain, status, status+0 as statusId, lastRun, isActive FROM ${SCHEMA}.${TABLE} WHERE isActive = 1`, function (error, results, fields) {
             if (error)  reject(error);
             try{
                 resolve(results);
@@ -45,15 +45,15 @@ const get = id => {
     });
 };
 
-const add = crawlerDetails => {
+const add = crawler => {
     return new Promise((resolve, reject) => {
-        let data = {
-            name: crawlerDetails.name,
-            url: crawlerDetails.url,
-            application: crawlerDetails.app,
-            config: crawlerDetails.config
-        };
-        connection.query(`INSERT INTO ${SCHEMA}.${TABLE} SET ?`, data, function (error, results, fields) {
+        // let data = {
+        //     name: crawlerDetails.name,
+        //     url: crawlerDetails.url,
+        //     status: crawlerDetails.app,
+        //     config: crawlerDetails.config
+        // };
+        connection.query(`INSERT INTO ${SCHEMA}.${TABLE} SET ?`, crawler, function (error, results, fields) {
             if (error)  reject(error);
             resolve(results);
         });
@@ -71,13 +71,6 @@ const updateStatus = (id, status) => {
 
 const update = (id, crawler) => {
     return new Promise((resolve, reject) => {
-        // let data = {
-        //     name: crawlerDetails.name,
-        //     url: crawlerDetails.url,
-        //     configChain: crawlerDetails.app,
-        //     status: crawlerDetails.config,
-        //     lastRun: Date.now(),
-        // };
         connection.query(`UPDATE ${SCHEMA}.${TABLE} SET ? WHERE id = ?`, [crawler, id], function (error, results, fields) {
             if (error)  reject(error);
             resolve(results);

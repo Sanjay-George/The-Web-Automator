@@ -15,36 +15,48 @@ let rootUrl = "";
 
 const init = async (crawler) => {
     let { id, url, configChain } = crawler;
+    let json = {};
     configChain = JSON.parse(configChain);
 
-    const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
-    let page = await pageHelper.openTab(browser, url);
-    rootUrl = url;
-
-    await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
+    try {
+        const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
+        let page = await pageHelper.openTab(browser, url);
+        rootUrl = url;
     
-    const recorder = new PuppeteerScreenRecorder(page);
-    await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
-
-    await insertScripts(page);
-
-    page.on('domcontentloaded', async () => {
-		console.log(`\nDOM loaded: ${page.url()}`);
-		await insertScripts(page);
-	});
-
-    let json = {};
-    await run(configChain, 0, page, json);
-
-    // console.log(JSON.stringify(json));
-
-    await recorder.stop();
-    await saveData(`data-${+ new Date}`, JSON.stringify(json));
+        await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
+        
+        const recorder = new PuppeteerScreenRecorder(page);
+        await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
     
-    await page.close();
-
-    await crawlersDL.updateStatus(id, crawlerStatus.COMPLETED);
-
+        await insertScripts(page);
+    
+        page.on('domcontentloaded', async () => {
+            console.log(`\nDOM loaded: ${page.url()}`);
+            await insertScripts(page);
+        });
+    
+        await run(configChain, 0, page, json);
+    
+        // console.log(JSON.stringify(json));
+    
+        await recorder.stop();
+        await saveData(`data-${+ new Date}`, JSON.stringify(json));
+        
+        await page.close();
+    
+        await crawlersDL.update(id, {
+            status: crawlerStatus.COMPLETED,
+            lastRun: new Date(Date.now())
+        });
+    
+        return json;
+    }
+    catch(ex) {
+        await crawlersDL.update(id, {
+            status: crawlerStatus.FAILED,
+            lastRun: new Date(Date.now())
+        });
+    }
     return json;
 };
 
