@@ -7,48 +7,52 @@ let configChain = [];
 
 const configure = async (crawler) => {
 	const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-    let page = await pageHelper.openTab(browser, crawler.url);
-
-    configChain = [];
-
-	if(page === null)	return;
-
-	await insertStyles(page);
-	await insertScripts(page);
-	await exposeFunctions(page);
-
-	page.on('load', async () => {
-		// insert all styles and scripts
-		console.log(`DOM loaded: ${page.url()}`);
+	try {
+		let page = await pageHelper.openTab(browser, crawler.url);
+		await page.bringToFront();
+	
+		configChain = [];
+	
+		if(page === null)	return;
+	
 		await insertStyles(page);
 		await insertScripts(page);
 		await exposeFunctions(page);
-
-	});
-
-	page.on('dialog', async dialog => {
-		console.log(dialog.message());
-		await dialog.dismiss();
-	});
-
-	page.on('close', async () => {
-		console.log("page closed");
-
-		if(!configChain.length) 	return;
-
-        let crawlerData = {
-            ...crawler,
-            configChain: JSON.stringify(configChain),
-            status: crawlerStatus.CONFIGURED,
-        }
-        await crawlersDL.update(crawler.id, crawlerData);
-
+	
+		page.on('load', async () => {
+			// insert all styles and scripts
+			console.log(`DOM loaded: ${page.url()}`);
+			await insertStyles(page);
+			await insertScripts(page);
+			await exposeFunctions(page);
+	
+		});
+	
+		page.on('dialog', async dialog => {
+			console.log(dialog.message());
+			await dialog.dismiss();
+		});
+	
+		page.on('close', async () => {
+			console.log("page closed");
+	
+			if(!configChain.length) 	return;
+	
+			let crawlerData = {
+				...crawler,
+				configChain: JSON.stringify(configChain),
+				status: crawlerStatus.CONFIGURED,
+			}
+			await crawlersDL.update(crawler.id, crawlerData);
+	
+			browser !== null && await browser.close();
+		});
+	}
+	catch(ex) {
+		console.error(ex);
 		browser !== null && await browser.close();
-	});
+	}
 };
-
-// await page.waitForTimeout(2000);
-// await automator.run(url, configChain);
 
 // exposed functions survives navigation, so no need to expose again on page refresh
 // but sometimes functions aren't exposing on first try. 

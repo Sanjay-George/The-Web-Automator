@@ -57,7 +57,7 @@ app.delete('/api/crawlers/:id', async (req, res, next) => {
 	res.sendStatus(200);
 });
 
-// open crawler configuration mode
+// initiate configuration mode
 app.post('/api/crawlers/configure/:id', async (req, res) => {
     let crawler = await crawlersDL.get(req.params.id);
 

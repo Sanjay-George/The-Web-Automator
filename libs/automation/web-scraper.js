@@ -13,6 +13,8 @@ const { crawlerStatus } = require('../common/enum');
 
 let rootUrl = "";
 
+
+// TODO: RENAME THIS METHOD
 const init = async (crawler) => {
     let { id, url, configChain } = crawler;
     let json = {};
