@@ -44,6 +44,7 @@ class Menu {
         });
     };
 
+    // NOTE: Generic method that takes similarity function as input
     populateSimilarElements = (fn, elementArr, selectorArr, elementType) => {
         if(selectorArr.length === 0)   return elementArr;
         
@@ -55,6 +56,7 @@ class Menu {
         return fn(elementArr, selectorArr, elementType);
     };
 
+    // NOTE: Generic method that takes similarity function as input
     removeSimilarElements = (fn, elementArr, selectorArr, elementType) => {
         if(selectorArr.length === 0 || elementArr.length === 0)   return elementArr;
 
