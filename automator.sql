@@ -4,7 +4,7 @@ CREATE TABLE `automator`.`crawlers` (
   `url` varchar(200) NOT NULL,
   `configChain` longtext,
   `status` enum('Not Configured', 'Configured', 'In Progress', 'Completed', 'Failed') default 'Not Configured',
-  `lastRun` datetime DEFAULT now(),
+  `lastRun` datetime,
   `isActive` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`)
 );
@@ -20,3 +20,5 @@ CREATE TABLE `webhooks` (
 
 
 SELECT * FROM automator.crawlers;
+
+desc automator.crawlers;
