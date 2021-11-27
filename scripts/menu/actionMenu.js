@@ -15,7 +15,7 @@ class ActionMenu extends Menu {
             selectSiblings: false,    
             repeatCount: 0,
             maxTargetCount: -1
-        }; 
+        };
     }
 
     renderMenu = () => {
@@ -100,7 +100,6 @@ class ActionMenu extends Menu {
         },
     
         handleSelection: (e) => {
-            // TODO: HOW TO PREVENT REACT ROUTER?
             e.preventDefault();
             this.showMenu();
             
@@ -126,10 +125,9 @@ class ActionMenu extends Menu {
             Highlighter.resetHighlight(e.target);
         },
         handleSelection: (e) => {
-            // TODO: HOW TO PREVENT routing?
-            // event listener is on document, hence routing already in progress by the time handler is hit
             e.preventDefault();
             this.showMenu();
+
             DynamicEventHandler.removeHandler("mouseover");
             DynamicEventHandler.removeHandler("mouseout");
             DynamicEventHandler.removeHandler("click");
@@ -314,7 +312,8 @@ class ActionMenu extends Menu {
     close = () => {
         this.resetConfiguration();
         this.hideMenu();
-        this.removeMenuListeners();  // TODO: Not implemented properly yet
+        this.removeMenuListeners(); 
+        ConfigManager.enableAllAnchorTags();
         ConfigManager.disableConfigurationMode();
     };
 
@@ -328,6 +327,7 @@ class ActionMenu extends Menu {
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
+        ConfigManager.disableAllAnchorTags();
         this.setMenuListeners();
     };
 

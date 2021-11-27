@@ -25,6 +25,38 @@ const ConfigManager = (() => {
         configuredElement = null;
     };
 
+    const disableAllAnchorTags = () => {
+        const anchorElements = Array.from(document.querySelectorAll('a')).filter(item => item.host === window.location.host);
+        anchorElements.forEach(anchor => {
+            const link = document.createElement('no-link');  
+            link.id = anchor.id;
+            link.classList = anchor.classList;
+            link.attributes = anchor.attributes;
+            link.onclick = anchor.onclick;
+            link.innerText = anchor.innerText;
+            link.innerHTML = anchor.innerHTML;
+            link.style = anchor.style;
+            link.href = anchor.href;
+            anchor.replaceWith(link);
+        });
+    };
+
+    const enableAllAnchorTags = () => {
+        const linkElements = Array.from(document.querySelectorAll('no-link'));
+        linkElements.forEach(link => {
+            const anchor = document.createElement('a');  
+            anchor.id = link.id;
+            anchor.classList = link.classList;
+            anchor.attributes = link.attributes;
+            anchor.onclick = link.onclick;
+            anchor.innerText = link.innerText;
+            anchor.innerHTML = link.innerHTML;
+            anchor.style = link.style;
+            anchor.href = link.href;
+            link.replaceWith(anchor);
+        });
+    };
+
     const handleMouseOver = (e) => {
         !isConfigurationActive && Highlighter.highlightElement(e.target, Enum.elementTypes.DEFAULT);
     };
@@ -57,6 +89,7 @@ const ConfigManager = (() => {
         }
     };
 
+
     const handleRightClick = (e) => {
         console.log(e);
         e.preventDefault();
@@ -72,7 +105,7 @@ const ConfigManager = (() => {
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
         DynamicEventHandler.addHandler("mouseout", handleMouseOut);
         // DynamicEventHandler.addHandler("click", handleClick);
-
+        
         document.addEventListener('contextmenu', handleRightClick, false);
     };
 
@@ -80,6 +113,8 @@ const ConfigManager = (() => {
         registerEvents: registerEvents,
         enableConfigurationMode: enableConfigurationMode,
         disableConfigurationMode: disableConfigurationMode,
+        enableAllAnchorTags: enableAllAnchorTags,
+        disableAllAnchorTags: disableAllAnchorTags,
         isConfigurationActive: () => isConfigurationActive,
     }
 })();
