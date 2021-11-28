@@ -26,9 +26,9 @@ const ConfigManager = (() => {
     };
 
     const disableAllAnchorTags = () => {
-        const anchorElements = Array.from(document.querySelectorAll('a')).filter(item => item.host === window.location.host);
+        const anchorElements = Array.from(document.querySelectorAll("a")).filter(item => item.host === window.location.host);
         anchorElements.forEach(anchor => {
-            const link = document.createElement('no-link');  
+            const link = document.createElement("no-link");  
             link.id = anchor.id;
             link.classList = anchor.classList;
             link.attributes = anchor.attributes;
@@ -42,9 +42,9 @@ const ConfigManager = (() => {
     };
 
     const enableAllAnchorTags = () => {
-        const linkElements = Array.from(document.querySelectorAll('no-link'));
+        const linkElements = Array.from(document.querySelectorAll("no-link"));
         linkElements.forEach(link => {
-            const anchor = document.createElement('a');  
+            const anchor = document.createElement("a");  
             anchor.id = link.id;
             anchor.classList = link.classList;
             anchor.attributes = link.attributes;
@@ -110,11 +110,11 @@ const ConfigManager = (() => {
     };
 
     return {
-        registerEvents: registerEvents,
-        enableConfigurationMode: enableConfigurationMode,
-        disableConfigurationMode: disableConfigurationMode,
-        enableAllAnchorTags: enableAllAnchorTags,
-        disableAllAnchorTags: disableAllAnchorTags,
+        registerEvents,
+        enableConfigurationMode,
+        disableConfigurationMode,
+        enableAllAnchorTags,
+        disableAllAnchorTags,
         isConfigurationActive: () => isConfigurationActive,
     }
 })();

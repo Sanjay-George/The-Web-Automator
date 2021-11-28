@@ -1,3 +1,5 @@
+/* global ConfigManager, Highlighter, DynamicEventHandler */
+
 class ActionMenu extends Menu {
     constructor() {
         super();
