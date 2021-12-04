@@ -21,7 +21,7 @@ const init = async (crawler) => {
     configChain = JSON.parse(configChain);
 
     try {
-        const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
+        const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
         let page = await pageHelper.openTab(browser, url);
         rootUrl = url;
     
@@ -372,7 +372,7 @@ const populateSimilarTargets = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];
 
     const finalTargets =  await page.evaluate((selectedTargets) => { 
-        const targets = DomUtils.findSimilarElements(selectedTargets);
+        const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
         const targetSelectors = [];
         targets.forEach(target => {
             targetSelectors.push(DomUtils.getQuerySelector(target));
