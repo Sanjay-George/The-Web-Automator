@@ -10,9 +10,7 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 const crawlersDL = require("../database/crawlersDL");
 const { crawlerStatus } = require('../common/enum');
 
-
 let rootUrl = "";
-
 
 // TODO: RENAME THIS METHOD
 const init = async (crawler) => {
@@ -77,7 +75,6 @@ const run = async (chain, step, page, json, memory = []) => {
         const { targets, labels } = await populateAllTargetsAndLabels(action, page);
         const jsonKeys = await getActionJsonKeys(targets, labels, page) || [];
 
-        
         for(let i = 0; i < targets.length; i++) {
             const target = targets[i];
             const label = labels[i];
@@ -250,7 +247,6 @@ const tryActionsInMemory = async (memory, step, page) => {
         }
         const { action, target } = memory[i];
         try{
-            // console.log(target);
             await perform(action, target, page);
         }
         catch(ex) {
@@ -327,7 +323,7 @@ const perform = async (action, target, page) => {
             await Promise.all([
                 awaitXhrResponse(),
                 awaitNavigation(),
-                page.waitForTimeout(500),
+                page.waitForTimeout(1000),
             ]);
             break;
         default:
@@ -357,7 +353,7 @@ const populateSiblings = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];
 
     const finalTargets =  await page.evaluate((selectedTargets) => { 
-        const targets = DomUtils.findSiblings(selectedTargets);
+        const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
         const targetSelectors = [];
         targets.forEach(target => {
             targetSelectors.push(DomUtils.getQuerySelector(target));
@@ -373,7 +369,9 @@ const populateSimilarTargets = async (selectedTargets, page) => {
 
     const finalTargets =  await page.evaluate((selectedTargets) => { 
         const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
-        const targetSelectors = [];
+        if(targets.length === 0) return [];
+
+        const targetSelectors = []; 
         targets.forEach(target => {
             targetSelectors.push(DomUtils.getQuerySelector(target));
         });
@@ -384,6 +382,7 @@ const populateSimilarTargets = async (selectedTargets, page) => {
 
     return finalTargets;  // target selectors, not elements
 };
+
 
 const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/enum.js" });
