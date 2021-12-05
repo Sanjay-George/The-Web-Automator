@@ -1,4 +1,4 @@
-var DomUtils = (() => {
+const DomUtils = (() => {
 
     const _startsWithNumber = str => {
         return !isNaN(parseInt(str[0]));   // first char in str is parseable 
@@ -59,7 +59,7 @@ var DomUtils = (() => {
         return element.id.length > 0;
     };
 
-    const getQuerySelector = (element) => {
+    const getQuerySelector = element => {
         if(element === undefined  || element === null)  return "";
         /*
         Logic: 
@@ -171,13 +171,18 @@ var DomUtils = (() => {
 
     const findSimilarElementsByTreePath = selectorArr => {
         let similarElements = [];
-        selectorArr.forEach(selector => {
-            const treePath = _formulateTreePath(selector);  // create selector path with just nodeName and nth-child
-            const bestSelector = _formulateBestSelector(treePath);  // get best selector (by removing nth-child)
-            similarElements = similarElements.concat(Array.from(document.querySelectorAll(bestSelector)));
-        });
-
-        return similarElements;
+        try {
+            selectorArr.forEach(selector => {
+                const treePath = _formulateTreePath(selector);  // create selector path with just nodeName and nth-child
+                const bestSelector = _formulateBestSelector(treePath);  // get best selector (by removing nth-child)
+                similarElements = similarElements.concat(Array.from(document.querySelectorAll(bestSelector)));
+            });
+            return similarElements;
+        }
+        catch(ex) {
+            console.error(ex);
+            return similarElements;
+        }
     };
 
     const _unloadListener = () => {
