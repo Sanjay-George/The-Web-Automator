@@ -10,7 +10,7 @@ const MAX_WAIT_TIME = 5000;
 
 function handleRequest(request) {
     if(!status.isXhrReadActive)             return;
-    if(request.resourceType() !== "xhr")    return;
+    if(request.resourceType() !== "xhr" || request.resourceType() !== "fetch")    return;
     xhrRequests.push(request);
 }
 
@@ -49,6 +49,17 @@ function waitTillLastRequest() {
     });
 }
 
+function turnOffRequestMode() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            page.off("request", handleRequest);
+            status.isXhrReadActive = false;
+            page.on("response", handleResponse);
+            resolve();
+        }, 100); 
+    });
+}
+
 async function addXhrListener(pageObj) {
     page = pageObj;
     await page.on("request", handleRequest);
@@ -61,11 +72,7 @@ async function removeXhrListener() {
 }
 
 async function awaitXhrResponse() {
-    setTimeout(() => {
-        page.off("request", handleRequest);
-        status.isXhrReadActive = false;
-        page.on("response", handleResponse);
-    }, 10);   
+    await turnOffRequestMode();
     
     let { lastRequestTimer, clearRequestTimer, clearAllTimer } = await waitTillLastRequest();
     clearInterval(lastRequestTimer);

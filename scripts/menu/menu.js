@@ -72,7 +72,7 @@ class Menu {
     populateSimilarTargets = (finalTargets, selectedTargets, elementType) => {  // TODO: REFACTOR THIS, REMOVE finalTargets
         if(selectedTargets.length === 0)   return finalTargets;
 
-        finalTargets = DomUtils.findSimilarElements(selectedTargets);
+        finalTargets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
 
         finalTargets.forEach(item => {
             Highlighter.highlightElement(item, elementType);

@@ -1,4 +1,4 @@
-/* global ActionMenu, StateMenu, Highlighter, DynamicEventHandler */
+/* global ActionMenu, StateMenu, Highlighter, DynamicEventHandler, DomUtils */
 
 
 // INFO: This is the start point of each page crawled in config mode
@@ -28,32 +28,14 @@ const ConfigManager = (() => {
     const disableAllAnchorTags = () => {
         const anchorElements = Array.from(document.querySelectorAll("a")).filter(item => item.host === window.location.host);
         anchorElements.forEach(anchor => {
-            const link = document.createElement("no-link");  
-            link.id = anchor.id;
-            link.classList = anchor.classList;
-            link.attributes = anchor.attributes;
-            link.onclick = anchor.onclick;
-            link.innerText = anchor.innerText;
-            link.innerHTML = anchor.innerHTML;
-            link.style = anchor.style;
-            link.href = anchor.href;
-            anchor.replaceWith(link);
+            DomUtils.convertToNoLink(anchor);
         });
     };
 
     const enableAllAnchorTags = () => {
         const linkElements = Array.from(document.querySelectorAll("no-link"));
         linkElements.forEach(link => {
-            const anchor = document.createElement("a");  
-            anchor.id = link.id;
-            anchor.classList = link.classList;
-            anchor.attributes = link.attributes;
-            anchor.onclick = link.onclick;
-            anchor.innerText = link.innerText;
-            anchor.innerHTML = link.innerHTML;
-            anchor.style = link.style;
-            anchor.href = link.href;
-            link.replaceWith(anchor);
+            DomUtils.convertToAnchor(link);
         });
     };
 
@@ -91,7 +73,6 @@ const ConfigManager = (() => {
 
 
     const handleRightClick = (e) => {
-        console.log(e);
         e.preventDefault();
         if(isConfigurationActive)       return;
         ContextMenu.open(e.pageX, e.pageY, e.target);
