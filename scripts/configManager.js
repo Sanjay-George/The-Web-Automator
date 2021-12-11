@@ -72,7 +72,7 @@ const ConfigManager = (() => {
     };
 
 
-    const handleRightClick = (e) => {
+    const handleRightClick = e => {
         e.preventDefault();
         if(isConfigurationActive)       return;
         ContextMenu.open(e.pageX, e.pageY, e.target);

@@ -207,7 +207,7 @@ const populateAllKeysAndValues = async (property, page) => {
 };
 
 const getInnerText = async (selector, page) => {
-    return await page.evaluate((selector) => {
+    return await page.evaluate(selector => {
         let element = document.querySelector(selector);
         if(element){
             return element.innerText.trim();  // TODO: sanitize further 

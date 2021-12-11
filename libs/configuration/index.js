@@ -79,12 +79,12 @@ const exposeFunctions = async (page) => {
 };
 
 
-const insertStyles = async (page) => {
+const insertStyles = async page => {
 	await page.addStyleTag({ url: "https://fonts.googleapis.com/icon?family=Material+Icons"});
 	await page.addStyleTag({ path: "./styles/menu.css"});
 };
 
-const insertScripts = async (page) => {
+const insertScripts = async page => {
 	await page.addScriptTag({ path: "./scripts/menu/menu.js" });
 	await page.addScriptTag({ path: "./scripts/enum.js" });
 	await page.addScriptTag({ path: "./scripts/menu/actionMenu.js" });

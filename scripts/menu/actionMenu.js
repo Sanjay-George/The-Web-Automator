@@ -1,4 +1,5 @@
-/* global ConfigManager, Highlighter, DynamicEventHandler */
+/* global ConfigManager, Highlighter, DynamicEventHandler, DomUtils */
+
 
 class ActionMenu extends Menu {
     constructor() {
@@ -153,7 +154,7 @@ class ActionMenu extends Menu {
     };
 
     validateConfig = () => {
-        const {actionName, actionType, selectedTargets} = this.configuration;
+        const {actionName, actionType, selectedTargets, selectedLabels} = this.configuration;
         let errorMsg = "";
         if(!actionName.length) {
             errorMsg = "Enter actionName";
@@ -166,7 +167,7 @@ class ActionMenu extends Menu {
         }
         else if(selectedLabels.length > 0 && selectedLabels.length !== selectedTargets.length) {
             errorMsg = `${selectedLabels.length} labels are selected, 
-                        but ${selectedTargets.length} targets are selected.`
+                        but ${selectedTargets.length} targets are selected.`;
         }
 
         return {

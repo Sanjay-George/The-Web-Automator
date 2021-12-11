@@ -49,7 +49,7 @@ async function disableHeavyResources(page) {
 	const blockedReqKeywords = ["video", "playback", "youtube", "autoplay"];
 
 	await page.setRequestInterception(true);
-	page.on('request', async (request) => {
+	page.on('request', async request => {
 	try{
 		if (heavyResources.includes(request.resourceType())) { 
 		await request.abort();
