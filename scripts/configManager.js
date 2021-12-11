@@ -1,4 +1,4 @@
-/* global ActionMenu, StateMenu, Highlighter, DynamicEventHandler */
+/* global ActionMenu, StateMenu, Highlighter, DynamicEventHandler, DomUtils */
 
 
 // INFO: This is the start point of each page crawled in config mode
@@ -23,6 +23,20 @@ const ConfigManager = (() => {
         Highlighter.resetAllHighlights();
         isConfigurationActive = false;
         configuredElement = null;
+    };
+
+    const disableAllAnchorTags = () => {
+        const anchorElements = Array.from(document.querySelectorAll("a")).filter(item => item.host === window.location.host);
+        anchorElements.forEach(anchor => {
+            DomUtils.convertToNoLink(anchor);
+        });
+    };
+
+    const enableAllAnchorTags = () => {
+        const linkElements = Array.from(document.querySelectorAll("no-link"));
+        linkElements.forEach(link => {
+            DomUtils.convertToAnchor(link);
+        });
     };
 
     const handleMouseOver = (e) => {
@@ -57,8 +71,8 @@ const ConfigManager = (() => {
         }
     };
 
-    const handleRightClick = (e) => {
-        console.log(e);
+
+    const handleRightClick = e => {
         e.preventDefault();
         if(isConfigurationActive)       return;
         ContextMenu.open(e.pageX, e.pageY, e.target);
@@ -72,14 +86,16 @@ const ConfigManager = (() => {
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
         DynamicEventHandler.addHandler("mouseout", handleMouseOut);
         // DynamicEventHandler.addHandler("click", handleClick);
-
+        
         document.addEventListener('contextmenu', handleRightClick, false);
     };
 
     return {
-        registerEvents: registerEvents,
-        enableConfigurationMode: enableConfigurationMode,
-        disableConfigurationMode: disableConfigurationMode,
+        registerEvents,
+        enableConfigurationMode,
+        disableConfigurationMode,
+        enableAllAnchorTags,
+        disableAllAnchorTags,
         isConfigurationActive: () => isConfigurationActive,
     }
 })();

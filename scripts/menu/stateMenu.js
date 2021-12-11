@@ -128,10 +128,12 @@ class StateMenu extends Menu {
     };
 
     removeMenuListeners = () => {
-        // close btn
-        document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
-        document.querySelector("#add-prop").addEventListener("click", this.handleAddProp);
-
+        document
+            .querySelector(`#${this.containerId} .profile-close`)
+            .removeEventListener("click", this.close);
+        document
+            .querySelector("#add-prop")
+            .removeEventListener("click", this.handleAddProp);  
     };
 
 
@@ -145,7 +147,6 @@ class StateMenu extends Menu {
         },
     
         handleSelection: e => {
-            // TODO: HOW TO PREVENT REACT ROUTER?
             e.preventDefault();
             this.showMenu();
             
@@ -153,7 +154,8 @@ class StateMenu extends Menu {
             DynamicEventHandler.removeHandler("mouseout");
             DynamicEventHandler.removeHandler("click");
 
-            const targetQuerySelector = DomUtils.getQuerySelector(e.target);
+            const target = e.target;
+            const targetQuerySelector = DomUtils.getQuerySelector(target);
 
             const { properties, propertiesMeta } = this.configuration;
             
@@ -161,9 +163,8 @@ class StateMenu extends Menu {
 
             const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
             properties[propIndex].value = targetQuerySelector;
-            propertiesMeta[propIndex].value = [ e.target ];
+            propertiesMeta[propIndex].value = [ target ];
             this.currentPropTarget.querySelector('.js-target-list').value = targetQuerySelector;
-            
         }
     };
 
@@ -175,8 +176,6 @@ class StateMenu extends Menu {
             Highlighter.resetHighlight(e.target);
         },
         handleSelection: e => {
-            // TODO: HOW TO PREVENT routing?
-            // event listener is on document, hence routing already in progress by the time handler is hit
             e.preventDefault();
             this.showMenu();
 
@@ -184,13 +183,14 @@ class StateMenu extends Menu {
             DynamicEventHandler.removeHandler("mouseout");
             DynamicEventHandler.removeHandler("click");
 
+            const target = e.target;
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
 
             const { properties, propertiesMeta } = this.configuration;
 
-            const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10); 
-            properties[propIndex - 1].key = targetQuerySelector;
-            propertiesMeta[propIndex - 1].key = e.target;
+            const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
+            properties[propIndex].key = targetQuerySelector;
+            propertiesMeta[propIndex].key = target;
             this.currentPropTarget.querySelector('.js-label-list').value = targetQuerySelector;
             
         }
@@ -242,11 +242,11 @@ class StateMenu extends Menu {
 
     handleAddProp = e => {
         const { properties, propertiesMeta } = this.configuration;
-        properties.push(new StateProperty({ value: DomUtils.getQuerySelector(e.target)}));
-        propertiesMeta.push(new StateProperty({ value: [ e.target ] }));
+        properties.push(new StateProperty({ value: ""}));
+        propertiesMeta.push(new StateProperty({ value: [ ] }));
 
         const propertyContainer = document.querySelector("#properties");
-        propertyContainer.append(this.addPropRow()); 
+        propertyContainer.append(this.addPropRow());
         this.removeMenuListeners();
         this.setMenuListeners();
     };
@@ -262,7 +262,7 @@ class StateMenu extends Menu {
                 this.currentPropTarget = e.target.closest('.js-property');
     
                 const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1;
-                Highlighter.resetHighlight(this.configuration.propertiesMeta[propIndex].value[0]); 
+                Highlighter.resetHighlight(this.configuration.propertiesMeta[propIndex].value[0]); // NOTE: Assuming there'll be only one element as value per property (this could change in future)
                 this.hideMenu();
     
                 DynamicEventHandler.addHandler("mouseover", this.stateTargetHandlers.handleMouseOver);
@@ -298,15 +298,39 @@ class StateMenu extends Menu {
                 const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
 
                 if(e.target.checked) {
-                    propertiesMeta[propIndex].value = this.populateSimilarElements(this.populateSimilarTargets, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.populateSimilarElements(this.populateSimilarTargets, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = 
+                        this.populateSimilarElements(
+                            this.populateSimilarTargets, 
+                            propertiesMeta[propIndex].value, 
+                            [properties[propIndex].value], 
+                            Enum.elementTypes.STATE_TARGET
+                        );
+                    propertiesMeta[propIndex].key = 
+                        this.populateSimilarElements(
+                            this.populateSimilarTargets, 
+                            propertiesMeta[propIndex].key, 
+                            [properties[propIndex].key], 
+                            Enum.elementTypes.STATE_LABEL
+                        );
                     properties[propIndex].selectSimilar = true;
                     properties[propIndex].selectSiblings = false;
                     siblingCheckbox.checked = false;
                 }
                 else {
-                    propertiesMeta[propIndex].value = this.removeSimilarElements(this.removeSimilarTargets, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.removeSimilarElements(this.removeSimilarTargets, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = 
+                        this.removeSimilarElements(
+                            this.removeSimilarTargets, 
+                            propertiesMeta[propIndex].value, 
+                            [properties[propIndex].value], 
+                            Enum.elementTypes.STATE_TARGET
+                        );
+                    propertiesMeta[propIndex].key = 
+                        this.removeSimilarElements(
+                            this.removeSimilarTargets, 
+                            propertiesMeta[propIndex].key, 
+                            [properties[propIndex].key], 
+                            Enum.elementTypes.STATE_LABEL
+                        );
                     properties[propIndex].selectSimilar = false;
                 }
                 this.configuration = {
@@ -329,15 +353,39 @@ class StateMenu extends Menu {
                 const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
 
                 if(e.target.checked) {
-                    propertiesMeta[propIndex].value = this.populateSimilarElements(this.populateSiblings, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.populateSimilarElements(this.populateSiblings, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = 
+                        this.populateSimilarElements(
+                            this.populateSiblings, 
+                            propertiesMeta[propIndex].value, 
+                            [properties[propIndex].value], 
+                            Enum.elementTypes.STATE_TARGET
+                        );
+                    propertiesMeta[propIndex].key = 
+                        this.populateSimilarElements(
+                            this.populateSiblings, 
+                            propertiesMeta[propIndex].key, 
+                            [properties[propIndex].key], 
+                            Enum.elementTypes.STATE_LABEL
+                        );
                     properties[propIndex].selectSimilar = false;
                     properties[propIndex].selectSiblings = true;
                     similarCheckbox.checked = false;
                 }
                 else {
-                    propertiesMeta[propIndex].value = this.removeSimilarElements(this.removeSiblings, propertiesMeta[propIndex].value, [properties[propIndex].value], Enum.elementTypes.STATE_TARGET);
-                    propertiesMeta[propIndex].key = this.removeSimilarElements(this.removeSiblings, propertiesMeta[propIndex].key, [properties[propIndex].key], Enum.elementTypes.STATE_LABEL);
+                    propertiesMeta[propIndex].value = 
+                        this.removeSimilarElements(
+                            this.removeSiblings, 
+                            propertiesMeta[propIndex].value, 
+                            [properties[propIndex].value], 
+                            Enum.elementTypes.STATE_TARGET
+                        );
+                    propertiesMeta[propIndex].key = 
+                        this.removeSimilarElements(
+                            this.removeSiblings, 
+                            propertiesMeta[propIndex].key, 
+                            [properties[propIndex].key], 
+                            Enum.elementTypes.STATE_LABEL
+                        );
                     properties[propIndex].selectSiblings = false;
                 }
 
@@ -364,7 +412,6 @@ class StateMenu extends Menu {
         // save state config
         document.querySelector("#configure-state > a#configure").addEventListener("click", async e => {
             this.setBasicDetails();
-            // todo: set key for all properties 
             this.setPropertyKeys();
 
             const {isValid, errorMsg} = this.validateConfig();
@@ -373,15 +420,39 @@ class StateMenu extends Menu {
                 return ;
             }
 
-            const { configType, stateName, stateType, collectionKey, properties, configChainIndex } = this.configuration;
-            // const index = performAfter >= 0 ? performAfter + 1 : performAfter;
+            const 
+                { configType, stateName, stateType, collectionKey, 
+                    properties, propertiesMeta, configChainIndex } = this.configuration;
+            
+            // TODO: RECALCULATE PROPERTIES FROM PROPERTIESMETA, AFTER CONVERTING NO-LINK BACK TO ANCHOR
+            for(let i = 0; i < propertiesMeta.length; i++) {
+                const meta = propertiesMeta[i];
+               
+                const sanitizedValueElement = 
+                    DomUtils.convertAllTagsInPathToAnotherType(meta.value[0], DomUtils.convertToAnchor); 
+                // NOTE: Using meta.value[0] assuming there'll be only one value per property. 
+                //       This could change in the future
+                const sanitizedValueSelector = DomUtils.getQuerySelector(sanitizedValueElement);
+                properties[i].value = sanitizedValueSelector;
+
+                if(!DomUtils.isValidQuerySelector(properties[i].key)) {
+                    continue;
+                }
+
+                const sanitizedKeyElement = 
+                    DomUtils.convertAllTagsInPathToAnotherType(meta.key[0], DomUtils.convertToAnchor);
+                const sanitizedKeySelector = 
+                    DomUtils.getQuerySelector(sanitizedKeyElement);
+                properties[i].key = sanitizedKeySelector;
+            }
+
+
             const item = {
                 configType,
                 stateName, 
                 stateType,
                 collectionKey,
                 properties,
-                // performAfter,
             }
             await ConfigChain.insertAt(item, configChainIndex);
             this.close();
@@ -393,6 +464,7 @@ class StateMenu extends Menu {
         this.initConfiguration();
         this.hideMenu();
         this.removeMenuListeners();  // TODO: Not implemented properly yet
+        ConfigManager.enableAllAnchorTags();
         ConfigManager.disableConfigurationMode();
     };
 
@@ -413,12 +485,14 @@ class StateMenu extends Menu {
         });
 
         if(!actions.length) {
-            assoActionContainer.innerHTML += `<option value="" disabled>No actions configured yet</option>`;
+            assoActionContainer.innerHTML += 
+                `<option value="" disabled>No actions configured yet</option>`;
             return;
         }
 
         actions.forEach((item, index) => {
-            assoActionContainer.innerHTML += `<option value="${item.index}">A${parseInt(index, 10) + 1} - ${item.name}</option>`;
+            assoActionContainer.innerHTML += 
+                `<option value="${item.index}">A${parseInt(index, 10) + 1} - ${item.name}</option>`;
         });
 
     } 
@@ -426,11 +500,14 @@ class StateMenu extends Menu {
     open = (target) => {     
         ConfigManager.enableConfigurationMode(target, Enum.elementTypes.STATE);
 
-        // initialize configuration values 
         const { properties, propertiesMeta } = this.configuration;
-        properties.push(new StateProperty({ value: DomUtils.getQuerySelector(target) }));
-        propertiesMeta.push(new StateProperty({ value: [ target ]}));
+        const sanitizedtarget = 
+            DomUtils.convertAllTagsInPathToAnotherType(target, DomUtils.convertToNoLink);
+        const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
+        properties.push(new StateProperty({ value:  sanitizedTargetSelector }));
+        propertiesMeta.push(new StateProperty({ value: [ sanitizedtarget ]}));
 
+        ConfigManager.disableAllAnchorTags();
         this.populateAssociatedActions();
         
         this.menu.innerHTML = this.renderMenu();
@@ -438,10 +515,9 @@ class StateMenu extends Menu {
         
         // add prop row to menu 
         const propertyContainer = document.querySelector(`#${this.containerId} #properties`);
-        propertyContainer.append(this.addPropRow(DomUtils.getQuerySelector(target))); 
+        propertyContainer.append(this.addPropRow(sanitizedTargetSelector)); 
         
         this.setMenuListeners();
-        
     };
 
     initialize = () => {

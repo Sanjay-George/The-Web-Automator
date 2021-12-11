@@ -34,14 +34,14 @@ const DomUtils = (() => {
         return `:nth-child(${childIndex+1})`;
     };
 
-    const hasSiblingsOfSameType = element => {
+    const _hasSiblingsOfSameType = element => {
         let parent = element.parentElement;
         let currentType  = element.nodeName;
         let similarTypeChildren = Array.from(parent.children).map(ele => ele.nodeName).filter(nodeName => nodeName === currentType);
         return similarTypeChildren.length > 1;
     };
 
-    const hasSiblingsWithSameClassList = element => {
+    const _hasSiblingsWithSameClassList = element => {
         if(element.parentElement.children.length === 1) return false;
 
         const parent = element.parentElement;
@@ -51,7 +51,7 @@ const DomUtils = (() => {
         return (siblingsWithSameClassList.length > 0);
     }; 
 
-    const hasClasses = element => {
+    const _hasClasses = element => {
         return element.classList.length > 0;
     };
 
@@ -73,7 +73,8 @@ const DomUtils = (() => {
         let path = [];        
         
         while(element !== document.body) {
-            let currentSelector = element.nodeName.toLowerCase();
+            let nodeName = element.nodeName.toLowerCase();
+            let currentSelector = nodeName;
 
             if(hasId(element)) {
                 currentSelector += `${_buildId(element)}`;
@@ -81,13 +82,13 @@ const DomUtils = (() => {
                 break;
             }
 
-            if(!hasSiblingsOfSameType(element)) {
+            if(!_hasSiblingsOfSameType(element)) {
                 path.push(currentSelector);
                 element = element.parentElement;
                 continue;
             }
             
-            if(hasClasses(element) && !hasSiblingsWithSameClassList(element)) {
+            if(_hasClasses(element) && !_hasSiblingsWithSameClassList(element)) {
                 currentSelector += `${_buildClassList(element)}`;
                 path.push(currentSelector);
                 element = element.parentElement;
@@ -102,14 +103,41 @@ const DomUtils = (() => {
         return path.reverse().join(" > ");
     }
 
+    const _formulateBestSelector = selector => {
+        let matchedElementsCount = 0;
+        const potentialSelectors = [];
+        const selectorArr = selector.split(" > ");
+        for(let i = 0; i < selectorArr.length; i++) {
+            if(!selectorArr[i].includes("nth-child")){
+                continue;
+            }
+            const newSelector = 
+                    selectorArr.slice(0, i)
+                        .concat(selectorArr.slice(i, i+1)[0].split(":")[0], selectorArr.slice(i+1, selectorArr.length))
+                        .join(" > ");  // Don't touch this. 
+            potentialSelectors.push(newSelector);
+        }
+
+        let bestSelector = selector;
+        for(let i = 0; i < potentialSelectors.length; i++) {
+            const potentialSelector = potentialSelectors[i];
+            const matchedElements = Array.from(document.querySelectorAll(potentialSelector));
+            if(matchedElements.length >= matchedElementsCount) {
+                bestSelector = potentialSelector;
+                matchedElementsCount = matchedElements.length;
+            }
+        }
+
+        return bestSelector;
+    };
+
     const findSimilarElements = selectorArr => {
         let similarElements = [];
         selectorArr.forEach(selector => {
             const nthChildElem = selector.split(" > ").filter(item => item.includes("nth-child"));
             let newSelector;
             if(nthChildElem.length) {
-                const replaceElem = nthChildElem[nthChildElem.length - 1];
-                newSelector = selector.replace(replaceElem, replaceElem.split(":")[0]);
+                newSelector = _formulateBestSelector(selector);
             } else {
                 newSelector = selector;
             }   
@@ -124,6 +152,37 @@ const DomUtils = (() => {
             siblings = siblings.concat(Array.from(document.querySelector(selector).parentElement.children));
         });
         return siblings;
+    };
+
+    const _formulateTreePath = selector => {
+        let selectorPath = [];
+        let element = document.querySelector(selector);
+
+        while(element !== document.body) {
+            const nodeName = element.nodeName.toLowerCase();
+            const index = Array.from(element.parentElement.children).indexOf(element);
+            selectorPath.push(`${nodeName}:nth-child(${index+1})`);
+            element = element.parentElement;
+        }
+        selectorPath.push("body");
+        selectorPath = selectorPath.reverse().join(" > ");
+        return selectorPath;
+    };
+
+    const findSimilarElementsByTreePath = selectorArr => {
+        let similarElements = [];
+        try {
+            selectorArr.forEach(selector => {
+                const treePath = _formulateTreePath(selector);  // create selector path with just nodeName and nth-child
+                const bestSelector = _formulateBestSelector(treePath);  // get best selector (by removing nth-child)
+                similarElements = similarElements.concat(Array.from(document.querySelectorAll(bestSelector)));
+            });
+            return similarElements;
+        }
+        catch(ex) {
+            console.error(ex);
+            return similarElements;
+        }
     };
 
     const _unloadListener = () => {
@@ -143,14 +202,72 @@ const DomUtils = (() => {
         return document.querySelector(selector) !== null;
     };
 
+    const _copyAllProperties = (src, dest) => {
+        dest.id = src.id;
+        dest.classList = src.classList;
+        dest.attributes = src.attributes;
+        dest.onclick = src.onclick;
+        dest.innerText = src.innerText;
+        dest.innerHTML = src.innerHTML;
+        dest.style = src.style;
+        dest.href = src.href;
+        dest.parentElement = src.parentElement;
+    };
+
+    const convertToNoLink = anchor => {
+        if(!anchor || anchor.nodeName.toLowerCase() !== "a")   return anchor;
+
+        const noLink = document.createElement("no-link"); 
+        _copyAllProperties(anchor, noLink); 
+        anchor.replaceWith(noLink);
+        return noLink; 
+    };
+
+    const convertToAnchor = noLink => {
+        if(!noLink || noLink.nodeName.toLowerCase() !== "no-link")   return noLink;
+
+        const anchor = document.createElement("a");  
+        _copyAllProperties(noLink, anchor); 
+        noLink.replaceWith(anchor);
+        return anchor;
+    };
+
+    const convertAllTagsInPathToAnotherType = (element, fn) => {
+        let traversedDistance = 0;
+        let childIndexAtEachStep = [];
+        
+        while(element !== document.body) {
+            const index  = Array.from(element.parentElement.children).indexOf(element);
+            childIndexAtEachStep.push(index);
+
+            const modifiedElement = fn(element);
+            element.replaceWith(modifiedElement);
+            element = modifiedElement.parentElement;
+            traversedDistance++;
+        }
+
+        traversedDistance--;
+
+        while(traversedDistance >= 0) {
+            element = element.children[childIndexAtEachStep[traversedDistance]]
+            traversedDistance--;
+        }
+
+        return element;
+    };
 
 
     return {
         getQuerySelector,
         findSimilarElements,
         findSiblings,
+        findSimilarElementsByTreePath,
         addUnloadListener,
         removeUnloadListener,
         isValidQuerySelector,
+        convertToNoLink,
+        convertToAnchor,
+        convertAllTagsInPathToAnotherType,
     }
 })();
+

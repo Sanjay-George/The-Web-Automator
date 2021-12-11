@@ -12,7 +12,7 @@ async function openTab(browser, url, attempt = 0, timeout = 0) {
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
     // getConfigValue("performanceMode") &&  
-	await disableHeavyResources(page);
+	// await disableHeavyResources(page);
 	try {
 		await page.goto(url, getWaitOptions(attempt * DEFAULT_TIMEOUT));
 	}
@@ -49,7 +49,7 @@ async function disableHeavyResources(page) {
 	const blockedReqKeywords = ["video", "playback", "youtube", "autoplay"];
 
 	await page.setRequestInterception(true);
-	page.on('request', async (request) => {
+	page.on('request', async request => {
 	try{
 		if (heavyResources.includes(request.resourceType())) { 
 		await request.abort();

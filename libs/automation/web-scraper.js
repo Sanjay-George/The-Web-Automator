@@ -7,32 +7,57 @@ const { elementTypes, actionTypes, configTypes } = require('../common/enum');
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation, handlePageUnload } = require('../common/navigationHandler');
 
+const crawlersDL = require("../database/crawlersDL");
+const { crawlerStatus } = require('../common/enum');
+
 let rootUrl = "";
 
-const initiate = async (url, configChain) => {
-    const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
-    let page = await pageHelper.openTab(browser, url);
-    rootUrl = url;
-    
-    const recorder = new PuppeteerScreenRecorder(page);
-    await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
-
-    await insertScripts(page);
-
-    page.on('domcontentloaded', async () => {
-		console.log(`\nDOM loaded: ${page.url()}`);
-		await insertScripts(page);
-	});
-
+// TODO: RENAME THIS METHOD
+const init = async (crawler) => {
+    let { id, url, configChain } = crawler;
     let json = {};
-    await run(configChain, 0, page, json);
+    configChain = JSON.parse(configChain);
 
-    // console.log(JSON.stringify(json));
-
-    await recorder.stop();
-    await saveData(`data-${+ new Date}`, JSON.stringify(json));
+    try {
+        const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+        let page = await pageHelper.openTab(browser, url);
+        rootUrl = url;
     
-    await page.close();
+        await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
+        
+        const recorder = new PuppeteerScreenRecorder(page);
+        await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
+    
+        await insertScripts(page);
+    
+        page.on('domcontentloaded', async () => {
+            console.log(`\nDOM loaded: ${page.url()}`);
+            await insertScripts(page);
+        });
+    
+        await run(configChain, 0, page, json);
+    
+        // console.log(JSON.stringify(json));
+    
+        await recorder.stop();
+        await saveData(`data-${+ new Date}`, JSON.stringify(json));
+        
+        await page.close();
+    
+        await crawlersDL.update(id, {
+            status: crawlerStatus.COMPLETED,
+            lastRun: new Date(Date.now())
+        });
+    
+        return json;
+    }
+    catch(ex) {
+        await crawlersDL.update(id, {
+            status: crawlerStatus.FAILED,
+            lastRun: new Date(Date.now())
+        });
+    }
+    return json;
 };
 
 
@@ -50,7 +75,6 @@ const run = async (chain, step, page, json, memory = []) => {
         const { targets, labels } = await populateAllTargetsAndLabels(action, page);
         const jsonKeys = await getActionJsonKeys(targets, labels, page) || [];
 
-        
         for(let i = 0; i < targets.length; i++) {
             const target = targets[i];
             const label = labels[i];
@@ -183,7 +207,7 @@ const populateAllKeysAndValues = async (property, page) => {
 };
 
 const getInnerText = async (selector, page) => {
-    return await page.evaluate((selector) => {
+    return await page.evaluate(selector => {
         let element = document.querySelector(selector);
         if(element){
             return element.innerText.trim();  // TODO: sanitize further 
@@ -223,7 +247,6 @@ const tryActionsInMemory = async (memory, step, page) => {
         }
         const { action, target } = memory[i];
         try{
-            // console.log(target);
             await perform(action, target, page);
         }
         catch(ex) {
@@ -300,7 +323,7 @@ const perform = async (action, target, page) => {
             await Promise.all([
                 awaitXhrResponse(),
                 awaitNavigation(),
-                page.waitForTimeout(500),
+                page.waitForTimeout(1000),
             ]);
             break;
         default:
@@ -330,7 +353,7 @@ const populateSiblings = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];
 
     const finalTargets =  await page.evaluate((selectedTargets) => { 
-        const targets = DomUtils.findSiblings(selectedTargets);
+        const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
         const targetSelectors = [];
         targets.forEach(target => {
             targetSelectors.push(DomUtils.getQuerySelector(target));
@@ -345,8 +368,10 @@ const populateSimilarTargets = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];
 
     const finalTargets =  await page.evaluate((selectedTargets) => { 
-        const targets = DomUtils.findSimilarElements(selectedTargets);
-        const targetSelectors = [];
+        const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
+        if(targets.length === 0) return [];
+
+        const targetSelectors = []; 
         targets.forEach(target => {
             targetSelectors.push(DomUtils.getQuerySelector(target));
         });
@@ -357,6 +382,7 @@ const populateSimilarTargets = async (selectedTargets, page) => {
 
     return finalTargets;  // target selectors, not elements
 };
+
 
 const insertScripts = async (page) => {
 	await page.addScriptTag({ path: "./scripts/enum.js" });
@@ -386,5 +412,5 @@ async function saveData(pageName, json) {
 
 
 module.exports = {
-    initiate
+    init,
 }

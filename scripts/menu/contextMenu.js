@@ -30,7 +30,7 @@ const ContextMenu = (() => {
     };
 
     const handleClick = (e) => {
-        console.log(e);
+        // console.log(e);
         
         if(ConfigManager.isConfigurationActive && (!e.target.nodeName.toLowerCase() === "input")) {
             e.preventDefault();

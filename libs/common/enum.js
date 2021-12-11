@@ -24,9 +24,18 @@ const stateTypes = {
     MONITOR_DATA: 2,
 };
 
+const crawlerStatus = {
+    NOT_CONFIGURED: 1,
+    CONFIGURED: 2,
+    IN_PROGRESS: 3,
+    COMPLETED: 4,
+    FAILED: 5,
+};
+
 module.exports = {
     elementTypes,
     actionTypes,
     stateTypes,
     configTypes,
+    crawlerStatus,
 }
