@@ -164,6 +164,10 @@ class ActionMenu extends Menu {
         else if(!selectedTargets.length) {
             errorMsg = "Select atleast one Action Target";
         }
+        else if(selectedLabels.length > 0 && selectedLabels.length !== selectedTargets.length) {
+            errorMsg = `${selectedLabels.length} labels are selected, 
+                        but ${selectedTargets.length} targets are selected.`
+        }
 
         return {
             isValid: errorMsg.length === 0,
@@ -274,12 +278,37 @@ class ActionMenu extends Menu {
         // save action config
         document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
             this.setBasicDetails();
+            
             const {isValid, errorMsg} = this.validateConfig();
             if(!isValid) {
                 document.querySelector("#error-msg").innerHTML = errorMsg;
                 return ;
             }
-            const { configType, actionName, actionType, actionKey, selectedTargets, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+
+            const 
+                { configType, actionName, actionType, actionKey, 
+                    selectedTargets, selectedLabels, selectSimilar,
+                     selectSiblings, finalLabels, finalTargets } = this.configuration;
+
+            for (let i = 0; i < finalTargets.length; i++) {
+                const sanitizedTargetElement = 
+                    DomUtils.convertAllTagsInPathToAnotherType(finalTargets[i], DomUtils.convertToAnchor);
+                const sanitizedTargetSelector = 
+                    DomUtils.getQuerySelector(sanitizedTargetElement);
+                selectedTargets[i] = sanitizedTargetSelector;
+
+                if(!DomUtils.isValidQuerySelector(finalLabels[i])) {
+                    continue;
+                }
+
+                const sanitizedLabelElement = 
+                    DomUtils.convertAllTagsInPathToAnotherType(finalLabels[i], DomUtils.convertToAnchor);
+                const sanitizedLabelSelector = 
+                    DomUtils.getQuerySelector(sanitizedLabelElement);
+                selectedLabels[i] = sanitizedLabelSelector;
+            }
+
+
             await ConfigChain.push({
                 configType,
                 actionName, 
@@ -315,6 +344,7 @@ class ActionMenu extends Menu {
         this.resetConfiguration();
         this.hideMenu();
         this.removeMenuListeners(); 
+
         ConfigManager.enableAllAnchorTags();
         ConfigManager.disableConfigurationMode();
     };
@@ -322,13 +352,17 @@ class ActionMenu extends Menu {
     open = (target) => {     
         ConfigManager.enableConfigurationMode(target, Enum.elementTypes.ACTION);
 
-        // initialize configuration values 
         let {selectedTargets, finalTargets} = this.configuration;
-        finalTargets.push(target);
-        selectedTargets.push(DomUtils.getQuerySelector(target));
+        
+        const sanitizedtarget = 
+            DomUtils.convertAllTagsInPathToAnotherType(target, DomUtils.convertToNoLink);
+        const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
+        selectedTargets.push(sanitizedTargetSelector);
+        finalTargets.push(sanitizedtarget);
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();
+
         ConfigManager.disableAllAnchorTags();
         this.setMenuListeners();
     };

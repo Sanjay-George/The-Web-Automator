@@ -432,7 +432,6 @@ class StateMenu extends Menu {
                     DomUtils.convertAllTagsInPathToAnotherType(meta.value[0], DomUtils.convertToAnchor); 
                 // NOTE: Using meta.value[0] assuming there'll be only one value per property. 
                 //       This could change in the future
-
                 const sanitizedValueSelector = DomUtils.getQuerySelector(sanitizedValueElement);
                 properties[i].value = sanitizedValueSelector;
 
