@@ -274,15 +274,19 @@ class StateMenu extends Menu {
             propertyContainer.removeChild(currRow);
 
             // TODO: REMOVE FROM PROPERTIES & PROPERTIESMETA ARRAY 
+            const { properties, propertiesMeta } = this.configuration;
+            const propIndex = parseInt(currRow.dataset.propId, 10) - 1;
+            properties.splice(propIndex, 1);
+            propertiesMeta.splice(propIndex, 1);
         },
 
         handleSelectSimilar: e => {
             e.stopPropagation();
             let { properties, propertiesMeta } = this.configuration;
 
-            this.currentPropTarget = e.target.closest('.js-property');
-            const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
-            const siblingCheckbox = this.currentPropTarget.querySelector(".js-sel-siblings input");
+            const currRow = e.target.closest('.js-property');
+            const propIndex = parseInt(currRow.dataset.propId, 10) - 1; 
+            const siblingCheckbox = currRow.querySelector(".js-sel-siblings input");
 
             if(e.target.checked) {
                 propertiesMeta[propIndex].value = 
@@ -332,9 +336,9 @@ class StateMenu extends Menu {
 
             let { properties, propertiesMeta } = this.configuration;
 
-            this.currentPropTarget = e.target.closest('.js-property');
-            const propIndex = parseInt(this.currentPropTarget.dataset.propId, 10) - 1; 
-            const similarCheckbox = this.currentPropTarget.querySelector(".js-sel-similar input");
+            currRow = e.target.closest('.js-property');
+            const propIndex = parseInt(currRow.dataset.propId, 10) - 1; 
+            const similarCheckbox = currRow.querySelector(".js-sel-similar input");
 
             if(e.target.checked) {
                 propertiesMeta[propIndex].value = 
@@ -394,7 +398,6 @@ class StateMenu extends Menu {
                 { configType, stateName, stateType, collectionKey, 
                     properties, propertiesMeta, configChainIndex } = this.configuration;
             
-            // TODO: RECALCULATE PROPERTIES FROM PROPERTIESMETA, AFTER CONVERTING NO-LINK BACK TO ANCHOR
             for(let i = 0; i < propertiesMeta.length; i++) {
                 const meta = propertiesMeta[i];
                
@@ -520,7 +523,7 @@ class StateMenu extends Menu {
     close = () => {
         this.initConfiguration();
         this.hideMenu();
-        this.removeMenuListeners();  // TODO: Not implemented properly yet
+        this.removeMenuListeners();
         ConfigManager.enableAllAnchorTags();
         ConfigManager.disableConfigurationMode();
     };
