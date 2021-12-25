@@ -5,6 +5,9 @@ class ActionMenu extends Menu {
     constructor() {
         super();
         this.containerId = "action-menu";
+    }
+
+    initConfiguration = () => {
         this.configuration = {
             configType: Enum.configTypes.ACTION,
             actionName: "",
@@ -17,9 +20,9 @@ class ActionMenu extends Menu {
             selectSimilar: false,
             selectSiblings: false,    
             repeatCount: 0,
-            maxTargetCount: -1
-        };
-    }
+            maxTargetCount: -1   
+        }; 
+    };
 
     renderMenu = () => {
         return `
@@ -87,11 +90,6 @@ class ActionMenu extends Menu {
             </form>
         `;
     };
-
-    removeMenuListeners = () => {
-        // close btn
-        document.querySelector(`#${this.containerId} .profile-close`).removeEventListener("click", this.close);
-    };
     
     actionTargetHandlers = {
         handleMouseOver: (e) => {
@@ -111,7 +109,7 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click");
 
             const targetQuerySelector = DomUtils.getQuerySelector(e.target);
-            // TODO: CHECK FOR DUPLICATE TARGETS, check if logic works
+            // TODO: (DUPLICATE TARGETS CHECK) check if logic works
             if(!this.configuration.finalTargets.includes(e.target)) {
                 this.configuration.selectedTargets.push(targetQuerySelector);
                 this.configuration.finalTargets.push(e.target);
@@ -176,12 +174,8 @@ class ActionMenu extends Menu {
         };
     };
 
-    setMenuListeners = () => {
-        // close btn
-        document.querySelector(`#${this.containerId} .profile-close`).addEventListener("click", this.close);
-
-        // select action targets
-        document.querySelector(`#${this.containerId} #target-list`).addEventListener("click", (e) => {
+    menuHandlers = {
+        handleSelectActionTargets: e => {
             e.stopPropagation();
             console.log("Individual target input clicked");
 
@@ -190,10 +184,9 @@ class ActionMenu extends Menu {
             DynamicEventHandler.addHandler("mouseover", this.actionTargetHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionTargetHandlers.handleMouseOut);
             DynamicEventHandler.addHandler("click", this.actionTargetHandlers.handleSelection);
-        });
+        },
 
-        // select label targets
-        document.querySelector(`#${this.containerId} #label-list`).addEventListener("click", (e) => {
+        handleSelectActionLabels: e => {
             e.stopPropagation();
             console.log("Individual label input clicked");
 
@@ -202,23 +195,36 @@ class ActionMenu extends Menu {
             DynamicEventHandler.addHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
             DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleSelection);
-        });
+        },
 
-        // select all similar siblings
-        document.querySelector(`#${this.containerId} #sel-similar`).addEventListener("click", (e) => {
+        handleSelectSimilar: e => {
             e.stopPropagation();
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+            let 
+                { finalTargets, selectedTargets, finalLabels, 
+                    selectedLabels, selectSimilar, selectSiblings } = this.configuration;
             const siblingCheckbox = document.querySelector(`#${this.containerId} #sel-siblings input`);
             if(e.target.checked) {
-                finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.populateSimilarElements(
+                        this.populateSimilarTargets, finalTargets, 
+                        selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.populateSimilarElements(
+                        this.populateSimilarTargets, finalLabels, 
+                        selectedLabels, Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = true;
                 selectSiblings = false;
                 siblingCheckbox.checked = false;
             }
             else {
-                finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, finalTargets,
+                         selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, finalLabels,
+                         selectedLabels,  Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = false;
             }
             this.configuration = {
@@ -229,25 +235,38 @@ class ActionMenu extends Menu {
                 selectSimilar,
                 selectSiblings,
             };
-        });
+        },
 
-        // select siblings (DOM tree logic)
-        document.querySelector(`#${this.containerId} #sel-siblings`).addEventListener("click", (e) => {
+        handleSelectSiblings: e => {
             e.stopPropagation();
             const similarCheckbox = document.querySelector(`#${this.containerId} #sel-similar input`);
-            let { finalTargets, selectedTargets, finalLabels, selectedLabels, selectSimilar, selectSiblings } = this.configuration;
+            let 
+                { finalTargets, selectedTargets, finalLabels, selectedLabels,
+                     selectSimilar, selectSiblings } = this.configuration;
 
             if(e.target.checked) {
                 // todo: populate sibling
-                finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.populateSimilarElements(
+                        this.populateSiblings, finalTargets, 
+                        selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.populateSimilarElements(
+                        this.populateSiblings, finalLabels, 
+                        selectedLabels, Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = false;
                 selectSiblings = true;
                 similarCheckbox.checked = false;
             }
             else {
-                finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, finalTargets,
+                         selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, finalLabels,
+                         selectedLabels,  Enum.elementTypes.ACTION_LABEL);
                 selectSiblings = false;
             }
             this.configuration = {
@@ -258,26 +277,23 @@ class ActionMenu extends Menu {
                 selectSimilar,
                 selectSiblings,
             };
-        });
+        },
 
-        // clear action targets
-        document.querySelector(`#${this.containerId} #clear-target`).addEventListener("click", (e) => {
+        handleClearActionTargets: e => {
             this.clearHighlight(this.configuration.finalTargets); // todo: NOT WORKING PROPERLY, COLOR STILL SHOWN
             this.configuration.finalTargets = [];
             this.configuration.selectedTargets = [];
             document.querySelector("#target-list").value = "";
-        });
-        
-        // clear label targets
-        document.querySelector("#clear-label").addEventListener("click", (e) => {
+        },
+
+        handleClearActionLabels: e => {
             this.clearHighlight(this.configuration.finalLabels); // TODO: not working properly
             this.configuration.finalLabels = [];
             this.configuration.selectedLabels = [];
             document.querySelector("#label-list").value = "";
-        });
+        },
 
-        // save action config
-        document.querySelector("#configure-action > a#configure").addEventListener("click", async e => {
+        handleSaveConfig: async e => {
             this.setBasicDetails();
             
             const {isValid, errorMsg} = this.validateConfig();
@@ -321,28 +337,62 @@ class ActionMenu extends Menu {
                 selectSiblings,
             });
             this.close();
-        });
+        },
+
+
     };
 
-    resetConfiguration = () => {
-        this.configuration = {
-            configType: Enum.configTypes.ACTION,
-            actionName: "",
-            actionType: null,
-            actionKey: "",
-            selectedTargets: [],
-            selectedLabels: [],
-            finalTargets: [], 
-            finalLabels: [],
-            selectSimilar: false,
-            selectSiblings: false,    
-            repeatCount: 0,
-            maxTargetCount: -1
-        }; 
-    }
+    setMenuListeners = () => {
+        // close btn
+        document
+            .querySelector(`#${this.containerId} .profile-close`)
+            .addEventListener("click", this.close);
+
+        // select action targets
+        document
+            .querySelector(`#${this.containerId} #target-list`)
+            .addEventListener("click", this.menuHandlers.handleSelectActionTargets);
+
+        // select label targets
+        document
+            .querySelector(`#${this.containerId} #label-list`)
+            .addEventListener("click", this.menuHandlers.handleSelectActionLabels);
+
+        // select all similar siblings
+        document
+            .querySelector(`#${this.containerId} #sel-similar`)
+            .addEventListener("click", this.menuHandlers.handleSelectSimilar);
+
+        // select siblings (DOM tree logic)
+        document
+            .querySelector(`#${this.containerId} #sel-siblings`)
+            .addEventListener("click", this.menuHandlers.handleSelectSiblings);
+
+        // clear action targets
+        document
+            .querySelector(`#${this.containerId} #clear-target`)
+            .addEventListener("click", this.menuHandlers.handleClearActionTargets);
+        
+        // clear label targets
+        document
+            .querySelector("#clear-label")
+            .addEventListener("click", this.menuHandlers.handleClearActionLabels);
+
+        // save action config
+        document
+            .querySelector("#configure-action > a#configure")
+            .addEventListener("click", this.menuHandlers.handleSaveConfig);
+    };
+
+    removeMenuListeners = () => {
+        // close btn
+        document
+            .querySelector(`#${this.containerId} .profile-close`)
+            .removeEventListener("click", this.close);
+    };
 
     close = () => {
-        this.resetConfiguration();
+        this.initConfiguration();
         this.hideMenu();
         this.removeMenuListeners(); 
 
@@ -371,5 +421,6 @@ class ActionMenu extends Menu {
     initialize = () => {
         this.createMenuElement(this.containerId);
         this.createOverlay();
+        this.initConfiguration();
     };
 }

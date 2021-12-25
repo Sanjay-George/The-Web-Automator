@@ -233,6 +233,7 @@ const DomUtils = (() => {
     };
 
     const convertAllTagsInPathToAnotherType = (element, fn) => {
+        if(element === null || element === undefined)   return element;
         let traversedDistance = 0;
         let childIndexAtEachStep = [];
         
