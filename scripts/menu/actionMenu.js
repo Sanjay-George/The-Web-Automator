@@ -312,7 +312,10 @@ class ActionMenu extends Menu {
                     DomUtils.convertAllTagsInPathToAnotherType(finalTargets[i], DomUtils.convertToAnchor);
                 const sanitizedTargetSelector = 
                     DomUtils.getQuerySelector(sanitizedTargetElement);
-                selectedTargets[i] = sanitizedTargetSelector;
+                
+                if(selectedTargets[i]) {
+                    selectedTargets[i] = sanitizedTargetSelector;
+                }
 
                 if(!DomUtils.isValidQuerySelector(finalLabels[i])) {
                     continue;
@@ -322,7 +325,9 @@ class ActionMenu extends Menu {
                     DomUtils.convertAllTagsInPathToAnotherType(finalLabels[i], DomUtils.convertToAnchor);
                 const sanitizedLabelSelector = 
                     DomUtils.getQuerySelector(sanitizedLabelElement);
-                selectedLabels[i] = sanitizedLabelSelector;
+                if(selectedLabels[i]) {
+                    selectedLabels[i] = sanitizedLabelSelector;
+                }
             }
 
 
