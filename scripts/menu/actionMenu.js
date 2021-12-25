@@ -201,15 +201,27 @@ class ActionMenu extends Menu {
                     selectedLabels, selectSimilar, selectSiblings } = this.configuration;
             const siblingCheckbox = document.querySelector(`#${this.containerId} #sel-siblings input`);
             if(e.target.checked) {
-                finalTargets = this.populateSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.populateSimilarTargets(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.populateSimilarElements(
+                        this.populateSimilarTargets, finalTargets, 
+                        selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.populateSimilarElements(
+                        this.populateSimilarTargets, finalLabels, 
+                        selectedLabels, Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = true;
                 selectSiblings = false;
                 siblingCheckbox.checked = false;
             }
             else {
-                finalTargets = this.removeSimilarTargets(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.removeSimilarTargets(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, finalTargets,
+                         selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, finalLabels,
+                         selectedLabels,  Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = false;
             }
             this.configuration = {
@@ -231,15 +243,27 @@ class ActionMenu extends Menu {
 
             if(e.target.checked) {
                 // todo: populate sibling
-                finalTargets = this.populateSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.populateSiblings(finalLabels, selectedLabels, Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.populateSimilarElements(
+                        this.populateSiblings, finalTargets, 
+                        selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.populateSimilarElements(
+                        this.populateSiblings, finalLabels, 
+                        selectedLabels, Enum.elementTypes.ACTION_LABEL);
                 selectSimilar = false;
                 selectSiblings = true;
                 similarCheckbox.checked = false;
             }
             else {
-                finalTargets = this.removeSiblings(finalTargets, selectedTargets, Enum.elementTypes.ACTION_TARGET);
-                finalLabels = this.removeSiblings(finalLabels, selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+                finalTargets = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, finalTargets,
+                         selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, finalLabels,
+                         selectedLabels,  Enum.elementTypes.ACTION_LABEL);
                 selectSiblings = false;
             }
             this.configuration = {
