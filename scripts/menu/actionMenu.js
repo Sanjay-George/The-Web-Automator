@@ -5,6 +5,9 @@ class ActionMenu extends Menu {
     constructor() {
         super();
         this.containerId = "action-menu";
+    }
+
+    initConfiguration = () => {
         this.configuration = {
             configType: Enum.configTypes.ACTION,
             actionName: "",
@@ -17,9 +20,9 @@ class ActionMenu extends Menu {
             selectSimilar: false,
             selectSiblings: false,    
             repeatCount: 0,
-            maxTargetCount: -1
-        };
-    }
+            maxTargetCount: -1   
+        }; 
+    };
 
     renderMenu = () => {
         return `
@@ -388,25 +391,8 @@ class ActionMenu extends Menu {
             .removeEventListener("click", this.close);
     };
 
-    resetConfiguration = () => {
-        this.configuration = {
-            configType: Enum.configTypes.ACTION,
-            actionName: "",
-            actionType: null,
-            actionKey: "",
-            selectedTargets: [],
-            selectedLabels: [],
-            finalTargets: [], 
-            finalLabels: [],
-            selectSimilar: false,
-            selectSiblings: false,    
-            repeatCount: 0,
-            maxTargetCount: -1
-        }; 
-    }
-
     close = () => {
-        this.resetConfiguration();
+        this.initConfiguration();
         this.hideMenu();
         this.removeMenuListeners(); 
 
@@ -435,5 +421,6 @@ class ActionMenu extends Menu {
     initialize = () => {
         this.createMenuElement(this.containerId);
         this.createOverlay();
+        this.initConfiguration();
     };
 }
