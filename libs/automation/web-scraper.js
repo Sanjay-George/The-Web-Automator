@@ -224,7 +224,7 @@ const performAction = async (action, target, memory, step, page) => {
         await perform(action, target, page);
     }
     catch(ex) {
-        // if perform(action) doesn't work, retry previous actions (handle popup cases)
+        // if perform(action) doesn't work, retry previous actions (to handle popup cases)
         // if none of the actions work, go back one page and try 
         let wasActionPerformed = await tryActionsInMemory(memory, step, page);
         if(!wasActionPerformed) {
@@ -316,9 +316,11 @@ const perform = async (action, target, page) => {
     switch(parseInt(action.actionType)) {
         case actionTypes.CLICK:
             // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-            // TODO: test client-side render, react / SPAs -
-            // TODO: incorporate xhrHandler
 
+            // TODO: check if element is anchor tag and will open in new tab
+            await page.evaluate(selector => {
+                DomUtils.sanitizeAnchorTags(selector)
+            }, target);
             await page.click(target);
             await Promise.all([
                 awaitXhrResponse(),

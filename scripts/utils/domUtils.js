@@ -169,11 +169,18 @@ const DomUtils = (() => {
         return selectorPath;
     };
 
+    // info: This logic was improved to handle following cases:
+    // 1. similar elements having different classes 
     const findSimilarElementsByTreePath = selectorArr => {
         let similarElements = [];
         try {
             selectorArr.forEach(selector => {
                 const treePath = _formulateTreePath(selector);  // create selector path with just nodeName and nth-child
+                
+                // TODO: FIX FLAW IN USING BEST SELECTOR, ie, selector that returns most elements
+                // Eg: `div:nth-child(3) > ul > li:nth-child(3)`
+                // if there are 4 li, and 8 div, it will remove nth-child from the div 
+                // and return `div > ul > li:nth-child(3)`
                 const bestSelector = _formulateBestSelector(treePath);  // get best selector (by removing nth-child)
                 similarElements = similarElements.concat(Array.from(document.querySelectorAll(bestSelector)));
             });
@@ -257,6 +264,34 @@ const DomUtils = (() => {
         return element;
     };
 
+    const setAnchorTargetTypeToSelf = element => {
+        if(element.nodeName.toLowerCase() !== "a")  return false;
+
+        if(element.target === "_blank") {
+            element.target = "_self";
+        }
+        return true;
+    }
+
+    const sanitizeAnchorTags = targetSelector => {
+        let element = document.querySelector(targetSelector);
+        if(element === null)    return;
+
+        if(setAnchorTargetTypeToSelf(element))    return;
+
+        // TODO: check parent and children for anchor tags, coz click event propagates.
+        while(element !== document.body) {
+            element = element.parentElement;
+            if (setAnchorTargetTypeToSelf(element))  return;        
+        }
+
+        element = document.querySelector(targetSelector);
+        while(element.children.length) {
+            element = element.children[0];
+            if (setAnchorTargetTypeToSelf(element))  return;
+        }
+    };
+
 
     return {
         getQuerySelector,
@@ -269,6 +304,8 @@ const DomUtils = (() => {
         convertToNoLink,
         convertToAnchor,
         convertAllTagsInPathToAnotherType,
+        sanitizeAnchorTags,
+        setAnchorTargetTypeToSelf,
     }
 })();
 

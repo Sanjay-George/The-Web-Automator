@@ -18,6 +18,7 @@ const configure = async (crawler) => {
 		await insertStyles(page);
 		await insertScripts(page);
 		await exposeFunctions(page);
+		await sanitizeAnchorTags(page);
 	
 		page.on('load', async () => {
 			// insert all styles and scripts
@@ -25,7 +26,7 @@ const configure = async (crawler) => {
 			await insertStyles(page);
 			await insertScripts(page);
 			await exposeFunctions(page);
-	
+			await sanitizeAnchorTags(page);
 		});
 	
 		page.on('dialog', async dialog => {
@@ -95,6 +96,17 @@ const insertScripts = async page => {
 	await page.addScriptTag({ path: "./scripts/menu/contextMenu.js" });
 	await page.addScriptTag({ path: "./scripts/configManager.js" });
 };
+
+const sanitizeAnchorTags = async page => {
+	await page.evaluate(() => {
+		const anchorTags = 
+			Array.from(document.querySelectorAll("a"))
+				.filter(item => item.target === "_blank");
+		anchorTags.forEach(element => {
+			DomUtils.setAnchorTargetTypeToSelf(element);
+		});
+	});
+}
 
 module.exports = {
 	configure,

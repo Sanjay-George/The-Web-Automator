@@ -48,9 +48,9 @@ class Menu {
     populateSimilarElements = (fn, elementArr, selectorArr, elementType) => {
         if(selectorArr.length === 0)   return elementArr;
         
-        const areSelectorsValid = selectorArr.reduce((prev, curr) => {
+        const areSelectorsValid = Boolean(selectorArr.reduce((prev, curr) => {
                 return prev && DomUtils.isValidQuerySelector(curr);
-        });  
+        }));  
         if(!areSelectorsValid)  return elementArr;
         
         return fn(elementArr, selectorArr, elementType);
@@ -60,9 +60,9 @@ class Menu {
     removeSimilarElements = (fn, elementArr, selectorArr, elementType) => {
         if(selectorArr.length === 0 || elementArr.length === 0)   return elementArr;
 
-        const areSelectorsValid = selectorArr.reduce((prev, curr) => {
+        const areSelectorsValid = Boolean(selectorArr.reduce((prev, curr) => {
                 return prev && DomUtils.isValidQuerySelector(curr);
-        }); 
+        })); 
         if(!areSelectorsValid)  return elementArr;
 
         return fn(elementArr, selectorArr, elementType);
