@@ -264,7 +264,7 @@ const DomUtils = (() => {
         return element;
     };
 
-    const _setAnchorTargetType = element => {
+    const setAnchorTargetTypeToSelf = element => {
         if(element.nodeName.toLowerCase() !== "a")  return false;
 
         if(element.target === "_blank") {
@@ -277,18 +277,18 @@ const DomUtils = (() => {
         let element = document.querySelector(targetSelector);
         if(element === null)    return;
 
-        if(_setAnchorTargetType(element))    return;
+        if(setAnchorTargetTypeToSelf(element))    return;
 
         // TODO: check parent and children for anchor tags, coz click event propagates.
         while(element !== document.body) {
             element = element.parentElement;
-            if (_setAnchorTargetType(element))  return;        
+            if (setAnchorTargetTypeToSelf(element))  return;        
         }
 
         element = document.querySelector(targetSelector);
         while(element.children.length) {
             element = element.children[0];
-            if (_setAnchorTargetType(element))  return;
+            if (setAnchorTargetTypeToSelf(element))  return;
         }
     };
 
@@ -305,6 +305,7 @@ const DomUtils = (() => {
         convertToAnchor,
         convertAllTagsInPathToAnotherType,
         sanitizeAnchorTags,
+        setAnchorTargetTypeToSelf,
     }
 })();
 

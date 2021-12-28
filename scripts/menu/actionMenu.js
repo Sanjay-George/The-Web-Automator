@@ -312,7 +312,6 @@ class ActionMenu extends Menu {
                     DomUtils.convertAllTagsInPathToAnotherType(finalTargets[i], DomUtils.convertToAnchor);
                 const sanitizedTargetSelector = 
                     DomUtils.getQuerySelector(sanitizedTargetElement);
-                
                 if(selectedTargets[i]) {
                     selectedTargets[i] = sanitizedTargetSelector;
                 }
