@@ -20,7 +20,8 @@ class ActionMenu extends Menu {
             selectSimilar: false,
             selectSiblings: false,    
             repeatCount: 0,
-            maxTargetCount: -1   
+            maxTargetCount: -1,
+            textInput: [],   
         }; 
     };
 
@@ -47,12 +48,17 @@ class ActionMenu extends Menu {
                 <div class="input-field col3">
                     <select id="action-type">
                         <option value="" disabled selected>Action Type</option>
-                        <option value="1">Click</option>
-                        <option value="2" disabled>Text input</option>
-                        <option value="3" disabled>Select</option>
+                        <option value="${Enum.actionTypes.CLICK}">Click</option>
+                        <option value="${Enum.actionTypes.TEXT}" >Text input</option>
+                        <option value="${Enum.actionTypes.SELECT}" disabled>Select</option>
                     </select>
                 </div>
                 
+                <div id="text-input-wrapper" class="input-field col12 hide">
+                    <label for="text-input">Text Input (comma separated values)</label>
+                    <textarea id="text-input" style="width: 100%; margin-top: 5px;"></textarea>
+                </div>
+
                 <div class="col9">
                     <div class="input-field">
                         <label for="target-list">Action Target(s)</label>
@@ -142,23 +148,37 @@ class ActionMenu extends Menu {
         }
     };
 
+    parseTextInput = (csvString) => {
+        if(csvString.length === 0)  return [];
+        return csvString.split(",").filter(item => item.trim().length > 0);
+    }
+
     setBasicDetails = () => {
         this.configuration = {
             ...this.configuration,
             actionName: document.querySelector("#action-name").value,
             actionKey: document.querySelector("#action-key").value,
-            actionType: document.querySelector("#action-type").value
+            actionType: parseInt(document.querySelector("#action-type").value),
+            textInput: this.parseTextInput(document.querySelector("#text-input").value),
         };
     };
 
+    validationActionTypeAndInput = () => {
+        const { actionType, textInput } = this.configuration;
+        if(!actionType) {
+            return "Select actionType";
+        }
+        if(actionType === Enum.actionTypes.TEXT && (!textInput || textInput.length === 0)) {
+            return "Enter at least 1 text input";
+        }
+        return "";
+    }
+
     validateConfig = () => {
-        const {actionName, actionType, selectedTargets, selectedLabels} = this.configuration;
+        const {actionName, selectedTargets, selectedLabels} = this.configuration;
         let errorMsg = "";
         if(!actionName.length) {
             errorMsg = "Enter actionName";
-        }
-        else if(!actionType) {
-            errorMsg = "Select actionType"
         }
         else if(!selectedTargets.length) {
             errorMsg = "Select atleast one Action Target";
@@ -167,6 +187,9 @@ class ActionMenu extends Menu {
             errorMsg = `${selectedLabels.length} labels are selected, 
                         but ${selectedTargets.length} targets are selected.`;
         }
+        const actionTypeErrorMsg = this.validationActionTypeAndInput();
+        debugger;
+        errorMsg = errorMsg || actionTypeErrorMsg;
 
         return {
             isValid: errorMsg.length === 0,
@@ -195,6 +218,17 @@ class ActionMenu extends Menu {
             DynamicEventHandler.addHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
             DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleSelection);
+        },
+
+        handleSelectActionType: e => {
+            const textInputWrapper = document.querySelector("#text-input-wrapper");
+
+            if(parseInt(e.target.value) === Enum.actionTypes.TEXT) {
+                textInputWrapper.classList.remove("hide");
+            }
+            else {
+                !textInputWrapper.classList.contains("hide") && textInputWrapper.classList.add("hide");
+            }
         },
 
         handleSelectSimilar: e => {
@@ -339,6 +373,7 @@ class ActionMenu extends Menu {
                 selectedTargets,
                 selectSimilar,
                 selectSiblings,
+                textInput,
             });
             this.close();
         },
@@ -361,6 +396,11 @@ class ActionMenu extends Menu {
         document
             .querySelector(`#${this.containerId} #label-list`)
             .addEventListener("click", this.menuHandlers.handleSelectActionLabels);
+        
+        // select action type
+        document
+            .querySelector(`#${this.containerId} #action-type`)
+            .addEventListener("change", this.menuHandlers.handleSelectActionType);
 
         // select all similar siblings
         document

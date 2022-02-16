@@ -313,10 +313,9 @@ const memorize = (memory, step, action, target) => {
 const perform = async (action, target, page) => {
     await addXhrListener(page);
     await addNavigationListener(page);
-    switch(parseInt(action.actionType)) {
+    switch(action.actionType) {
         case actionTypes.CLICK:
             // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-
             // TODO: check if element is anchor tag and will open in new tab
             await page.evaluate(selector => {
                 DomUtils.sanitizeAnchorTags(selector)
@@ -328,6 +327,8 @@ const perform = async (action, target, page) => {
                 page.waitForTimeout(1000),
             ]);
             break;
+        case actionTypes.TEXT:
+
         default:
             break;
     }
@@ -336,6 +337,7 @@ const perform = async (action, target, page) => {
 };
 
 const populateAllTargetsAndLabels = async (action, page) => {
+    // TODO: If actionType = text / select box, populate the targets and labels here accordingly
     if(action.selectSimilar) {
         const targets = await populateSimilarTargets(action.selectedTargets, page);
         const labels = await populateSimilarTargets(action.selectedLabels, page);
