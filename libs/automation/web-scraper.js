@@ -10,6 +10,9 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 const crawlersDL = require("../database/crawlersDL");
 const { crawlerStatus } = require('../common/enum');
 
+const { ActionDirector } = require('./actionBuilders/actionDirector');
+const { ClickLogicBuilder } = require('./actionBuilders/clickLogicBuilder');
+
 let rootUrl = "";
 
 // TODO: RENAME THIS METHOD
@@ -48,10 +51,12 @@ const init = async (crawler) => {
             status: crawlerStatus.COMPLETED,
             lastRun: new Date(Date.now())
         });
-    
+
+        await browser.close();
         return json;
     }
     catch(ex) {
+        console.error(ex);  // TODO: re-evaluate exception logging at this point
         await crawlersDL.update(id, {
             status: crawlerStatus.FAILED,
             lastRun: new Date(Date.now())
@@ -67,54 +72,66 @@ const run = async (chain, step, page, json, memory = []) => {
 
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
+        const meta = { run, memorize, chain, step, page, memory, rootUrl };
+        
+        // TODO: USE FACTORY TO DECIDE WHICH LOGIC BUILDER TO CREATE
+        const clickLogic = new ClickLogicBuilder(action, page, meta);
+        const actionDirector = new ActionDirector();
+        await actionDirector.perform(clickLogic);
 
-        const isActionKeyPresent = action.actionKey.length > 0;
-        isActionKeyPresent && 
-            (json[action.actionKey] = []);
 
-        const { targets, labels } = await populateAllTargetsAndLabels(action, page);
-        const jsonKeys = await getActionJsonKeys(targets, labels, page) || [];
+        // // TODO: BUILDER
+        // const isActionKeyPresent = action.actionKey.length > 0;
+        // isActionKeyPresent && 
+        //     (json[action.actionKey] = []);
 
-        for(let i = 0; i < targets.length; i++) {
-            const target = targets[i];
-            const label = labels[i];
-            memorize(memory, step, action, target);
+    
+        // // TODO: BUILDER    
+        // const { targets, labels } = await populateAllTargetsAndLabels(action, page);
+        // const jsonKeys = await getActionJsonKeys(targets, labels, page) || [];
+
+        // for(let i = 0; i < targets.length; i++) {
+        //     // TODO: PARENT CLASS
+        //     const target = targets[i];
+        //     const label = labels[i];
+        //     memorize(memory, step, action, target);
             
-            let innerJson = {};
-            if(isActionKeyPresent && jsonKeys[i].length)
-            {
-                innerJson["name"] = jsonKeys[i];
-            }
+        //     let innerJson = {};
+        //     if(isActionKeyPresent && jsonKeys[i].length)
+        //     {
+        //         innerJson["name"] = jsonKeys[i];
+        //     }
             
-            const isActionPerformed = await performAction(action, target, memory, step, page);
-            if(!isActionPerformed) {
-                console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
-                break;
-            }
-            await run(chain, step + 1, page, innerJson, memory);
+        //     // TODO: COMMON
+        //     const isActionPerformed = await performAction(action, target, memory, step, page);
+        //     if(!isActionPerformed) {
+        //         console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
+        //         break;
+        //     }
+        //     await run(chain, step + 1, page, innerJson, memory);
 
-            console.log(`\ninnerJSON inside action: ${JSON.stringify(innerJson)}`);
+        //     console.log(`\ninnerJSON inside action: ${JSON.stringify(innerJson)}`);
 
-            if(isActionKeyPresent){
-                json[action.actionKey].push(innerJson);
-            }
-            else {
-                // INFO: 
-                // Copying each property of innerJSON into json, coz of recursive call stack. 
-                // Deep or shallow copy won't work
+        //     if(isActionKeyPresent){
+        //         json[action.actionKey].push(innerJson);
+        //     }
+        //     else {
+        //         // INFO: 
+        //         // Copying each property of innerJSON into json, coz of recursive call stack. 
+        //         // Deep or shallow copy won't work
 
-                // TODO: TEST THIS. 
-                for (prop in innerJson) { 
-                    if(Array.isArray(json[prop])) {
-                        json[prop].push(innerJson[prop]);
-                    }
-                    else {
-                        json[prop] = innerJson[prop];
-                    }
-                }
-            }
+        //         // TODO: TEST THIS. 
+        //         for (prop in innerJson) { 
+        //             if(Array.isArray(json[prop])) {
+        //                 json[prop].push(innerJson[prop]);
+        //             }
+        //             else {
+        //                 json[prop] = innerJson[prop];
+        //             }
+        //         }
+        //     }
                 
-        }
+        // }
     }
     else if (chain[step].configType === configTypes.STATE) {
         const state = chain[step];
