@@ -48,9 +48,6 @@ class ClickLogicBuilder extends LogicBuilder
         }
     };
 
-
-    // LOGIC SPECIFIC TO CLICK ACTION
-
     populateAllTargetsAndLabels = async (action, page) => {
         // TODO: If actionType = text / select box, populate the targets and labels here accordingly
         if(action.selectSimilar) {
@@ -134,9 +131,7 @@ class ClickLogicBuilder extends LogicBuilder
         await removeXhrListener();
         removeNavigationListener(); 
     };
-
 }
-
 
 module.exports = {
     ClickLogicBuilder,

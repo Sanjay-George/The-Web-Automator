@@ -48,8 +48,6 @@ class LogicBuilder
         }
     };
 
-    // COMMON METHODS
-
     getInnerText = async (selector, page) => {
         return await page.evaluate(selector => {
             let element = document.querySelector(selector);
@@ -82,8 +80,7 @@ class LogicBuilder
     tryActionsInMemory = async (memory, step, page) => {
         // repeat all actions from beginning of memory to end
         console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
-        // console.log(JSON.stringify(memory));
-    
+
         let wasActionPerformed = true;
         for (let i = 0; i <= step; i++) {
             if(memory[i] === null) {
@@ -135,11 +132,8 @@ class LogicBuilder
         // await page.goBack(pageHelper.getWaitOptions());
         // await page.reload(pageHelper.getWaitOptions());
         return await this.performAction(action, target, memory, step, page);
-    };
-    
-    
+    };    
 }
-
 
 
 module.exports = {
