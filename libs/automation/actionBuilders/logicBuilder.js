@@ -7,14 +7,14 @@ const { elementTypes, actionTypes, configTypes } = require('../../common/enum');
 
 class LogicBuilder 
 {
-    constructor(action, page, meta) {
+    constructor(action, page, meta, json) {
         this.action = action;
         this.page = page;
         this.meta = meta;
 
         this.targets = null;
         this.labels = null;
-        this.json = {};
+        this.json = json || {};
         this.jsonKeys = [];
         this.isActionKeyPresent = false;
     }

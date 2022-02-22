@@ -75,7 +75,7 @@ const run = async (chain, step, page, json, memory = []) => {
         const meta = { run, memorize, chain, step, page, memory, rootUrl };
         
         // TODO: USE FACTORY TO DECIDE WHICH LOGIC BUILDER TO CREATE
-        const clickLogic = new ClickLogicBuilder(action, page, meta);
+        const clickLogic = new ClickLogicBuilder(action, page, meta, json);
         const actionDirector = new ActionDirector();
         await actionDirector.perform(clickLogic);
 

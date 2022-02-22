@@ -7,9 +7,9 @@ const { elementTypes, actionTypes, configTypes } = require('../../common/enum');
 
 class ClickLogicBuilder extends LogicBuilder 
 {
-    constructor(action, page, meta)
+    constructor(action, page, meta, json)
     {
-        super(action, page, meta);
+        super(action, page, meta, json);
     }
 
     populateTargetsLabelsAndJsonKeys = async () => {
