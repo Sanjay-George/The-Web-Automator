@@ -1,10 +1,6 @@
 const { LogicBuilder } = require("./logicBuilder");
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../../common/xhrHandler');
-const { removeNavigationListener, addNavigationListener, 
-    awaitNavigation, handlePageUnload } = require('../../common/navigationHandler');
-const pageHelper = require('../../common/pageHelper');
-const { elementTypes, actionTypes, configTypes } = require('../../common/enum');
-
+const { removeNavigationListener, addNavigationListener, awaitNavigation } = require('../../common/navigationHandler');
 class ClickLogicBuilder extends LogicBuilder 
 {
     constructor(action, page, meta, json)
@@ -12,6 +8,9 @@ class ClickLogicBuilder extends LogicBuilder
         super(action, page, meta, json);
     }
 
+    /**
+     * Populate targets, labels and jSON keys for further processing
+     */
     populateTargetsLabelsAndJsonKeys = async () => {
         const { targets, labels } = await this.populateAllTargetsAndLabels(this.action, this.page);
         const jsonKeys = await this.getActionJsonKeys(targets, labels, this.page) || [];
@@ -20,6 +19,9 @@ class ClickLogicBuilder extends LogicBuilder
         this.jsonKeys = jsonKeys;
     };
 
+    /**
+     * Iterate through the list of targets and perform action on the page
+     */
     iterate = async () => {
         const { run, memorize, chain, step, page, memory } = this.meta;
         const { action, targets, labels, jsonKeys, isActionKeyPresent } = this;
@@ -48,6 +50,12 @@ class ClickLogicBuilder extends LogicBuilder
         }
     };
 
+    /**
+     * Populate list of targets and labels based on chosen similarity logic
+     * @param {object} action 
+     * @param {Page} page 
+     * @returns { targets: Array<string>, labels: Array<string> }
+     */
     populateAllTargetsAndLabels = async (action, page) => {
         // TODO: If actionType = text / select box, populate the targets and labels here accordingly
         if(action.selectSimilar) {
@@ -65,11 +73,17 @@ class ClickLogicBuilder extends LogicBuilder
         }
     };
     
+    /**
+     * Similarity Logic to select immediate siblings
+     * @param {Array<string>} selectedTargets list of target selectors
+     * @param {Page} page 
+     * @returns {Array<string>} final list of selectors
+     */
     populateSiblings = async (selectedTargets, page) => {
         if(selectedTargets.length === 0)   return [];
     
         const finalTargets =  await page.evaluate((selectedTargets) => { 
-            const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets);
+            const targets = DomUtils.findSimilarElementsByTreePath(selectedTargets); // todo: check this, seems wrong
             const targetSelectors = [];
             targets.forEach(target => {
                 targetSelectors.push(DomUtils.getQuerySelector(target));
@@ -80,6 +94,12 @@ class ClickLogicBuilder extends LogicBuilder
         return finalTargets;  // target selectors, not elements
     };
     
+    /**
+     * Similarity logic to select similar elements by using the tree path of current element
+     *  @param {Array<string>} selectedTargets list of target selectors
+     *  @param {Page} page 
+     *  @returns {Array<string>} final list of selectors
+     */
     populateSimilarTargets = async (selectedTargets, page) => {
         if(selectedTargets.length === 0)   return [];
     
@@ -99,6 +119,14 @@ class ClickLogicBuilder extends LogicBuilder
         return finalTargets;  // target selectors, not elements
     };
 
+    /**
+     * Get JSON keys for all targets of the current action. 
+     * JSON keys are extracted from the innerText property of labels (or targets)
+     * @param {Array<string>} targets 
+     * @param {Array<string>} labels 
+     * @param {Page} page 
+     * @returns {Array<string>}
+     */
     getActionJsonKeys = async (targets, labels, page) => {
         if(targets.length === 0)    return [];
     
@@ -112,6 +140,11 @@ class ClickLogicBuilder extends LogicBuilder
         return jsonKeys;
     };
 
+    /**
+     * @param {object} action object containing action data  
+     * @param {string} target selector
+     * @param {object} page puppeteer page
+    */
     perform = async (action, target, page) => {
         await addXhrListener(page);
         await addNavigationListener(page);

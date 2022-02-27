@@ -12,6 +12,7 @@ const { crawlerStatus } = require('../common/enum');
 
 const { ActionDirector } = require('./actionBuilders/actionDirector');
 const { ClickLogicBuilder } = require('./actionBuilders/clickLogicBuilder');
+const { TextInputLogicBuilder } = require('./actionBuilders/textInputLogicBuilder');
 
 let rootUrl = "";
 
@@ -74,10 +75,9 @@ const run = async (chain, step, page, json, memory = []) => {
         const action = chain[step];
         const meta = { run, memorize, chain, step, page, memory, rootUrl };
         
-        // TODO: USE FACTORY TO DECIDE WHICH LOGIC BUILDER TO CREATE
-        const clickLogic = new ClickLogicBuilder(action, page, meta, json);
+        const logicBuilder = getLogicBuilder(parseInt(action.actionType), action, page, meta, json);
         const actionDirector = new ActionDirector();
-        await actionDirector.perform(clickLogic);
+        await actionDirector.perform(logicBuilder);
 
     }
     else if (chain[step].configType === configTypes.STATE) {
@@ -141,18 +141,16 @@ const run = async (chain, step, page, json, memory = []) => {
    
 };
 
-const getActionJsonKeys = async (targets, labels, page) => {
-    if(targets.length === 0)    return [];
-
-    const jsonKeys = [];
-    for(let i = 0; i < targets.length; i++) {
-        const labelText = await getInnerText(labels[i], page);
-        const targetText = await getInnerText(targets[i], page);
-        jsonKeys.push(labelText || targetText || "");
-    }
-
-    return jsonKeys;
-};
+const getLogicBuilder = (actionType, action, page, meta, json) => {
+    switch(actionType) {
+        case actionTypes.CLICK:
+            return new ClickLogicBuilder(action, page, meta, json);
+        case actionTypes.TEXT:
+            return new TextInputLogicBuilder(action, page, meta, json);
+        default:
+            return null;
+    };
+}; 
 
 const populateAllKeysAndValues = async (property, page) => {
     if(property.selectSimilar) {
@@ -298,23 +296,6 @@ const perform = async (action, target, page) => {
     }
     await removeXhrListener();
     removeNavigationListener(); 
-};
-
-const populateAllTargetsAndLabels = async (action, page) => {
-    // TODO: If actionType = text / select box, populate the targets and labels here accordingly
-    if(action.selectSimilar) {
-        const targets = await populateSimilarTargets(action.selectedTargets, page);
-        const labels = await populateSimilarTargets(action.selectedLabels, page);
-        return {targets, labels};
-    }
-    else if(action.selectSiblings) {
-        const targets = await populateSiblings(action.selectedTargets, page);
-        const labels = await populateSiblings(action.selectedLabels, page);
-        return {targets, labels};
-    }
-    else {
-        return { targets: action.selectedTargets, labels: action.selectedLabels };
-    }
 };
 
 const populateSiblings = async (selectedTargets, page) => {
