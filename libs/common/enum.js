@@ -32,10 +32,16 @@ const crawlerStatus = {
     FAILED: 5,
 };
 
+const keyPresses = {
+    DOWN_ARROW: 'ArrowDown',
+    ENTER: 'Enter'
+};
+
 module.exports = {
     elementTypes,
     actionTypes,
     stateTypes,
     configTypes,
     crawlerStatus,
+    keyPresses,
 }

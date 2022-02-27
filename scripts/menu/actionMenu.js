@@ -21,7 +21,8 @@ class ActionMenu extends Menu {
             selectSiblings: false,    
             repeatCount: 0,
             maxTargetCount: -1,
-            textInput: [],   
+            textInput: [],
+            keyPresses: [],   // [{code: "Enter", count: 5, isIncrementalRepeat: false}, ...]
         }; 
     };
 
@@ -57,7 +58,42 @@ class ActionMenu extends Menu {
                 <div id="text-input-wrapper" class="input-field col12 hide">
                     <label for="text-input">Text Input (comma separated values)</label>
                     <textarea id="text-input" style="width: 100%; margin-top: 5px;"></textarea>
+               
+                    <div class="col12 input-field" style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <div class="col3">Key</div>
+                        <div class="col2">IsActive</div>
+                        <div class="col2">Count</div>
+                        <div class="col2">Incremental</div>
+                    </div>
+                    <div id="key-press-wrapper" class="col12">
+                        <div class="col12 input-field" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.keyPresses.DOWN_ARROW}>
+                            <div class="col3"><span>Arrow Down</span></div>
+                            <div class="col2">
+                                <input class="js-key-status" type="checkbox"/>
+                            </div> 
+                            <div class="col2">
+                                <input class="js-key-count" type="number" min="1" value="1">
+                            </div>
+                            <div class="col2">
+                                <input class="js-key-increment" type="checkbox"/>    
+                            </div> 
+                        </div>
+
+                        <div class="col12" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.keyPresses.ENTER}>
+                            <div class="col3"><span>Enter</span></div>
+                            <div class="col2">
+                                <input class="js-key-status" type="checkbox"/>
+                            </div> 
+                            <div class="col2">
+                                <input class="js-key-count" type="number" min="1" value="1">
+                            </div>
+                            <div class="col2">
+                                <input class="js-key-increment" type="checkbox"/>    
+                            </div> 
+                        </div>
+                    </div>
                 </div>
+            
 
                 <div class="col9">
                     <div class="input-field">
@@ -65,7 +101,7 @@ class ActionMenu extends Menu {
                         <input id="target-list" type="text" readonly value="${this.configuration.selectedTargets[0]}">
                         <a id="clear-target"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
-                    <div class="input-field">
+                    <div id="label-target-wrapper" class="input-field">
                         <label for="label-list">Label Target(s)</label>
                         <input id="label-list" type="text" readonly>
                         <a id="clear-label"><i class="tiny material-icons clear-all">delete</i></a>
@@ -85,11 +121,6 @@ class ActionMenu extends Menu {
                         </label>
                     </div>    
                 </div>
-
-                <!-- <div class="input-field col12">
-                    <label for="custom-input">Custom Input (for autocomplete input)</label>
-                    <input id="custom-input" type="text" class="validate">
-                </div> -->
 
                 <a id="configure" class="button">Configure</a>
                 <div style="padding-left: 10px; padding-top: 10px; color: red" id="error-msg"></div>
@@ -151,7 +182,27 @@ class ActionMenu extends Menu {
     parseTextInput = (csvString) => {
         if(csvString.length === 0)  return [];
         return csvString.split(",").filter(item => item.trim().length > 0);
-    }
+    };
+
+    formulateKeyPresses = () => {
+        const keyPressWrapper = document.querySelector("#key-press-wrapper");
+        const keys = Array.from(keyPressWrapper.children);
+        if(!keys || keys.length ===  0) return [];
+
+        return keys
+            .map(key => {
+                const isActive = key.children[1].children[0].checked;
+                if(!isActive)   return null;
+                
+                return {
+                    keyCode: key.dataset.keyCode,
+                    isActive: isActive,
+                    count: parseInt(key.children[2].children[0].value) || 1,
+                    isIncrementalRepeat: key.children[3].children[0].checked,
+                };
+            })
+            .filter(key => key !== null);
+    };
 
     setBasicDetails = () => {
         this.configuration = {
@@ -160,6 +211,7 @@ class ActionMenu extends Menu {
             actionKey: document.querySelector("#action-key").value,
             actionType: parseInt(document.querySelector("#action-type").value),
             textInput: this.parseTextInput(document.querySelector("#text-input").value),
+            keyPresses: this.formulateKeyPresses() || [],
         };
     };
 
@@ -222,12 +274,15 @@ class ActionMenu extends Menu {
 
         handleSelectActionType: e => {
             const textInputWrapper = document.querySelector("#text-input-wrapper");
+            const labelWrapper = document.querySelector("#label-target-wrapper");
 
             if(parseInt(e.target.value) === Enum.actionTypes.TEXT) {
                 textInputWrapper.classList.remove("hide");
+                labelWrapper.classList.add("hide");
             }
             else {
                 !textInputWrapper.classList.contains("hide") && textInputWrapper.classList.add("hide");
+                labelWrapper.classList.contains("hide") && labelWrapper.classList.remove("hide");
             }
         },
 
@@ -337,9 +392,9 @@ class ActionMenu extends Menu {
             }
 
             const 
-                { configType, actionName, actionType, actionKey, 
-                    selectedTargets, selectedLabels, selectSimilar,
-                     selectSiblings, finalLabels, finalTargets } = this.configuration;
+                { configType, actionName, actionType, 
+                    actionKey, selectedTargets, selectedLabels, selectSimilar,
+                     selectSiblings, finalLabels, finalTargets, textInput, keyPresses } = this.configuration;
 
             for (let i = 0; i < finalTargets.length; i++) {
                 const sanitizedTargetElement = 
@@ -374,6 +429,7 @@ class ActionMenu extends Menu {
                 selectSimilar,
                 selectSiblings,
                 textInput,
+                keyPresses,
             });
             this.close();
         },

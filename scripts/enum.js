@@ -25,11 +25,17 @@ const Enum = (() => {
         MONITOR_DATA: 2,
     };
 
+    const keyPresses = {
+        DOWN_ARROW: 'ArrowDown',
+        ENTER: 'Enter'
+    };
+
     return {
         elementTypes,
         actionTypes,
         stateTypes,
         configTypes,
+        keyPresses,
     }
 })();
 
