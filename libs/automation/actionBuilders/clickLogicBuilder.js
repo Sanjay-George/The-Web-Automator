@@ -54,7 +54,7 @@ class ClickLogicBuilder extends LogicBuilder
      * Populate list of targets and labels based on chosen similarity logic
      * @param {object} action 
      * @param {Page} page 
-     * @returns { targets: Array<string>, labels: Array<string> }
+     * @returns {object} of the form { targets: Array<string>, labels: Array<string> }
      */
     populateAllTargetsAndLabels = async (action, page) => {
         // TODO: If actionType = text / select box, populate the targets and labels here accordingly
