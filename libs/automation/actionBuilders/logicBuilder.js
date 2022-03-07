@@ -66,6 +66,7 @@ class LogicBuilder
             await this.perform(action, target, page);
         }
         catch(ex) {
+            console.error(ex);
             // if perform(action) doesn't work, retry previous actions (to handle popup cases)
             // if none of the actions work, go back one page and try 
             let wasActionPerformed = await this.tryActionsInMemory(memory, step, page);

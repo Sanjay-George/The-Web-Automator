@@ -75,9 +75,9 @@ class TextInputLogicBuilder extends LogicBuilder
         await addXhrListener(page);
         await addNavigationListener(page);
        
-        await page.evaluate(selector => {
-            DomUtils.sanitizeAnchorTags(selector)
-        }, target.selector);
+        // await page.evaluate(selector => {
+        //     DomUtils.sanitizeAnchorTags(selector)
+        // }, target.selector);
 
         await page.type(target.selector, target.input, { delay: 100 });
         await Promise.all([
@@ -86,7 +86,7 @@ class TextInputLogicBuilder extends LogicBuilder
             page.waitForTimeout(1000),
         ]);
 
-        await pressKeys(target.keyPresses, page);
+        await this.pressKeys(target.keyPresses, page);
         await Promise.all([
             awaitXhrResponse(),
             awaitNavigation(),
@@ -107,13 +107,12 @@ class TextInputLogicBuilder extends LogicBuilder
             const { keyCode, count } = keyPress;
             
             for(let i = 0; i < count; i++) {
-                await pressKey(keyCode, page);
+                await this.pressKey(keyCode, page);
             }
         };
     };
 
-    pressKey = async (key, page) => {
-        const keyCode = specialKeys[key];
+    pressKey = async (keyCode, page) => {
         await page.keyboard.press(keyCode);
     };
 
@@ -125,7 +124,7 @@ class TextInputLogicBuilder extends LogicBuilder
 
         const incrementalKeyPresses = keyPresses.filter(item => item.isIncrementalRepeat);  
         const constantKeyPresses = keyPresses.filter(item => !item.isIncrementalRepeat);  
-        let allKeyPressesMatrix = this.populateAllKeyPresses(incrementalKeyPresses, constantKeyPresses); 
+        const allKeyPressesMatrix = this.populateAllKeyPresses(incrementalKeyPresses, constantKeyPresses); 
        
 
         selectedTargets.forEach(target => {
