@@ -169,6 +169,8 @@ const populateAllKeysAndValues = async (property, page) => {
 };
 
 const getInnerText = async (selector, page) => {
+    if(!selector || !selector.length)       return null;
+    
     return await page.evaluate(selector => {
         let element = document.querySelector(selector);
         if(element){

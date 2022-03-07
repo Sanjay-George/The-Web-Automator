@@ -37,7 +37,7 @@ class LogicBuilder
             // Deep or shallow copy won't work
 
             // TODO: TEST THIS. 
-            for (prop in innerJson) { 
+            for (const prop in innerJson) { 
                 if(Array.isArray(this.json[prop])) {
                     this.json[prop].push(innerJson[prop]);
                 }
