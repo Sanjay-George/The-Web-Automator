@@ -25,7 +25,7 @@ const Enum = (() => {
         MONITOR_DATA: 2,
     };
 
-    const keyPresses = {
+    const specialKeys = {
         DOWN_ARROW: 'ArrowDown',
         ENTER: 'Enter'
     };
@@ -35,7 +35,7 @@ const Enum = (() => {
         actionTypes,
         stateTypes,
         configTypes,
-        keyPresses,
+        specialKeys,
     }
 })();
 

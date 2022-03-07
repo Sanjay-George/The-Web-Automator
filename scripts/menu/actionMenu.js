@@ -66,7 +66,7 @@ class ActionMenu extends Menu {
                         <div class="col2">Incremental</div>
                     </div>
                     <div id="key-press-wrapper" class="col12">
-                        <div class="col12 input-field" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.keyPresses.DOWN_ARROW}>
+                        <div class="col12 input-field" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.specialKeys.DOWN_ARROW}>
                             <div class="col3"><span>Arrow Down</span></div>
                             <div class="col2">
                                 <input class="js-key-status" type="checkbox"/>
@@ -79,7 +79,7 @@ class ActionMenu extends Menu {
                             </div> 
                         </div>
 
-                        <div class="col12" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.keyPresses.ENTER}>
+                        <div class="col12" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.specialKeys.ENTER}>
                             <div class="col3"><span>Enter</span></div>
                             <div class="col2">
                                 <input class="js-key-status" type="checkbox"/>
@@ -196,7 +196,6 @@ class ActionMenu extends Menu {
                 
                 return {
                     keyCode: key.dataset.keyCode,
-                    isActive: isActive,
                     count: parseInt(key.children[2].children[0].value) || 1,
                     isIncrementalRepeat: key.children[3].children[0].checked,
                 };
