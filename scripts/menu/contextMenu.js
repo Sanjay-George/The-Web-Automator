@@ -10,11 +10,13 @@ const ContextMenu = (() => {
     let currentTarget = "";
 
     const open = (offsetX, offsetY, target) => {
+        debugger;
         const menu = document.getElementById(name);
-        menu.classList.remove("hide");
         
-        menu.style.top = offsetY + menu.offsetHeight < document.body.offsetHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
-        menu.style.left = offsetX + menu.offsetWidth < document.body.offsetWidth ? `${offsetX}px`: `${offsetX - menu.offsetWidth}px`;
+        menu.style.top = offsetY + menu.offsetHeight < window.innerHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
+        menu.style.left = offsetX + menu.offsetWidth < window.innerWidth ? `${offsetX}px`: `${offsetX - menu.offsetWidth}px`;
+
+        menu.classList.remove("hide");
 
         // if clicked anywhere outside context-menu, close the menu.
         // open action/state/ menus according to li clicked

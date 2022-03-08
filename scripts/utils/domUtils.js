@@ -222,21 +222,25 @@ const DomUtils = (() => {
     };
 
     const convertToNoLink = anchor => {
-        if(!anchor || anchor.nodeName.toLowerCase() !== "a")   return anchor;
+        if(!anchor || anchor.nodeName.toLowerCase() !== "a") {
+            return { modifiedElement: anchor, isModified: false };
+        }
 
         const noLink = document.createElement("no-link"); 
         _copyAllProperties(anchor, noLink); 
         anchor.replaceWith(noLink);
-        return noLink; 
+        return { modifiedElement: noLink, isModified: true }; 
     };
 
     const convertToAnchor = noLink => {
-        if(!noLink || noLink.nodeName.toLowerCase() !== "no-link")   return noLink;
+        if(!noLink || noLink.nodeName.toLowerCase() !== "no-link") {
+            return { modifiedElement: noLink, isModified: false };
+        }
 
         const anchor = document.createElement("a");  
         _copyAllProperties(noLink, anchor); 
         noLink.replaceWith(anchor);
-        return anchor;
+        return { modifiedElement: anchor, isModified: true };
     };
 
     const convertAllTagsInPathToAnotherType = (element, fn) => {
@@ -248,8 +252,11 @@ const DomUtils = (() => {
             const index  = Array.from(element.parentElement.children).indexOf(element);
             childIndexAtEachStep.push(index);
 
-            const modifiedElement = fn(element);
-            element.replaceWith(modifiedElement);
+            const { modifiedElement, isModified } = fn(element);
+            
+            if(isModified) {
+                element.replaceWith(modifiedElement);  
+            }
             element = modifiedElement.parentElement;
             traversedDistance++;
         }
