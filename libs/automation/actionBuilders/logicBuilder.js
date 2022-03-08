@@ -66,7 +66,7 @@ class LogicBuilder
             await this.perform(action, target, page);
         }
         catch(ex) {
-            console.error(ex);
+            // console.error(ex);
             // if perform(action) doesn't work, retry previous actions (to handle popup cases)
             // if none of the actions work, go back one page and try 
             let wasActionPerformed = await this.tryActionsInMemory(memory, step, page);
@@ -89,7 +89,15 @@ class LogicBuilder
             }
             const { action, target } = memory[i];
             try{
-                await this.perform(action, target, page);
+                if(action.actionType === this.action.actionType) {
+                    await this.perform(action, target, page);
+                }
+                else {
+                    const { getLogicBuilder } = this.meta;
+                    const logicBuilder = 
+                        getLogicBuilder(action.actionType, action, page, this.meta, this.json);
+                    await logicBuilder.perform(action, target, page);
+                }
             }
             catch(ex) {
                 if(i === step) {
