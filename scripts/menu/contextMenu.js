@@ -12,8 +12,8 @@ const ContextMenu = (() => {
     const open = (offsetX, offsetY, target) => {
         const menu = document.getElementById(name);
         
-        menu.style.top = offsetY + menu.offsetHeight < window.innerHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
-        menu.style.left = offsetX + menu.offsetWidth < window.innerWidth ? `${offsetX}px`: `${offsetX - menu.offsetWidth}px`;
+        menu.style.top = offsetY + menu.offsetHeight + 100 < window.innerHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
+        menu.style.left = offsetX + menu.offsetWidth + 100 < window.innerWidth ? `${offsetX}px`: `${offsetX - menu.offsetWidth}px`;
 
         menu.classList.remove("hide");
 

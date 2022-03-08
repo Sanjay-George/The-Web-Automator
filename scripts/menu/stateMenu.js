@@ -100,11 +100,11 @@ class StateMenu extends Menu {
         label = label || `key${id}`;
 
         const innerHTML = `
-            <div class="col4">
+            <div class="col4 flex-nowrap">
                 <input class="js-label-list" type="text" style="width: 84%;" value="${label}">
                 <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
             </div>
-            <div class="col5">
+            <div class="col5 flex-nowrap">
                 <input class="js-target-list" type="text"  style="width: 92%;" value="${target}">
                 <a class="js-edit-value"><i class="tiny material-icons icon-btn">edit_note</i></a>
             </div>
