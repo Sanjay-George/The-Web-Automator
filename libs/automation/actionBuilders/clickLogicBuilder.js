@@ -26,7 +26,7 @@ class ClickLogicBuilder extends LogicBuilder
         const { run, memorize, chain, step, page, memory } = this.meta;
         const { action, targets, labels, jsonKeys, isActionKeyPresent } = this;
 
-        for(let i = 0; i < Math.min(targets.length, 3); i++) { // TODO: REVERT Math.min()
+        for(let i = 0; i < targets.length; i++) { // TODO: REVERT Math.min()
             const target = targets[i];
             const label = labels[i];
             memorize(memory, step, action, target);

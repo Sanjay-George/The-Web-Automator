@@ -3,7 +3,7 @@ const DEFAULT_TIMEOUT = 10000;
 const MAX_ATTEMPTS = 3;
 
 function getWaitOptions(customTimeout) {
-	return { waitUntil: 'load', timeout: customTimeout || DEFAULT_TIMEOUT };
+	return { waitUntil: 'networkidle0', timeout: customTimeout || DEFAULT_TIMEOUT };
 } 
 
 async function openTab(browser, url, attempt = 0, timeout = 0) {
