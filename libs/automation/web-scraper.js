@@ -73,7 +73,7 @@ const run = async (chain, step, page, json, memory = []) => {
 
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
-        const meta = { run, memorize, chain, step, page, memory, rootUrl };
+        const meta = { run, memorize, getLogicBuilder, chain, step, page, memory, rootUrl };
         
         const logicBuilder = getLogicBuilder(parseInt(action.actionType), action, page, meta, json);
         const actionDirector = new ActionDirector();
@@ -182,81 +182,6 @@ const getInnerText = async (selector, page) => {
     }, selector);
 };
 
-const performAction = async (action, target, memory, step, page) => {
-    console.log(`performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
-    try {
-        await perform(action, target, page);
-    }
-    catch(ex) {
-        // if perform(action) doesn't work, retry previous actions (to handle popup cases)
-        // if none of the actions work, go back one page and try 
-        let wasActionPerformed = await tryActionsInMemory(memory, step, page);
-        if(!wasActionPerformed) {
-            wasActionPerformed = await tryActionOnPrevPage(action, target, memory, step, page);
-            return wasActionPerformed;
-        }
-    }
-    return true;
-};
-
-const tryActionsInMemory = async (memory, step, page) => {
-    // repeat all actions from beginning of memory to end
-    console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
-    // console.log(JSON.stringify(memory));
-
-    let wasActionPerformed = true;
-    for (let i = 0; i <= step; i++) {
-        if(memory[i] === null) {
-            continue;
-        }
-        const { action, target } = memory[i];
-        try{
-            await perform(action, target, page);
-        }
-        catch(ex) {
-            if(i === step) {
-                wasActionPerformed = false;
-            }
-            continue;
-        }
-    }
-    return wasActionPerformed;
-};
-
-const tryActionOnPrevPage = async (action, target, memory, step, page) => {
-    console.log(`\ntryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
-    
-    if(await page.url() === rootUrl)  return false;
-    await Promise.all([
-        addXhrListener(page),
-        addNavigationListener(page),
-    ]);
-    
-    const httpRes = await page.goBack(pageHelper.getWaitOptions());
-    await Promise.all([
-        awaitXhrResponse(),
-        awaitNavigation(),
-        page.waitForTimeout(500),
-    ]);
-
-    // console.log("going back, httpRes", httpRes);
-
-    if(httpRes  === null) {
-        await page.reload(pageHelper.getWaitOptions());
-        return await performAction(action, target, memory, step, page);
-    }
-
-    await Promise.all([
-        removeXhrListener(),
-        removeNavigationListener(), 
-    ]);
-
-
-    // await page.goBack(pageHelper.getWaitOptions());
-    // await page.reload(pageHelper.getWaitOptions());
-    return await performAction(action, target, memory, step, page);
-};
-
 
 const memorize = (memory, step, action, target) => {
     if(memory[step]) {
@@ -274,31 +199,6 @@ const memorize = (memory, step, action, target) => {
 };
 
 
-const perform = async (action, target, page) => {
-    await addXhrListener(page);
-    await addNavigationListener(page);
-    switch(action.actionType) {
-        case actionTypes.CLICK:
-            // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-            // TODO: check if element is anchor tag and will open in new tab
-            await page.evaluate(selector => {
-                DomUtils.sanitizeAnchorTags(selector)
-            }, target);
-            await page.click(target);
-            await Promise.all([
-                awaitXhrResponse(),
-                awaitNavigation(),
-                page.waitForTimeout(1000),
-            ]);
-            break;
-        case actionTypes.TEXT:
-
-        default:
-            break;
-    }
-    await removeXhrListener();
-    removeNavigationListener(); 
-};
 
 const populateSiblings = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];
