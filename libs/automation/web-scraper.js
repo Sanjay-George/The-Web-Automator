@@ -10,6 +10,10 @@ const { removeNavigationListener, addNavigationListener, awaitNavigation, handle
 const crawlersDL = require("../database/crawlersDL");
 const { crawlerStatus } = require('../common/enum');
 
+const { ActionDirector } = require('./actionBuilders/actionDirector');
+const { ClickLogicBuilder } = require('./actionBuilders/clickLogicBuilder');
+const { TextInputLogicBuilder } = require('./actionBuilders/textInputLogicBuilder');
+
 let rootUrl = "";
 
 // TODO: RENAME THIS METHOD
@@ -48,10 +52,12 @@ const init = async (crawler) => {
             status: crawlerStatus.COMPLETED,
             lastRun: new Date(Date.now())
         });
-    
+
+        await browser.close();
         return json;
     }
     catch(ex) {
+        console.error(ex);  // TODO: re-evaluate exception logging at this point
         await crawlersDL.update(id, {
             status: crawlerStatus.FAILED,
             lastRun: new Date(Date.now())
@@ -67,54 +73,12 @@ const run = async (chain, step, page, json, memory = []) => {
 
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
+        const meta = { run, memorize, getLogicBuilder, chain, step, page, memory, rootUrl };
+        
+        const logicBuilder = getLogicBuilder(parseInt(action.actionType, 10), action, page, meta, json);
+        const actionDirector = new ActionDirector();
+        await actionDirector.perform(logicBuilder);
 
-        const isActionKeyPresent = action.actionKey.length > 0;
-        isActionKeyPresent && 
-            (json[action.actionKey] = []);
-
-        const { targets, labels } = await populateAllTargetsAndLabels(action, page);
-        const jsonKeys = await getActionJsonKeys(targets, labels, page) || [];
-
-        for(let i = 0; i < targets.length; i++) {
-            const target = targets[i];
-            const label = labels[i];
-            memorize(memory, step, action, target);
-            
-            let innerJson = {};
-            if(isActionKeyPresent && jsonKeys[i].length)
-            {
-                innerJson["name"] = jsonKeys[i];
-            }
-            
-            const isActionPerformed = await performAction(action, target, memory, step, page);
-            if(!isActionPerformed) {
-                console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
-                break;
-            }
-            await run(chain, step + 1, page, innerJson, memory);
-
-            console.log(`\ninnerJSON inside action: ${JSON.stringify(innerJson)}`);
-
-            if(isActionKeyPresent){
-                json[action.actionKey].push(innerJson);
-            }
-            else {
-                // INFO: 
-                // Copying each property of innerJSON into json, coz of recursive call stack. 
-                // Deep or shallow copy won't work
-
-                // TODO: TEST THIS. 
-                for (prop in innerJson) { 
-                    if(Array.isArray(json[prop])) {
-                        json[prop].push(innerJson[prop]);
-                    }
-                    else {
-                        json[prop] = innerJson[prop];
-                    }
-                }
-            }
-                
-        }
     }
     else if (chain[step].configType === configTypes.STATE) {
         const state = chain[step];
@@ -177,18 +141,16 @@ const run = async (chain, step, page, json, memory = []) => {
    
 };
 
-const getActionJsonKeys = async (targets, labels, page) => {
-    if(targets.length === 0)    return [];
-
-    const jsonKeys = [];
-    for(let i = 0; i < targets.length; i++) {
-        const labelText = await getInnerText(labels[i], page);
-        const targetText = await getInnerText(targets[i], page);
-        jsonKeys.push(labelText || targetText || "");
+const getLogicBuilder = (actionType, action, page, meta, json) => {
+    switch(actionType) {
+        case actionTypes.CLICK:
+            return new ClickLogicBuilder(action, page, meta, json);
+        case actionTypes.TEXT:
+            return new TextInputLogicBuilder(action, page, meta, json);
+        default:
+            return null;
     }
-
-    return jsonKeys;
-};
+}; 
 
 const populateAllKeysAndValues = async (property, page) => {
     if(property.selectSimilar) {
@@ -207,6 +169,8 @@ const populateAllKeysAndValues = async (property, page) => {
 };
 
 const getInnerText = async (selector, page) => {
+    if(!selector || !selector.length)       return null;
+    
     return await page.evaluate(selector => {
         let element = document.querySelector(selector);
         if(element){
@@ -216,81 +180,6 @@ const getInnerText = async (selector, page) => {
             return null;
         }
     }, selector);
-};
-
-const performAction = async (action, target, memory, step, page) => {
-    console.log(`performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
-    try {
-        await perform(action, target, page);
-    }
-    catch(ex) {
-        // if perform(action) doesn't work, retry previous actions (to handle popup cases)
-        // if none of the actions work, go back one page and try 
-        let wasActionPerformed = await tryActionsInMemory(memory, step, page);
-        if(!wasActionPerformed) {
-            wasActionPerformed = await tryActionOnPrevPage(action, target, memory, step, page);
-            return wasActionPerformed;
-        }
-    }
-    return true;
-};
-
-const tryActionsInMemory = async (memory, step, page) => {
-    // repeat all actions from beginning of memory to end
-    console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
-    // console.log(JSON.stringify(memory));
-
-    let wasActionPerformed = true;
-    for (let i = 0; i <= step; i++) {
-        if(memory[i] === null) {
-            continue;
-        }
-        const { action, target } = memory[i];
-        try{
-            await perform(action, target, page);
-        }
-        catch(ex) {
-            if(i === step) {
-                wasActionPerformed = false;
-            }
-            continue;
-        }
-    }
-    return wasActionPerformed;
-};
-
-const tryActionOnPrevPage = async (action, target, memory, step, page) => {
-    console.log(`\ntryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
-    
-    if(await page.url() === rootUrl)  return false;
-    await Promise.all([
-        addXhrListener(page),
-        addNavigationListener(page),
-    ]);
-    
-    const httpRes = await page.goBack(pageHelper.getWaitOptions());
-    await Promise.all([
-        awaitXhrResponse(),
-        awaitNavigation(),
-        page.waitForTimeout(500),
-    ]);
-
-    // console.log("going back, httpRes", httpRes);
-
-    if(httpRes  === null) {
-        await page.reload(pageHelper.getWaitOptions());
-        return await performAction(action, target, memory, step, page);
-    }
-
-    await Promise.all([
-        removeXhrListener(),
-        removeNavigationListener(), 
-    ]);
-
-
-    // await page.goBack(pageHelper.getWaitOptions());
-    // await page.reload(pageHelper.getWaitOptions());
-    return await performAction(action, target, memory, step, page);
 };
 
 
@@ -310,46 +199,6 @@ const memorize = (memory, step, action, target) => {
 };
 
 
-const perform = async (action, target, page) => {
-    await addXhrListener(page);
-    await addNavigationListener(page);
-    switch(parseInt(action.actionType)) {
-        case actionTypes.CLICK:
-            // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-
-            // TODO: check if element is anchor tag and will open in new tab
-            await page.evaluate(selector => {
-                DomUtils.sanitizeAnchorTags(selector)
-            }, target);
-            await page.click(target);
-            await Promise.all([
-                awaitXhrResponse(),
-                awaitNavigation(),
-                page.waitForTimeout(1000),
-            ]);
-            break;
-        default:
-            break;
-    }
-    await removeXhrListener();
-    removeNavigationListener(); 
-};
-
-const populateAllTargetsAndLabels = async (action, page) => {
-    if(action.selectSimilar) {
-        const targets = await populateSimilarTargets(action.selectedTargets, page);
-        const labels = await populateSimilarTargets(action.selectedLabels, page);
-        return {targets, labels};
-    }
-    else if(action.selectSiblings) {
-        const targets = await populateSiblings(action.selectedTargets, page);
-        const labels = await populateSiblings(action.selectedLabels, page);
-        return {targets, labels};
-    }
-    else {
-        return { targets: action.selectedTargets, labels: action.selectedLabels };
-    }
-};
 
 const populateSiblings = async (selectedTargets, page) => {
     if(selectedTargets.length === 0)   return [];

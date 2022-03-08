@@ -20,7 +20,9 @@ class ActionMenu extends Menu {
             selectSimilar: false,
             selectSiblings: false,    
             repeatCount: 0,
-            maxTargetCount: -1   
+            maxTargetCount: -1,
+            textInput: [],
+            keyPresses: [],   // [{code: "Enter", count: 5, isIncrementalRepeat: false}, ...]
         }; 
     };
 
@@ -34,38 +36,78 @@ class ActionMenu extends Menu {
             </div>
 
             <form id='configure-action' class="row">
-                <div class="input-field col5">
+                <div class="flex-row col5">
                     <label for="action-name">Action*</label>
                     <input id="action-name" type="text">
                 </div>
 
-                <div class="input-field col4">
+                <div class="flex-row col4">
                     <label for="action-key">Key</label>
                     <input id="action-key" type="text">
                 </div>
 
-                <div class="input-field col3">
+                <div class="flex-row col3">
                     <select id="action-type">
                         <option value="" disabled selected>Action Type</option>
-                        <option value="1">Click</option>
-                        <option value="2" disabled>Text input</option>
-                        <option value="3" disabled>Select</option>
+                        <option value="${Enum.actionTypes.CLICK}">Click</option>
+                        <option value="${Enum.actionTypes.TEXT}" >Text input</option>
+                        <option value="${Enum.actionTypes.SELECT}" disabled>Select</option>
                     </select>
                 </div>
                 
+                <div id="text-input-wrapper" class="col12 hide">
+                    <label for="text-input">Text Input (comma separated values)</label>
+                    <textarea id="text-input" style="width: 100%; margin-top: 5px;"></textarea>
+               
+                    <div class="col12 flex-row" style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <div class="col3">Key</div>
+                        <div class="col2">IsActive</div>
+                        <div class="col2">Count</div>
+                        <div class="col2">Incremental</div>
+                    </div>
+                    <div id="key-press-wrapper" class="col12">
+                        <div class="col12 flex-row" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.specialKeys.DOWN_ARROW}>
+                            <div class="col3"><span>Arrow Down</span></div>
+                            <div class="col2">
+                                <input class="js-key-status" type="checkbox"/>
+                            </div> 
+                            <div class="col2">
+                                <input class="js-key-count" type="number" min="1" value="1">
+                            </div>
+                            <div class="col2">
+                                <input class="js-key-increment" type="checkbox"/>    
+                            </div> 
+                        </div>
+
+                        <div class="col12" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.specialKeys.ENTER}>
+                            <div class="col3"><span>Enter</span></div>
+                            <div class="col2">
+                                <input class="js-key-status" type="checkbox"/>
+                            </div> 
+                            <div class="col2">
+                                <input class="js-key-count" type="number" min="1" value="1">
+                            </div>
+                            <div class="col2">
+                                <input class="js-key-increment" type="checkbox"/>    
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+            
+
                 <div class="col9">
-                    <div class="input-field">
+                    <div class="flex-row">
                         <label for="target-list">Action Target(s)</label>
                         <input id="target-list" type="text" readonly value="${this.configuration.selectedTargets[0]}">
                         <a id="clear-target"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
-                    <div class="input-field">
+                    <div id="label-target-wrapper" class="flex-row">
                         <label for="label-list">Label Target(s)</label>
                         <input id="label-list" type="text" readonly>
                         <a id="clear-label"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
                 </div>
-                <div class="input-field col3" style="display: flex; align-items: center; flex-wrap: wrap;">
+                <div class="flex-row col3" style="display: flex; align-items: center; flex-wrap: wrap;">
                     <div class="col12">
                         <label id="sel-similar">
                             <input type="checkbox"/>
@@ -79,11 +121,6 @@ class ActionMenu extends Menu {
                         </label>
                     </div>    
                 </div>
-
-                <!-- <div class="input-field col12">
-                    <label for="custom-input">Custom Input (for autocomplete input)</label>
-                    <input id="custom-input" type="text" class="validate">
-                </div> -->
 
                 <a id="configure" class="button">Configure</a>
                 <div style="padding-left: 10px; padding-top: 10px; color: red" id="error-msg"></div>
@@ -142,23 +179,57 @@ class ActionMenu extends Menu {
         }
     };
 
+    parseTextInput = csvString => {
+        if(csvString.length === 0)  return [];
+        return csvString.split(",").filter(item => item.trim().length > 0);
+    };
+
+    formulateKeyPresses = () => {
+        const keyPressWrapper = document.querySelector("#key-press-wrapper");
+        const keys = Array.from(keyPressWrapper.children);
+        if(!keys || keys.length ===  0) return [];
+
+        return keys
+            .map(key => {
+                const isActive = key.children[1].children[0].checked;
+                if(!isActive)   return null;
+                
+                return {
+                    keyCode: key.dataset.keyCode,
+                    count: parseInt(key.children[2].children[0].value) || 1,
+                    isIncrementalRepeat: key.children[3].children[0].checked,
+                };
+            })
+            .filter(key => key !== null);
+    };
+
     setBasicDetails = () => {
         this.configuration = {
             ...this.configuration,
             actionName: document.querySelector("#action-name").value,
             actionKey: document.querySelector("#action-key").value,
-            actionType: document.querySelector("#action-type").value
+            actionType: parseInt(document.querySelector("#action-type").value),
+            textInput: this.parseTextInput(document.querySelector("#text-input").value),
+            keyPresses: this.formulateKeyPresses() || [],
         };
     };
 
+    validationActionTypeAndInput = () => {
+        const { actionType, textInput } = this.configuration;
+        if(!actionType) {
+            return "Select actionType";
+        }
+        if(actionType === Enum.actionTypes.TEXT && (!textInput || textInput.length === 0)) {
+            return "Enter at least 1 text input";
+        }
+        return "";
+    }
+
     validateConfig = () => {
-        const {actionName, actionType, selectedTargets, selectedLabels} = this.configuration;
+        const {actionName, selectedTargets, selectedLabels} = this.configuration;
         let errorMsg = "";
         if(!actionName.length) {
             errorMsg = "Enter actionName";
-        }
-        else if(!actionType) {
-            errorMsg = "Select actionType"
         }
         else if(!selectedTargets.length) {
             errorMsg = "Select atleast one Action Target";
@@ -167,6 +238,8 @@ class ActionMenu extends Menu {
             errorMsg = `${selectedLabels.length} labels are selected, 
                         but ${selectedTargets.length} targets are selected.`;
         }
+        const actionTypeErrorMsg = this.validationActionTypeAndInput();
+        errorMsg = errorMsg || actionTypeErrorMsg;
 
         return {
             isValid: errorMsg.length === 0,
@@ -195,6 +268,20 @@ class ActionMenu extends Menu {
             DynamicEventHandler.addHandler("mouseover", this.actionLabelHandlers.handleMouseOver);
             DynamicEventHandler.addHandler("mouseout", this.actionLabelHandlers.handleMouseOut);
             DynamicEventHandler.addHandler("click", this.actionLabelHandlers.handleSelection);
+        },
+
+        handleSelectActionType: e => {
+            const textInputWrapper = document.querySelector("#text-input-wrapper");
+            const labelWrapper = document.querySelector("#label-target-wrapper");
+
+            if(parseInt(e.target.value) === Enum.actionTypes.TEXT) {
+                textInputWrapper.classList.remove("hide");
+                labelWrapper.classList.add("hide");
+            }
+            else {
+                !textInputWrapper.classList.contains("hide") && textInputWrapper.classList.add("hide");
+                labelWrapper.classList.contains("hide") && labelWrapper.classList.remove("hide");
+            }
         },
 
         handleSelectSimilar: e => {
@@ -303,9 +390,9 @@ class ActionMenu extends Menu {
             }
 
             const 
-                { configType, actionName, actionType, actionKey, 
-                    selectedTargets, selectedLabels, selectSimilar,
-                     selectSiblings, finalLabels, finalTargets } = this.configuration;
+                { configType, actionName, actionType, 
+                    actionKey, selectedTargets, selectedLabels, selectSimilar,
+                     selectSiblings, finalLabels, finalTargets, textInput, keyPresses } = this.configuration;
 
             for (let i = 0; i < finalTargets.length; i++) {
                 const sanitizedTargetElement = 
@@ -339,6 +426,8 @@ class ActionMenu extends Menu {
                 selectedTargets,
                 selectSimilar,
                 selectSiblings,
+                textInput,
+                keyPresses,
             });
             this.close();
         },
@@ -361,6 +450,11 @@ class ActionMenu extends Menu {
         document
             .querySelector(`#${this.containerId} #label-list`)
             .addEventListener("click", this.menuHandlers.handleSelectActionLabels);
+        
+        // select action type
+        document
+            .querySelector(`#${this.containerId} #action-type`)
+            .addEventListener("change", this.menuHandlers.handleSelectActionType);
 
         // select all similar siblings
         document

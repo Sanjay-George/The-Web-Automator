@@ -1,12 +1,13 @@
 .profile-menu * {
     color:black;
-    font-size: 13px;
-    font-family: "Roboto","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;
+    font-size: 13px !important;
+    font-family: "Roboto","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif !important;
 }
 
 .profile-menu input {
     background-color: white !important;
     border: 1px solid #cdcdcd !important;
+    display: flex;
 }
 
 .profile-menu {
@@ -17,7 +18,7 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    z-index: 999;
+    z-index: 2147483647;  /* highest value possible */
     transform: translateX(-50%) translateY(-50%);
     overflow-y: scroll;
     overflow-x: hidden;
@@ -28,8 +29,8 @@
 
 .profile-menu .material-icons {
     color: rgb(2, 136, 209);
-    font-size: 20px;
-    font-family: 'Material Icons';
+    font-size: 20px !important;
+    font-family: 'Material Icons' !important;
 }
 
 .profile-overlay {
@@ -41,7 +42,7 @@
     position: fixed;
     top: 0px;
     left: 0px;
-    z-index: 50;
+    z-index: 2147483646; /* highest value possible minus one */
 }
 
 .hide {
@@ -51,7 +52,7 @@
 .profile-menu h4 {
     padding: 10px 20px; 
     text-align: center;
-    font-size: 16px;
+    font-size: 16px !important;
     margin: 0;
 }
 /* 
@@ -95,9 +96,10 @@
     width: 100%;
 }
 
-.profile-menu .input-field {
+.profile-menu .flex-row {
     padding: 10px 0;
-    font-size: 13px;
+    font-size: 13px !important;
+    display: flex;
 }
 
 .profile-menu select{
@@ -113,7 +115,7 @@
 
 .profile-menu .clear-all {
     cursor: pointer;
-    font-size: 16px; 
+    font-size: 16px !important; 
     position: relative; 
     top: 2px; 
 }
@@ -127,15 +129,26 @@
     letter-spacing: 1px;
     margin: 5px 0;
     cursor: pointer;
-    font-size: 13px;
+    width: 130px;
+    height: 30px;
+    line-height: normal !important;
 }
 
-.profile-menu input[type="text"] {
+.profile-menu input[type="text"],
+.profile-menu input[type="number"] {
     width: 70%;
 }
 
+.profile-menu input[type="checkbox"] {
+    height: 13px !important;
+    width: 13px !important;
+    display: inline-block !important;
+    cursor: pointer;
+    appearance: auto !important;
+}
+
 .profile-menu i.icon-btn{
-    font-size: 16px;
+    font-size: 16px !important;
     cursor: pointer;
     position: relative; 
     top: 3px; 
@@ -145,12 +158,17 @@
     padding: 0px !important;
 }
 
+.profile-menu .flex-nowrap {
+    display: flex !important;
+    flex-wrap: nowrap;
+}
+
 .context-menu {
     display: flex;
     font-size: 12px !important;
     flex-wrap: wrap;
     width: 160px !important;
-    z-index: 999;
+    z-index: 2147483647; /* highest value possible */
     overflow-x: hidden;
     background-color: #242424 !important;
     color: #f5f5f5 !important;
