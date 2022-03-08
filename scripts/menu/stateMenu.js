@@ -39,12 +39,12 @@ class StateMenu extends Menu {
             </div>
 
             <form id='configure-state' class="row">
-                <div class="input-field col6">
+                <div class="flex-row col6">
                     <label for="state-name">Name*</label>
                     <input id="state-name" type="text">
                 </div>
 
-                <div class="input-field col4">
+                <div class="flex-row col4">
                     <select id="state-type">
                         <option value="" disabled selected>State Type</option>
                         <option value="1">Scrape Data</option>
@@ -53,12 +53,12 @@ class StateMenu extends Menu {
                     </select>
                 </div>
 
-                <div class="input-field col8">
+                <div class="flex-row col8">
                     <label for="state-key">Collection Key*</label>
                     <input id="state-key" type="text">
                 </div>
 
-                <div class="input-field col4">
+                <div class="flex-row col4">
                     <select id="perform-after">
                         <option value="" disabled selected>Select when to perform state*</option>
                         <option value="-1">Perform immediately</option>
@@ -100,11 +100,11 @@ class StateMenu extends Menu {
         label = label || `key${id}`;
 
         const innerHTML = `
-            <div class="col4">
+            <div class="col4 flex-nowrap">
                 <input class="js-label-list" type="text" style="width: 84%;" value="${label}">
                 <a class="js-edit-key"><i class="tiny material-icons icon-btn">edit_note</i></a>
             </div>
-            <div class="col5">
+            <div class="col5 flex-nowrap">
                 <input class="js-target-list" type="text"  style="width: 92%;" value="${target}">
                 <a class="js-edit-value"><i class="tiny material-icons icon-btn">edit_note</i></a>
             </div>
