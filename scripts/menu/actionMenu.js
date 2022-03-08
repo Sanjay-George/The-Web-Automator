@@ -36,17 +36,17 @@ class ActionMenu extends Menu {
             </div>
 
             <form id='configure-action' class="row">
-                <div class="input-field col5">
+                <div class="flex-row col5">
                     <label for="action-name">Action*</label>
                     <input id="action-name" type="text">
                 </div>
 
-                <div class="input-field col4">
+                <div class="flex-row col4">
                     <label for="action-key">Key</label>
                     <input id="action-key" type="text">
                 </div>
 
-                <div class="input-field col3">
+                <div class="flex-row col3">
                     <select id="action-type">
                         <option value="" disabled selected>Action Type</option>
                         <option value="${Enum.actionTypes.CLICK}">Click</option>
@@ -55,18 +55,18 @@ class ActionMenu extends Menu {
                     </select>
                 </div>
                 
-                <div id="text-input-wrapper" class="input-field col12 hide">
+                <div id="text-input-wrapper" class="col12 hide">
                     <label for="text-input">Text Input (comma separated values)</label>
                     <textarea id="text-input" style="width: 100%; margin-top: 5px;"></textarea>
                
-                    <div class="col12 input-field" style="display: flex; align-items: center; flex-wrap: wrap;">
+                    <div class="col12 flex-row" style="display: flex; align-items: center; flex-wrap: wrap;">
                         <div class="col3">Key</div>
                         <div class="col2">IsActive</div>
                         <div class="col2">Count</div>
                         <div class="col2">Incremental</div>
                     </div>
                     <div id="key-press-wrapper" class="col12">
-                        <div class="col12 input-field" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.specialKeys.DOWN_ARROW}>
+                        <div class="col12 flex-row" style="display: flex; align-items: center; flex-wrap: wrap;" data-key-code=${Enum.specialKeys.DOWN_ARROW}>
                             <div class="col3"><span>Arrow Down</span></div>
                             <div class="col2">
                                 <input class="js-key-status" type="checkbox"/>
@@ -96,18 +96,18 @@ class ActionMenu extends Menu {
             
 
                 <div class="col9">
-                    <div class="input-field">
+                    <div class="flex-row">
                         <label for="target-list">Action Target(s)</label>
                         <input id="target-list" type="text" readonly value="${this.configuration.selectedTargets[0]}">
                         <a id="clear-target"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
-                    <div id="label-target-wrapper" class="input-field">
+                    <div id="label-target-wrapper" class="flex-row">
                         <label for="label-list">Label Target(s)</label>
                         <input id="label-list" type="text" readonly>
                         <a id="clear-label"><i class="tiny material-icons clear-all">delete</i></a>
                     </div>
                 </div>
-                <div class="input-field col3" style="display: flex; align-items: center; flex-wrap: wrap;">
+                <div class="flex-row col3" style="display: flex; align-items: center; flex-wrap: wrap;">
                     <div class="col12">
                         <label id="sel-similar">
                             <input type="checkbox"/>
@@ -239,7 +239,6 @@ class ActionMenu extends Menu {
                         but ${selectedTargets.length} targets are selected.`;
         }
         const actionTypeErrorMsg = this.validationActionTypeAndInput();
-        debugger;
         errorMsg = errorMsg || actionTypeErrorMsg;
 
         return {

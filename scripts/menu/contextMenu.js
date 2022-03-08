@@ -10,7 +10,6 @@ const ContextMenu = (() => {
     let currentTarget = "";
 
     const open = (offsetX, offsetY, target) => {
-        debugger;
         const menu = document.getElementById(name);
         
         menu.style.top = offsetY + menu.offsetHeight < window.innerHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
