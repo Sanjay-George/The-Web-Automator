@@ -75,7 +75,7 @@ const run = async (chain, step, page, json, memory = []) => {
         const action = chain[step];
         const meta = { run, memorize, getLogicBuilder, chain, step, page, memory, rootUrl };
         
-        const logicBuilder = getLogicBuilder(parseInt(action.actionType), action, page, meta, json);
+        const logicBuilder = getLogicBuilder(parseInt(action.actionType, 10), action, page, meta, json);
         const actionDirector = new ActionDirector();
         await actionDirector.perform(logicBuilder);
 
@@ -149,7 +149,7 @@ const getLogicBuilder = (actionType, action, page, meta, json) => {
             return new TextInputLogicBuilder(action, page, meta, json);
         default:
             return null;
-    };
+    }
 }; 
 
 const populateAllKeysAndValues = async (property, page) => {

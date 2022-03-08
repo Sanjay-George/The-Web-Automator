@@ -179,7 +179,7 @@ class ActionMenu extends Menu {
         }
     };
 
-    parseTextInput = (csvString) => {
+    parseTextInput = csvString => {
         if(csvString.length === 0)  return [];
         return csvString.split(",").filter(item => item.trim().length > 0);
     };
