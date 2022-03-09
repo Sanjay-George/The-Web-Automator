@@ -44,7 +44,7 @@ class ClickLogicBuilder extends LogicBuilder
             }
             await run(chain, step + 1, page, innerJson, memory);
     
-            console.log(`\ninnerJSON inside action: ${JSON.stringify(innerJson)}`);
+            console.log(`\nINFO: innerJSON inside action: ${JSON.stringify(innerJson)}`);
 
             this.populateOutputJSON(action, innerJson, isActionKeyPresent);
         }
@@ -114,7 +114,7 @@ class ClickLogicBuilder extends LogicBuilder
             return targetSelectors;
         }, selectedTargets);
         
-        // console.log('All targets', JSON.stringify(finalTargets));
+        // console.log('INFO: All targets', JSON.stringify(finalTargets));
     
         return finalTargets;  // target selectors, not elements
     };

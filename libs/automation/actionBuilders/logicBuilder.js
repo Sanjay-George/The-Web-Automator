@@ -61,12 +61,13 @@ class LogicBuilder
     };
 
     performAction = async (action, target, memory, step, page) => {
-        console.log(`performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
+        console.log(`\nINFO: performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
         try {
             await this.perform(action, target, page);
         }
         catch(ex) {
-            // console.error(ex);
+            console.error("\nPPTR EXCEPTION:");
+            console.error(ex);
             // if perform(action) doesn't work, retry previous actions (to handle popup cases)
             // if none of the actions work, go back one page and try 
             let wasActionPerformed = await this.tryActionsInMemory(memory, step, page);
@@ -80,7 +81,7 @@ class LogicBuilder
     
     tryActionsInMemory = async (memory, step, page) => {
         // repeat all actions from beginning of memory to end
-        console.log(`\ntryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
+        console.log(`\nINFO: tryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
 
         let wasActionPerformed = true;
         for (let i = 0; i <= step; i++) {
@@ -100,6 +101,8 @@ class LogicBuilder
                 }
             }
             catch(ex) {
+                console.error("\nPPTR EXCEPTION:");
+                console.error(ex);
                 if(i === step) {
                     wasActionPerformed = false;
                 }
@@ -110,7 +113,7 @@ class LogicBuilder
     };
     
     tryActionOnPrevPage = async (action, target, memory, step, page) => {
-        console.log(`\ntryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
+        console.log(`\nINFO: tryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
         
         if(await page.url() === this.meta.rootUrl)  return false;
         await Promise.all([
@@ -118,14 +121,15 @@ class LogicBuilder
             addNavigationListener(page),
         ]);
         
-        const httpRes = await page.goBack(pageHelper.getWaitOptions());
+        // todo: make this incremental backoff
+        const httpRes = await page.goBack(pageHelper.getWaitOptions()); 
         await Promise.all([
             awaitXhrResponse(),
             awaitNavigation(),
             page.waitForTimeout(500),
         ]);
     
-        // console.log("going back, httpRes", httpRes);
+        // console.log("INFO: going back, httpRes", httpRes);
     
         if(httpRes  === null) {
             await page.reload(pageHelper.getWaitOptions());

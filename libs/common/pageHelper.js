@@ -3,7 +3,7 @@ const DEFAULT_TIMEOUT = 10000;
 const MAX_ATTEMPTS = 3;
 
 function getWaitOptions(customTimeout) {
-	return { waitUntil: 'networkidle0', timeout: customTimeout || DEFAULT_TIMEOUT };
+	return { waitUntil: 'load', timeout: customTimeout || DEFAULT_TIMEOUT };
 } 
 
 async function openTab(browser, url, attempt = 0, timeout = 0) {
@@ -12,11 +12,12 @@ async function openTab(browser, url, attempt = 0, timeout = 0) {
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
     // getConfigValue("performanceMode") &&  
-	// await disableHeavyResources(page);
+	await disableHeavyResources(page);
 	try {
 		await page.goto(url, getWaitOptions(attempt * DEFAULT_TIMEOUT));
 	}
 	catch(ex) {
+		console.error("\nPPTR EXCEPTION:");
 		console.error(ex);
 		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
 			await closeTab(page);
@@ -71,6 +72,7 @@ async function disableHeavyResources(page) {
 		await request.continue();
 	}
 	catch(ex) {
+		console.error("\nPPTR EXCEPTION:");
 		console.error(ex);
 	}
 	});

@@ -23,7 +23,7 @@ const init = async (crawler) => {
     configChain = JSON.parse(configChain);
 
     try {
-        const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+        const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
         let page = await pageHelper.openTab(browser, url);
         rootUrl = url;
     
@@ -42,6 +42,8 @@ const init = async (crawler) => {
         await run(configChain, 0, page, json);
     
         // console.log(JSON.stringify(json));
+
+        console.log("INFO: Crawling Completed! Saving Data...");
     
         await recorder.stop();
         await saveData(`data-${+ new Date}`, JSON.stringify(json));
@@ -68,7 +70,7 @@ const init = async (crawler) => {
 
 
 const run = async (chain, step, page, json, memory = []) => {
-    console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
+    console.log(`\n\nINFO: run() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
     if(chain[step].configType === configTypes.ACTION) {
@@ -133,7 +135,7 @@ const run = async (chain, step, page, json, memory = []) => {
             json[state.collectionKey].push(innerJson);
         }
 
-        console.log(`\nJSON inside state: ${JSON.stringify(json)}\n`);
+        console.log(`\nINFO: JSON inside state: ${JSON.stringify(json)}`);
 
         await run(chain, step + 1, page, json, memory);
 
@@ -229,7 +231,7 @@ const populateSimilarTargets = async (selectedTargets, page) => {
         return targetSelectors;
     }, selectedTargets);
     
-    // console.log('All targets', JSON.stringify(finalTargets));
+    // console.log('INFO: All targets', JSON.stringify(finalTargets));
 
     return finalTargets;  // target selectors, not elements
 };
