@@ -3,7 +3,7 @@ const Highlighter = (() => {
         hover: [255, 213, 79],  // yellow
         action: [3, 169, 244],  // blue
         actionLabel: [255, 0, 0], // red
-        actionTarget: [0, 0, 0],  // black
+        actionTarget: [244, 123, 3],  // orange
         state: [0, 230, 118],  // green
     };
 

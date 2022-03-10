@@ -24,7 +24,7 @@ const init = async (crawler) => {
 
     try {
         const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
-        let page = await pageHelper.openTab(browser, url);
+        let page = await pageHelper.openTab(browser, url, insertScripts);
         rootUrl = url;
     
         await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
@@ -34,14 +34,16 @@ const init = async (crawler) => {
     
         await insertScripts(page);
     
-        page.on('domcontentloaded', async () => {
-            console.log(`\nDOM loaded: ${page.url()}`);
-            await insertScripts(page);
-        });
+        // page.on('domcontentloaded', async () => {
+        //     console.log(`\nDOM loaded: ${page.url()}`);
+        //     await insertScripts(page);
+        // });
     
         await run(configChain, 0, page, json);
     
         // console.log(JSON.stringify(json));
+
+        console.log("\nINFO: Crawling Completed! Saving Data...");
     
         await recorder.stop();
         await saveData(`data-${+ new Date}`, JSON.stringify(json));
@@ -68,12 +70,12 @@ const init = async (crawler) => {
 
 
 const run = async (chain, step, page, json, memory = []) => {
-    console.log(`\n\nrun() - step: ${step}, chainLength: ${chain.length}`);
+    console.log(`\n\nINFO: run() - step: ${step}, chainLength: ${chain.length}`);
     if(step >= chain.length)     return;
 
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
-        const meta = { run, memorize, getLogicBuilder, chain, step, page, memory, rootUrl };
+        const meta = { run, memorize, getLogicBuilder, insertScripts, chain, step, page, memory, rootUrl };
         
         const logicBuilder = getLogicBuilder(parseInt(action.actionType, 10), action, page, meta, json);
         const actionDirector = new ActionDirector();
@@ -133,7 +135,7 @@ const run = async (chain, step, page, json, memory = []) => {
             json[state.collectionKey].push(innerJson);
         }
 
-        console.log(`\nJSON inside state: ${JSON.stringify(json)}\n`);
+        console.log(`\nINFO: JSON inside state: ${JSON.stringify(json)}`);
 
         await run(chain, step + 1, page, json, memory);
 
@@ -229,7 +231,7 @@ const populateSimilarTargets = async (selectedTargets, page) => {
         return targetSelectors;
     }, selectedTargets);
     
-    // console.log('All targets', JSON.stringify(finalTargets));
+    // console.log('INFO: All targets', JSON.stringify(finalTargets));
 
     return finalTargets;  // target selectors, not elements
 };

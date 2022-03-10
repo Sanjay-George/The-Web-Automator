@@ -34,7 +34,9 @@ const crawlerStatus = {
 
 const specialKeys = {
     DOWN_ARROW: 'ArrowDown',
-    ENTER: 'Enter'
+    ENTER: 'Enter',
+    CTRL: 'ControlLeft',
+    BACKSPACE: 'Backspace',
 };
 
 module.exports = {

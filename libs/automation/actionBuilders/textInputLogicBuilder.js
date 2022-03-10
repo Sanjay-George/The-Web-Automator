@@ -54,11 +54,11 @@ class TextInputLogicBuilder extends LogicBuilder
             const isActionPerformed = await this.performAction(action, target, memory, step, page);
             if(!isActionPerformed) {
                 console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
-                break;
+                continue;
             }
             await run(chain, step + 1, page, innerJson, memory);
     
-            console.log(`\ninnerJSON inside action: ${JSON.stringify(innerJson)}`);
+            console.log(`\nINFO: innerJSON inside action: ${JSON.stringify(innerJson)}`);
 
             this.populateOutputJSON(action, innerJson, isActionKeyPresent);            
         }
@@ -72,14 +72,15 @@ class TextInputLogicBuilder extends LogicBuilder
      * @param {object} page puppeteer page
      */
     perform = async (action, target, page) => {
+        const { insertScripts } = this.meta;
+
         await addXhrListener(page);
         await addNavigationListener(page);
-       
-        // await page.evaluate(selector => {
-        //     DomUtils.sanitizeAnchorTags(selector)
-        // }, target.selector);
 
-        await page.type(target.selector, target.input, { delay: 100 });
+        await this.clearInputField(target.selector, page);
+        await page.type(target.selector, target.input, { delay: 300 });
+        await page.waitForNetworkIdle();
+
         await Promise.all([
             awaitXhrResponse(),
             awaitNavigation(),
@@ -87,14 +88,41 @@ class TextInputLogicBuilder extends LogicBuilder
         ]);
 
         await this.pressKeys(target.keyPresses, page);
+        await page.waitForNetworkIdle();
+
         await Promise.all([
             awaitXhrResponse(),
             awaitNavigation(),
             page.waitForTimeout(1000),
         ]);
-           
+
+        await insertScripts(page);
+        
         await removeXhrListener();
         removeNavigationListener(); 
+    };
+
+    clearInputField = async (selector, page) => {
+        const currentInput = await page.evaluate(selector => {
+            return document.querySelector(selector) !== null 
+                ? document.querySelector(selector).value
+                : "";
+        }, selector);
+
+        if(!currentInput || !currentInput.length)    return;
+
+        // console.log(`INFO: clearInputField() - currentInput: ${currentInput}`)
+
+        const re = /([^a-zA-Z0-9])/;
+        const backSpaceCount = currentInput.split(re).length;
+
+        await page.focus(selector);
+
+        await page.keyboard.down(specialKeys.CTRL);
+        for(let i = 0; i < backSpaceCount; i++) {
+            await page.keyboard.press(specialKeys.BACKSPACE);
+        }
+        await page.keyboard.up(specialKeys.CTRL);
     };
 
     /**
