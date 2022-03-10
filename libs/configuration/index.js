@@ -55,7 +55,7 @@ const configure = async (crawler) => {
 	}
 };
 
-const handlePageLoad = async () => {
+const handlePageLoad = async (page) => {
 	// insert all styles and scripts
 	// console.log(`DOM loaded: ${page.url()}`);
 	await insertStyles(page);
