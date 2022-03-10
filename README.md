@@ -23,9 +23,19 @@ Please note that the code for the core logic or server and the UI panel are in 2
 ### To set up client
 1. Clone the [UI repo](https://github.com/Sanjay-George/Web-Automator-Panel)
 2. Run npm install to download all dependencies.
-3. Run `npm run dev` to build. 
+3. Run `npm run dev` to build.
+4. Open http://localhost:3000/ to see the *ugly* home page
+
+![image](https://user-images.githubusercontent.com/10389062/157643060-4a901ba3-ad89-4f57-90ab-81e5944bfebb.png)
+
+5. Under modules, click on `web scraper` to get started. 
+
+![image](https://user-images.githubusercontent.com/10389062/157642936-7b597311-8185-4ab2-b1d2-6be0f52196ce.png)
 
 *Note: nextJS requires node >= 12.22.0. In case you have a lower version, use [nvm](https://github.com/nvm-sh/nvm) to easily manage different node versions on your system.* 
+
+
+
 
 ## How to use it?
 ### Configure automator
