@@ -38,6 +38,5 @@ Please note that the code for the core logic or server and the UI panel are in 2
 
 
 ## How to use it?
-### Configure automator
 
-### Run the automator
+Check out [this wiki](https://github.com/Sanjay-George/Web-Automator/wiki/Setting-up-a-simple-crawler) where we go about configuring a crawler on a simple blog. The core concepts of the web scraper module will extend to other modules, such as UI testing, core web vitals, etc.
