@@ -23,8 +23,8 @@ const init = async (crawler) => {
     configChain = JSON.parse(configChain);
 
     try {
-        const browser = await puppeteer.launch({ headless: true, defaultViewport: null} );
-        let page = await pageHelper.openTab(browser, url);
+        const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+        let page = await pageHelper.openTab(browser, url, insertScripts);
         rootUrl = url;
     
         await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
@@ -34,16 +34,16 @@ const init = async (crawler) => {
     
         await insertScripts(page);
     
-        page.on('domcontentloaded', async () => {
-            console.log(`\nDOM loaded: ${page.url()}`);
-            await insertScripts(page);
-        });
+        // page.on('domcontentloaded', async () => {
+        //     console.log(`\nDOM loaded: ${page.url()}`);
+        //     await insertScripts(page);
+        // });
     
         await run(configChain, 0, page, json);
     
         // console.log(JSON.stringify(json));
 
-        console.log("INFO: Crawling Completed! Saving Data...");
+        console.log("\nINFO: Crawling Completed! Saving Data...");
     
         await recorder.stop();
         await saveData(`data-${+ new Date}`, JSON.stringify(json));
@@ -75,7 +75,7 @@ const run = async (chain, step, page, json, memory = []) => {
 
     if(chain[step].configType === configTypes.ACTION) {
         const action = chain[step];
-        const meta = { run, memorize, getLogicBuilder, chain, step, page, memory, rootUrl };
+        const meta = { run, memorize, getLogicBuilder, insertScripts, chain, step, page, memory, rootUrl };
         
         const logicBuilder = getLogicBuilder(parseInt(action.actionType, 10), action, page, meta, json);
         const actionDirector = new ActionDirector();

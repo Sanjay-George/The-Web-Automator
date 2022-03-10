@@ -28,8 +28,9 @@ class LogicBuilder
     };
 
     populateOutputJSON = (action, innerJson, isActionKeyPresent) => {
+        let json = this.json;
         if(isActionKeyPresent){
-            this.json[action.actionKey].push(innerJson);
+            json[action.actionKey].push(innerJson);
         }
         else {
             // INFO: 
@@ -39,13 +40,14 @@ class LogicBuilder
             // TODO: TEST THIS. 
             for (const prop in innerJson) { 
                 if(Array.isArray(this.json[prop])) {
-                    this.json[prop].push(innerJson[prop]);
+                    json[prop].push(innerJson[prop]);
                 }
                 else {
-                    this.json[prop] = innerJson[prop];
+                    json[prop] = innerJson[prop];
                 }
             }
         }
+        return json;
     };
 
     getInnerText = async (selector, page) => {
@@ -121,8 +123,9 @@ class LogicBuilder
             addNavigationListener(page),
         ]);
         
+        const { insertScripts } = this.meta; 
         // todo: make this incremental backoff
-        const httpRes = await page.goBack(pageHelper.getWaitOptions()); 
+        const httpRes = await pageHelper.goBack(page, insertScripts); 
         await Promise.all([
             awaitXhrResponse(),
             awaitNavigation(),
@@ -132,8 +135,8 @@ class LogicBuilder
         // console.log("INFO: going back, httpRes", httpRes);
     
         if(httpRes  === null) {
-            await page.reload(pageHelper.getWaitOptions());
-            return await this.performAction(action, target, memory, step, page);
+            await pageHelper.reloadPage(page, insertScripts);
+            // return await this.performAction(action, target, memory, step, page);
         }
     
         await Promise.all([

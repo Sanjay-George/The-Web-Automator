@@ -46,7 +46,7 @@ class ClickLogicBuilder extends LogicBuilder
     
             console.log(`\nINFO: innerJSON inside action: ${JSON.stringify(innerJson)}`);
 
-            this.populateOutputJSON(action, innerJson, isActionKeyPresent);
+            this.json = this.populateOutputJSON(action, innerJson, isActionKeyPresent);
         }
     };
 
@@ -146,20 +146,23 @@ class ClickLogicBuilder extends LogicBuilder
      * @param {object} page puppeteer page
     */
     perform = async (action, target, page) => {
+        const { insertScripts } = this.meta;
+
         await addXhrListener(page);
         await addNavigationListener(page);
        
         // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-        // TODO: check if element is anchor tag and will open in new tab
         await page.evaluate(selector => {
             DomUtils.sanitizeAnchorTags(selector)
         }, target);
+
         await page.click(target);
         await Promise.all([
             awaitXhrResponse(),
             awaitNavigation(),
             page.waitForTimeout(1000),
         ]);
+        await insertScripts(page);
            
         await removeXhrListener();
         removeNavigationListener(); 

@@ -8,17 +8,17 @@ let configChain = [];
 const configure = async (crawler) => {
 	const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
 	try {
-		let page = await pageHelper.openTab(browser, crawler.url);
+		let page = await pageHelper.openTab(browser, crawler.url, handlePageLoad);
 		await page.bringToFront();
 	
 		configChain = [];
 	
 		if(page === null)	return;
 	
-		await insertStyles(page);
-		await insertScripts(page);
-		await exposeFunctions(page);
-		await sanitizeAnchorTags(page);
+		// await insertStyles(page);
+		// await insertScripts(page);
+		// await exposeFunctions(page);
+		// await sanitizeAnchorTags(page);
 	
 		page.on('load', async () => {
 			// insert all styles and scripts
@@ -54,6 +54,15 @@ const configure = async (crawler) => {
 		browser !== null && await browser.close();
 	}
 };
+
+const handlePageLoad = async () => {
+	// insert all styles and scripts
+	// console.log(`DOM loaded: ${page.url()}`);
+	await insertStyles(page);
+	await insertScripts(page);
+	await exposeFunctions(page);
+	await sanitizeAnchorTags(page);
+}
 
 // exposed functions survives navigation, so no need to expose again on page refresh
 // but sometimes functions aren't exposing on first try. 

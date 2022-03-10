@@ -6,27 +6,68 @@ function getWaitOptions(customTimeout) {
 	return { waitUntil: 'load', timeout: customTimeout || DEFAULT_TIMEOUT };
 } 
 
-async function openTab(browser, url, attempt = 0, timeout = 0) {
+async function openTab(browser, url, callback = null, attempt = 0, timeout = 0) {
     console.log(`\nOpening URL : ${url}`);
     let page = await browser.newPage();
     await page.setBypassCSP(true);
     await page.setUserAgent(getUserAgent());
     // getConfigValue("performanceMode") &&  
-	await disableHeavyResources(page);
+	// await disableHeavyResources(page);
 	try {
 		await page.goto(url, getWaitOptions(attempt * DEFAULT_TIMEOUT));
+		callback && await callback(page);
 	}
 	catch(ex) {
 		console.error("\nPPTR EXCEPTION:");
 		console.error(ex);
 		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
 			await closeTab(page);
-			return await openTab(browser, url, attempt+1);
+			return await openTab(browser, url, callback, attempt+1);
 		}
 		return null;
 	}
     // await warmUpPage(page);
     return page;
+}
+
+async function reloadPage(page, callback = null, attempt = 0)
+{
+	try {
+		await page.reload(getWaitOptions(attempt * DEFAULT_TIMEOUT));
+		callback && await callback(page);
+	}
+	catch(ex) {
+		console.error("\nPPTR EXCEPTION:");
+		console.error(ex);
+		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
+			// await closeTab(page);
+			return await reloadPage(page, callback, attempt+1);
+		}
+	}
+}
+
+async function goBack(page, callback = null, attempt = 0)
+{
+	const currUrl = page.url();
+	let httpRes = null;
+	try {
+		httpRes = await page.goBack(getWaitOptions(attempt * DEFAULT_TIMEOUT));
+		callback && await callback(page);
+	}
+	catch(ex) {
+		console.error("\nPPTR EXCEPTION:");
+		console.error(ex);
+		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
+			// await closeTab(page);
+			if(page.url() === currUrl) {
+				await reloadPage(page, callback);
+				return await goBack(page, callback, attempt+1);
+			}
+			await reloadPage(page, callback);
+			return await goBack(page, callback, attempt+1);
+		}
+	}
+	return httpRes;
 }
 
 function getUserAgent() {
@@ -86,4 +127,6 @@ module.exports = {
     takeScreenShot,
     disableHeavyResources,
 	getWaitOptions,
+	goBack,
+	reloadPage,
 }

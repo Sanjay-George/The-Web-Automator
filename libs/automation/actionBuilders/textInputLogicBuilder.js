@@ -72,12 +72,10 @@ class TextInputLogicBuilder extends LogicBuilder
      * @param {object} page puppeteer page
      */
     perform = async (action, target, page) => {
+        const { insertScripts } = this.meta;
+
         await addXhrListener(page);
         await addNavigationListener(page);
-    
-        // await page.evaluate(selector => {
-        //     DomUtils.sanitizeAnchorTags(selector)
-        // }, target.selector);
 
         await this.clearInputField(target.selector, page);
         await page.type(target.selector, target.input, { delay: 300 });
@@ -97,6 +95,8 @@ class TextInputLogicBuilder extends LogicBuilder
             awaitNavigation(),
             page.waitForTimeout(1000),
         ]);
+
+        await insertScripts(page);
         
         await removeXhrListener();
         removeNavigationListener(); 
