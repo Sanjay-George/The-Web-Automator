@@ -1,32 +1,33 @@
-# Web Automator
+# The Web Automator
 
-This is a powerful, robust, and open-source tool to automate tasks on the web. It can also be used to fetch data from any website and build custom APIs or datasets. 
+This is a powerful and robust tool to automate tasks on the web without writing a single line of code.   
 
 ### Uses
-Following are some of the uses of this tool:
-1. Scrape data off websites  [in progress now]
-2. Monitor the price of products on e-commerce websites [tbd]
-3. Monitor web-vitals or console errors of a webpage [tbd]
+Following are some uses of the tool:
+1. **Web Scraping:** The basic use of the automator is to crawl a website and scrape data in JSON format.
+2. **UI Testing:** Once built, the web automator will be able to deliver the convenience of setting up UI testing without having to code. This could improve the TAT of UI testing in the software development cycle. 
+3. **Data Monitoring:** The tool can be used to monitor data such as the price of products on e-commerce websites. 
+4. **Monitor Health of website:** The tool can be developed to check the Web Vitals of a webpage, or log the console errors reliably.
 
-Note: Only web-scraper module is being built right now. Rest of the modules will be supported in future. 
+*Note: Only web-scraper module is being built right now. Rest of the modules will be supported in future.* 
+
+## Installation and Set up
+Please note that the code for the core logic or server and the UI panel are in 2 different repos as of now. This will be merged in future. 
+
+### To set up server 
+1. Clone this repo and run `npm install` in root folder. 
+2. Set up your local mySQL server and run the queries in `automator.sql` file.
+3. Update the details of your mySQL server in `appsettings.json` under the `dbConfig` property
+4. Run `node server.js` in terminal to start the Express server.
+
+### To set up client
+1. Clone the [UI repo](https://github.com/Sanjay-George/Web-Automator-Panel)
+2. Run npm install to download all dependencies.
+3. Run `npm run dev` to build. 
+
+*Note: nextJS requires node >= 12.22.0. In case you have a lower version, use [nvm](https://github.com/nvm-sh/nvm) to easily manage different node versions on your system.* 
 
 ## How to use it?
-Below are the steps to try it out in the current state (pre-release):
-1. Clone the repo and run `npm install` in root folder. 
-2. Change the value of the global const named `url` in `./server.js`. Set it to a website you want to try scraping data from.
-3. Run `node server.js` in terminal. This should open the url specified, in a chromium browser.
-4. Right click an element on the page to configure either an **action** or **state**. 
+### Configure automator
 
-## How does it work?
-There are 2 important parts to this tool:
-1. Configuration
-2. Automation
-
-### Configuration 
-The tool needs to be configured to perform **actions** and to make sense of the data (or **state**) of the websites. In this step, we have to configure **actions** and **states** to form the **configChain**, which will power the automated modules later. **This is a one-time step.**
-
-### Automation
-This is the step where the tool uses the **configChain** to perform the tasks automatically. In case of the web-scraper module, the automator module will perform the configured **actions** on the page, simulating the behaviour of a user, and extract data into a structured format (JSON, for now). 
-
-NOTE: This tool is being built. There isn't a timeline for the first major release yet. 
-
+### Run the automator
