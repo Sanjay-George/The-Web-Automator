@@ -54,7 +54,7 @@ class TextInputLogicBuilder extends LogicBuilder
             const isActionPerformed = await this.performAction(action, target, memory, step, page);
             if(!isActionPerformed) {
                 console.error(`\nERROR: Unable to perform action "${action.actionName}" for target at index ${i}`);
-                break;
+                continue;
             }
             await run(chain, step + 1, page, innerJson, memory);
     
