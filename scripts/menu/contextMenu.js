@@ -30,6 +30,7 @@ const ContextMenu = (() => {
         const menu = document.getElementById(id);
         menu.classList.add("hide");
         isContextMenuActive = false;
+        Highlighter.resetHighlight(currentTarget);
         DynamicEventHandler.removeHandler("click");
     };
 
