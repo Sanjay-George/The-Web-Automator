@@ -54,7 +54,7 @@ const ConfigManager = (() => {
     const handleRightClick = e => {
         e.preventDefault();
         if(isConfigurationActive)       return;
-        ContextMenu.open(e.pageX, e.pageY, e.target);
+        ContextMenu.open(e.clientX, e.clientY, e.pageX, e.pageY, e.target);
     };
 
     const registerEvents = () => {
