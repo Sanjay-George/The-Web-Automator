@@ -4,10 +4,11 @@ This is a powerful and robust tool to automate tasks on the web without writing 
 
 ### Uses
 Following are some uses of the tool:
-1. **Web Scraping:** The basic use of the automator is to crawl a website and scrape data in JSON format.
-2. **UI Testing:** Once built, the web automator will be able to deliver the convenience of setting up UI testing without having to code. This could improve the TAT of UI testing in the software development cycle. 
-3. **Data Monitoring:** The tool can be used to monitor data such as the price of products on e-commerce websites. 
-4. **Monitor Health of website:** The tool can be developed to check the Web Vitals of a webpage, or log the console errors reliably.
+1. **Web Scraping:** The automator can be used to crawl a website and scrape data in JSON format. 
+2. **Automating Tasks** The tool can also be used for tasks such as automating form submissions.
+3. **UI Testing:** Once built, the web automator will be able to deliver the convenience of setting up UI testing without having to code. This could improve the TAT of UI testing in the software development cycle. 
+4. **Data Monitoring:** The tool can be used to monitor data such as the price of products on e-commerce websites. 
+5. **Monitor Health of website:** The tool can be developed to check the Web Vitals of a webpage, or log the console errors reliably.
 
 *Note: Only web-scraper module is being built right now. Rest of the modules will be supported in future.* 
 
@@ -40,3 +41,5 @@ Please note that the code for the core logic or server and the UI panel are in 2
 ## How to use it?
 
 Check out [the wiki](https://github.com/Sanjay-George/Web-Automator/wiki) where we go about configuring a crawler on a simple blog. The core concepts of the web scraper module will extend to other modules, such as UI testing, core web vitals, etc.
+
+
