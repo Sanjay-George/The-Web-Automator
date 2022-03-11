@@ -197,13 +197,20 @@ class StateMenu extends Menu {
         };
     };
 
-    setPropertyKeys = () => {
-        const propertyKeys = Array.from(document.querySelectorAll(`#${this.containerId} .js-label-list`));
+    setPropertyKeysAndValues = () => {
+        const propertyKeys 
+            = Array.from(document.querySelectorAll(`#${this.containerId} .js-label-list`));
+        const propertyValues 
+            = Array.from(document.querySelectorAll(`#${this.containerId} .js-target-list`));
 
         const { properties } = this.configuration;
 
         propertyKeys.forEach((element, index) => {
-            properties[index].key = properties[index].key || element.value;
+            properties[index].key =  element.value;
+        });
+
+        propertyValues.forEach((element, index) => {
+            properties[index].value =  element.value;
         });
     };
 
@@ -228,6 +235,10 @@ class StateMenu extends Menu {
             isValid: errorMsg.length === 0,
             errorMsg  
         };
+    };
+
+    showError = error => {
+        document.querySelector("#error-msg").innerHTML = error;
     };
 
     menuHandlers = {
@@ -289,6 +300,21 @@ class StateMenu extends Menu {
             const siblingCheckbox = currRow.querySelector(".js-sel-siblings input");
 
             if(e.target.checked) {
+                // INFO: remove existing selected elements first before adding new ones
+                propertiesMeta[propIndex].value = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, 
+                        propertiesMeta[propIndex].value, 
+                        [properties[propIndex].value], 
+                        Enum.elementTypes.STATE_TARGET
+                    );
+                propertiesMeta[propIndex].key = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, 
+                        propertiesMeta[propIndex].key, 
+                        [properties[propIndex].key], 
+                        Enum.elementTypes.STATE_LABEL
+                    );
                 propertiesMeta[propIndex].value = 
                     this.populateSimilarElements(
                         this.populateSimilarTargets, 
@@ -336,11 +362,26 @@ class StateMenu extends Menu {
 
             let { properties, propertiesMeta } = this.configuration;
 
-            currRow = e.target.closest('.js-property');
+            const currRow = e.target.closest('.js-property');
             const propIndex = parseInt(currRow.dataset.propId, 10) - 1; 
             const similarCheckbox = currRow.querySelector(".js-sel-similar input");
 
             if(e.target.checked) {
+                // INFO: remove existing selected elements first before adding new ones
+                propertiesMeta[propIndex].value = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, 
+                        propertiesMeta[propIndex].value, 
+                        [properties[propIndex].value], 
+                        Enum.elementTypes.STATE_TARGET
+                    );
+                propertiesMeta[propIndex].key = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, 
+                        propertiesMeta[propIndex].key, 
+                        [properties[propIndex].key], 
+                        Enum.elementTypes.STATE_LABEL
+                    );
                 propertiesMeta[propIndex].value = 
                     this.populateSimilarElements(
                         this.populateSiblings, 
@@ -386,11 +427,11 @@ class StateMenu extends Menu {
 
         handleSaveConfig: async e => {
             this.setBasicDetails();
-            this.setPropertyKeys();
+            this.setPropertyKeysAndValues();
 
             const {isValid, errorMsg} = this.validateConfig();
             if(!isValid) {
-                document.querySelector("#error-msg").innerHTML = errorMsg;
+                this.showError(errorMsg);
                 return ;
             }
 
@@ -400,7 +441,11 @@ class StateMenu extends Menu {
             
             for(let i = 0; i < propertiesMeta.length; i++) {
                 const meta = propertiesMeta[i];
-               
+
+                if(!DomUtils.isValidQuerySelector(properties[i].value)) { 
+                    this.showError("State collection values have to be DOM elements.");
+                    return;
+                }
                 const sanitizedValueElement = 
                     DomUtils.convertAllTagsInPathToAnotherType(meta.value[0], DomUtils.convertToAnchor); 
                 // NOTE: Using meta.value[0] assuming there'll be only one value per property. 
@@ -566,6 +611,10 @@ class StateMenu extends Menu {
         const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
         properties.push(new StateProperty({ value:  sanitizedTargetSelector }));
         propertiesMeta.push(new StateProperty({ value: [ sanitizedtarget ]}));
+
+        // INFO: Need to do this separately to handle <no-link> tags which aren't formed 
+        //      until convertAllTagsInPath..() is called.
+        Highlighter.highlightElement(sanitizedtarget, Enum.elementTypes.STATE);
 
         ConfigManager.disableAllAnchorTags();
         this.populateAssociatedActions();

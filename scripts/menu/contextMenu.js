@@ -1,5 +1,6 @@
 const ContextMenu = (() => {
-    const name = "context-menu";
+    const id = "context-menu";
+    let isContextMenuActive = false;
 
     const options = {
         CONFIGURE_ACTION: 1,
@@ -7,26 +8,31 @@ const ContextMenu = (() => {
         CONFIGURE_BACKBTN: 3
     };
 
-    let currentTarget = "";
+    let currentTarget = null
 
-    const open = (offsetX, offsetY, target) => {
-        const menu = document.getElementById(name);
+    const open = (clientX, clientY, pageX, pageY, target) => {
+        isContextMenuActive && close();
         
-        menu.style.top = offsetY + menu.offsetHeight + 100 < window.innerHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
-        menu.style.left = offsetX + menu.offsetWidth + 100 < window.innerWidth ? `${offsetX}px`: `${offsetX - menu.offsetWidth}px`;
-
+        const menu = document.getElementById(id); 
         menu.classList.remove("hide");
+
+        menu.style.top = clientY + menu.offsetHeight < window.innerHeight ?  `${pageY}px` : `${pageY - menu.offsetHeight}px`;
+        menu.style.left = clientX + menu.offsetWidth < window.innerWidth ? `${pageX}px`: `${pageX - menu.offsetWidth}px`;
+
+        isContextMenuActive = true;
 
         // if clicked anywhere outside context-menu, close the menu.
         // open action/state/ menus according to li clicked
-        // if scrolled, close the menu
+        // TODO: if scrolled, close the menu
         DynamicEventHandler.addHandler("click", handleClick);
         currentTarget = target;
     };
 
     const close = () => {
-        const menu = document.getElementById(name);
+        const menu = document.getElementById(id);
         menu.classList.add("hide");
+        isContextMenuActive = false;
+        currentTarget && Highlighter.resetHighlight(currentTarget);
         DynamicEventHandler.removeHandler("click");
     };
 
@@ -62,7 +68,7 @@ const ContextMenu = (() => {
     };
 
     const initialize = () => {
-        createMenuElement(name);
+        createMenuElement(id);
     };
 
     const createMenuElement = (id) => {
@@ -81,6 +87,7 @@ const ContextMenu = (() => {
     return {
         open: open,
         initialize: initialize,
+        isContextMenuActive: () => isContextMenuActive,
     };
 
 })();

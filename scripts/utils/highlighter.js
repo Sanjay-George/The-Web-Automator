@@ -1,10 +1,12 @@
 const Highlighter = (() => {
     const colors = {
         hover: [255, 213, 79],  // yellow
-        action: [3, 169, 244],  // blue
-        actionLabel: [255, 0, 0], // red
+        action: [255, 0, 0], // red
+        actionLabel: [255, 71, 108],  // pink
         actionTarget: [244, 123, 3],  // orange
-        state: [0, 230, 118],  // green
+        state: [83, 71, 255], // blue
+        stateLabel: [0, 230, 118],  // green
+        stateTarget: [3, 169, 244], // light blue
     };
 
     const getColorsByType = (elementType) => {
@@ -14,11 +16,13 @@ const Highlighter = (() => {
             case Enum.elementTypes.ACTION:
                 return colors.action;
             case Enum.elementTypes.ACTION_TARGET:
-            case Enum.elementTypes.STATE_TARGET:
                 return colors.actionTarget;
+            case Enum.elementTypes.STATE_TARGET:
+                return colors.stateTarget;
             case Enum.elementTypes.ACTION_LABEL:
-            case Enum.elementTypes.STATE_LABEL:
                 return colors.actionLabel;
+            case Enum.elementTypes.STATE_LABEL:
+                return colors.stateLabel;
             case Enum.elementTypes.STATE:
                 return colors.state;
             default:

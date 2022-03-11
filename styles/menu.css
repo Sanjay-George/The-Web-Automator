@@ -188,4 +188,8 @@
 .context-menu ul li {
     padding: 15px 10px;
     border-bottom: 1px solid #b0b0b0;
+    cursor: pointer;
+}
+.context-menu ul li:hover {
+    background-color: #3b3a3a;
 }

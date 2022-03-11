@@ -206,7 +206,18 @@ const DomUtils = (() => {
 
     const isValidQuerySelector = selector => {
         if(!selector || !selector.length)   return false;
-        return document.querySelector(selector) !== null;
+        
+        try {
+            return document.querySelector(selector) !== null;
+        }
+        catch(ex)
+        {
+            if(ex.name === "SyntaxError") {
+                return false;
+            }
+            console.error(ex);
+        }
+        return false;
     };
 
     const _copyAllProperties = (src, dest) => {
