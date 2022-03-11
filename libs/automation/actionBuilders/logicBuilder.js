@@ -118,19 +118,21 @@ class LogicBuilder
         console.log(`\nINFO: tryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
         
         if(await page.url() === this.meta.rootUrl)  return false;
-        await Promise.all([
-            addXhrListener(page),
-            addNavigationListener(page),
-        ]);
+        
+        // await Promise.all([
+        //     addXhrListener(page),
+        //     addNavigationListener(page),
+        // ]);
         
         const { insertScripts } = this.meta; 
+        
         // todo: make this incremental backoff
         const httpRes = await pageHelper.goBack(page, insertScripts); 
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(500),
-        ]);
+        // await Promise.all([
+        //     awaitXhrResponse(),
+        //     awaitNavigation(),
+        //     page.waitForTimeout(500),
+        // ]);
     
         // console.log("INFO: going back, httpRes", httpRes);
     
@@ -139,10 +141,10 @@ class LogicBuilder
             // return await this.performAction(action, target, memory, step, page);
         }
     
-        await Promise.all([
-            removeXhrListener(),
-            removeNavigationListener(), 
-        ]);
+        // await Promise.all([
+        //     removeXhrListener(),
+        //     removeNavigationListener(), 
+        // ]);
     
     
         // await page.goBack(pageHelper.getWaitOptions());

@@ -8,9 +8,18 @@ function getWaitOptions(customTimeout) {
 
 async function openTab(browser, url, callback = null, attempt = 0, timeout = 0) {
     console.log(`\nOpening URL : ${url}`);
-    let page = await browser.newPage();
-    await page.setBypassCSP(true);
-    await page.setUserAgent(getUserAgent());
+	const context = await browser.newContext({
+		bypassCSP: true,
+		colorScheme: 'light',
+		recordVideo: {
+			dir: './screencaptures/'
+		},
+	});
+	context.setDefaultTimeout(5000);
+	context.grantPermissions(['geolocation', 'notifications'])
+    const page = await context.newPage();
+    // await page.setBypassCSP(true);
+    // await page.setUserAgent(getUserAgent());
     // getConfigValue("performanceMode") &&  
 	// await disableHeavyResources(page);
 	try {
@@ -62,6 +71,9 @@ async function goBack(page, callback = null, attempt = 0)
 			if(page.url() === currUrl) {
 				await reloadPage(page, callback);
 				return await goBack(page, callback, attempt+1);
+			}
+			else {
+				page.goto
 			}
 			await reloadPage(page, callback);
 			return await goBack(page, callback, attempt+1);

@@ -74,32 +74,32 @@ class TextInputLogicBuilder extends LogicBuilder
     perform = async (action, target, page) => {
         const { insertScripts } = this.meta;
 
-        await addXhrListener(page);
-        await addNavigationListener(page);
+        // await addXhrListener(page);
+        // await addNavigationListener(page);
 
         await this.clearInputField(target.selector, page);
         await page.type(target.selector, target.input, { delay: 300 });
         await page.waitForNetworkIdle();
 
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
+        // await Promise.all([
+        //     awaitXhrResponse(),
+        //     awaitNavigation(),
+        //     page.waitForTimeout(1000),
+        // ]);
 
         await this.pressKeys(target.keyPresses, page);
         await page.waitForNetworkIdle();
 
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
+        // await Promise.all([
+        //     awaitXhrResponse(),
+        //     awaitNavigation(),
+        //     page.waitForTimeout(1000),
+        // ]);
 
         await insertScripts(page);
         
-        await removeXhrListener();
-        removeNavigationListener(); 
+        // await removeXhrListener();
+        // removeNavigationListener(); 
     };
 
     clearInputField = async (selector, page) => {

@@ -1,6 +1,8 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer');
+const { firefox } = require('playwright');
+
 const fs = require('fs');
-const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
+// const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 
 const pageHelper = require('../common/pageHelper');
 const { elementTypes, actionTypes, configTypes } = require('../common/enum');
@@ -23,14 +25,14 @@ const init = async (crawler) => {
     configChain = JSON.parse(configChain);
 
     try {
-        const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+        const browser = await firefox.launch({ headless: false, devtools: true} );
         let page = await pageHelper.openTab(browser, url, insertScripts);
         rootUrl = url;
     
         await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
         
-        const recorder = new PuppeteerScreenRecorder(page);
-        await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
+        // const recorder = new PuppeteerScreenRecorder(page);
+        // await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
     
         await insertScripts(page);
     
@@ -45,7 +47,7 @@ const init = async (crawler) => {
 
         console.log("\nINFO: Crawling Completed! Saving Data...");
     
-        await recorder.stop();
+        // await recorder.stop();
         await saveData(`data-${+ new Date}`, JSON.stringify(json));
         
         await page.close();

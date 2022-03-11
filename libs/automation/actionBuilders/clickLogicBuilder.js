@@ -148,8 +148,8 @@ class ClickLogicBuilder extends LogicBuilder
     perform = async (action, target, page) => {
         const { insertScripts } = this.meta;
 
-        await addXhrListener(page);
-        await addNavigationListener(page);
+        // await addXhrListener(page);
+        // await addNavigationListener(page);
        
         // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
         await page.evaluate(selector => {
@@ -157,15 +157,15 @@ class ClickLogicBuilder extends LogicBuilder
         }, target);
 
         await page.click(target);
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
+        // await Promise.all([
+        //     awaitXhrResponse(),
+        //     awaitNavigation(),
+        //     page.waitForTimeout(1000),
+        // ]);
         await insertScripts(page);
            
-        await removeXhrListener();
-        removeNavigationListener(); 
+        // await removeXhrListener();
+        // removeNavigationListener(); 
     };
 }
 
