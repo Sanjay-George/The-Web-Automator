@@ -291,6 +291,16 @@ class ActionMenu extends Menu {
                     selectedLabels, selectSimilar, selectSiblings } = this.configuration;
             const siblingCheckbox = document.querySelector(`#${this.containerId} #sel-siblings input`);
             if(e.target.checked) {
+                // INFO: remove existing selected elements first before adding new ones
+                finalTargets = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, finalTargets,
+                         selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, finalLabels,
+                         selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+
                 finalTargets = 
                     this.populateSimilarElements(
                         this.populateSimilarTargets, finalTargets, 
@@ -332,7 +342,16 @@ class ActionMenu extends Menu {
                      selectSimilar, selectSiblings } = this.configuration;
 
             if(e.target.checked) {
-                // todo: populate sibling
+                // INFO: remove existing selected elements first before adding new ones
+                finalTargets = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, finalTargets,
+                         selectedTargets, Enum.elementTypes.ACTION_TARGET);
+                finalLabels = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, finalLabels,
+                         selectedLabels,  Enum.elementTypes.ACTION_LABEL);
+
                 finalTargets = 
                     this.populateSimilarElements(
                         this.populateSiblings, finalTargets, 
@@ -508,6 +527,10 @@ class ActionMenu extends Menu {
         const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
         selectedTargets.push(sanitizedTargetSelector);
         finalTargets.push(sanitizedtarget);
+
+        // INFO: Need to do this separately to handle <no-link> tags which aren't formed 
+        //      until convertAllTagsInPath..() is called.
+        Highlighter.highlightElement(sanitizedtarget, Enum.elementTypes.ACTION);
         
         this.menu.innerHTML = this.renderMenu();
         this.showMenu();

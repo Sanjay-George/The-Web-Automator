@@ -289,6 +289,21 @@ class StateMenu extends Menu {
             const siblingCheckbox = currRow.querySelector(".js-sel-siblings input");
 
             if(e.target.checked) {
+                // INFO: remove existing selected elements first before adding new ones
+                propertiesMeta[propIndex].value = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, 
+                        propertiesMeta[propIndex].value, 
+                        [properties[propIndex].value], 
+                        Enum.elementTypes.STATE_TARGET
+                    );
+                propertiesMeta[propIndex].key = 
+                    this.removeSimilarElements(
+                        this.removeSiblings, 
+                        propertiesMeta[propIndex].key, 
+                        [properties[propIndex].key], 
+                        Enum.elementTypes.STATE_LABEL
+                    );
                 propertiesMeta[propIndex].value = 
                     this.populateSimilarElements(
                         this.populateSimilarTargets, 
@@ -336,11 +351,26 @@ class StateMenu extends Menu {
 
             let { properties, propertiesMeta } = this.configuration;
 
-            currRow = e.target.closest('.js-property');
+            const currRow = e.target.closest('.js-property');
             const propIndex = parseInt(currRow.dataset.propId, 10) - 1; 
             const similarCheckbox = currRow.querySelector(".js-sel-similar input");
 
             if(e.target.checked) {
+                // INFO: remove existing selected elements first before adding new ones
+                propertiesMeta[propIndex].value = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, 
+                        propertiesMeta[propIndex].value, 
+                        [properties[propIndex].value], 
+                        Enum.elementTypes.STATE_TARGET
+                    );
+                propertiesMeta[propIndex].key = 
+                    this.removeSimilarElements(
+                        this.removeSimilarTargets, 
+                        propertiesMeta[propIndex].key, 
+                        [properties[propIndex].key], 
+                        Enum.elementTypes.STATE_LABEL
+                    );
                 propertiesMeta[propIndex].value = 
                     this.populateSimilarElements(
                         this.populateSiblings, 
@@ -566,6 +596,10 @@ class StateMenu extends Menu {
         const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
         properties.push(new StateProperty({ value:  sanitizedTargetSelector }));
         propertiesMeta.push(new StateProperty({ value: [ sanitizedtarget ]}));
+
+        // INFO: Need to do this separately to handle <no-link> tags which aren't formed 
+        //      until convertAllTagsInPath..() is called.
+        Highlighter.highlightElement(sanitizedtarget, Enum.elementTypes.STATE);
 
         ConfigManager.disableAllAnchorTags();
         this.populateAssociatedActions();
