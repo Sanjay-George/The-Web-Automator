@@ -197,13 +197,20 @@ class StateMenu extends Menu {
         };
     };
 
-    setPropertyKeys = () => {
-        const propertyKeys = Array.from(document.querySelectorAll(`#${this.containerId} .js-label-list`));
+    setPropertyKeysAndValues = () => {
+        const propertyKeys 
+            = Array.from(document.querySelectorAll(`#${this.containerId} .js-label-list`));
+        const propertyValues 
+            = Array.from(document.querySelectorAll(`#${this.containerId} .js-target-list`));
 
         const { properties } = this.configuration;
 
         propertyKeys.forEach((element, index) => {
-            properties[index].key = properties[index].key || element.value;
+            properties[index].key =  element.value;
+        });
+
+        propertyValues.forEach((element, index) => {
+            properties[index].value =  element.value;
         });
     };
 
@@ -228,6 +235,10 @@ class StateMenu extends Menu {
             isValid: errorMsg.length === 0,
             errorMsg  
         };
+    };
+
+    showError = error => {
+        document.querySelector("#error-msg").innerHTML = error;
     };
 
     menuHandlers = {
@@ -416,11 +427,11 @@ class StateMenu extends Menu {
 
         handleSaveConfig: async e => {
             this.setBasicDetails();
-            this.setPropertyKeys();
+            this.setPropertyKeysAndValues();
 
             const {isValid, errorMsg} = this.validateConfig();
             if(!isValid) {
-                document.querySelector("#error-msg").innerHTML = errorMsg;
+                this.showError(errorMsg);
                 return ;
             }
 
@@ -430,7 +441,11 @@ class StateMenu extends Menu {
             
             for(let i = 0; i < propertiesMeta.length; i++) {
                 const meta = propertiesMeta[i];
-               
+
+                if(!DomUtils.isValidQuerySelector(properties[i].value)) { 
+                    this.showError("State collection values have to be DOM elements.");
+                    return;
+                }
                 const sanitizedValueElement = 
                     DomUtils.convertAllTagsInPathToAnotherType(meta.value[0], DomUtils.convertToAnchor); 
                 // NOTE: Using meta.value[0] assuming there'll be only one value per property. 
