@@ -1,5 +1,6 @@
 const ContextMenu = (() => {
-    const name = "context-menu";
+    const id = "context-menu";
+    let isContextMenuActive = false;
 
     const options = {
         CONFIGURE_ACTION: 1,
@@ -10,12 +11,13 @@ const ContextMenu = (() => {
     let currentTarget = "";
 
     const open = (offsetX, offsetY, target) => {
-        const menu = document.getElementById(name);
+        const menu = document.getElementById(id);
         
         menu.style.top = offsetY + menu.offsetHeight + 100 < window.innerHeight ?  `${offsetY}px` : `${offsetY - menu.offsetHeight}px`;
         menu.style.left = offsetX + menu.offsetWidth + 100 < window.innerWidth ? `${offsetX}px`: `${offsetX - menu.offsetWidth}px`;
 
         menu.classList.remove("hide");
+        isContextMenuActive = true;
 
         // if clicked anywhere outside context-menu, close the menu.
         // open action/state/ menus according to li clicked
@@ -25,8 +27,9 @@ const ContextMenu = (() => {
     };
 
     const close = () => {
-        const menu = document.getElementById(name);
+        const menu = document.getElementById(id);
         menu.classList.add("hide");
+        isContextMenuActive = false;
         DynamicEventHandler.removeHandler("click");
     };
 
@@ -62,7 +65,7 @@ const ContextMenu = (() => {
     };
 
     const initialize = () => {
-        createMenuElement(name);
+        createMenuElement(id);
     };
 
     const createMenuElement = (id) => {
@@ -81,6 +84,7 @@ const ContextMenu = (() => {
     return {
         open: open,
         initialize: initialize,
+        isContextMenuActive: () => isContextMenuActive,
     };
 
 })();

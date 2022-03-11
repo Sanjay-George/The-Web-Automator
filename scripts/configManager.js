@@ -40,37 +40,16 @@ const ConfigManager = (() => {
     };
 
     const handleMouseOver = (e) => {
-        !isConfigurationActive && Highlighter.highlightElement(e.target, Enum.elementTypes.DEFAULT);
+        !isConfigurationActive 
+            && !ContextMenu.isContextMenuActive() 
+            &&  Highlighter.highlightElement(e.target, Enum.elementTypes.DEFAULT);
     };
 
     const handleMouseOut = (e) => {
-        !isConfigurationActive && Highlighter.resetHighlight(e.target);
+        !isConfigurationActive 
+            && !ContextMenu.isContextMenuActive()
+            && Highlighter.resetHighlight(e.target);
     };
-
-    // TODO: MAKE OBSOLETE AND REMOVE AFTER TESTING
-    const handleClick = (e) => {
-        // console.log(e);
-        
-        if(isConfigurationActive && (!e.target.nodeName.toLowerCase() === "input")) {
-            e.preventDefault();
-            return;
-        }
-
-        if(e.shiftKey) {
-            e.preventDefault();
-            isConfigurationActive = true;
-            configuredElement = e.target;
-            actionMenu.open(e);
-        }
-
-        if(e.ctrlKey) {
-            e.preventDefault();
-            isConfigurationActive = true;
-            configuredElement = e.target;
-            // setStateMenu(e.target);
-        }
-    };
-
 
     const handleRightClick = e => {
         e.preventDefault();
@@ -84,9 +63,7 @@ const ConfigManager = (() => {
         ContextMenu.initialize();
 
         DynamicEventHandler.addHandler("mouseover", handleMouseOver);
-        DynamicEventHandler.addHandler("mouseout", handleMouseOut);
-        // DynamicEventHandler.addHandler("click", handleClick);
-        
+        DynamicEventHandler.addHandler("mouseout", handleMouseOut);        
         document.addEventListener('contextmenu', handleRightClick, false);
     };
 
