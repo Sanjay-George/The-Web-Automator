@@ -72,76 +72,59 @@ class TextInputLogicBuilder extends LogicBuilder
      * @param {object} page puppeteer page
      */
     perform = async (action, target, page) => {
-        const { insertScripts } = this.meta;
+        try{
+            const inputField = await page.locator(target.selector).first();
+            await inputField.fill('');  // .fill() waits for actionability
+            await inputField.type(target.input, { delay: 200 });
+            await this.pressKeys(target.keyPresses, inputField);
+            await page.waitForLoadState('networkidle');
 
-        await addXhrListener(page);
-        await addNavigationListener(page);
-
-        await this.clearInputField(target.selector, page);
-        await page.type(target.selector, target.input, { delay: 300 });
-        await page.waitForNetworkIdle();
-
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
-
-        await this.pressKeys(target.keyPresses, page);
-        await page.waitForNetworkIdle();
-
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
-
-        await insertScripts(page);
-        
-        await removeXhrListener();
-        removeNavigationListener(); 
-    };
-
-    clearInputField = async (selector, page) => {
-        const currentInput = await page.evaluate(selector => {
-            return document.querySelector(selector) !== null 
-                ? document.querySelector(selector).value
-                : "";
-        }, selector);
-
-        if(!currentInput || !currentInput.length)    return;
-
-        // console.log(`INFO: clearInputField() - currentInput: ${currentInput}`)
-
-        const re = /([^a-zA-Z0-9])/;
-        const backSpaceCount = currentInput.split(re).length;
-
-        await page.focus(selector);
-
-        await page.keyboard.down(specialKeys.CTRL);
-        for(let i = 0; i < backSpaceCount; i++) {
-            await page.keyboard.press(specialKeys.BACKSPACE);
+            await this.meta.insertScripts(page);
         }
-        await page.keyboard.up(specialKeys.CTRL);
+        catch (ex) {
+            return false;
+        }
+        return true;
+
     };
+
+    // clearInputField = async (selector, page) => {
+    //     const currentInput = await page.evaluate(selector => {
+    //         return document.querySelector(selector) !== null 
+    //             ? document.querySelector(selector).value
+    //             : "";
+    //     }, selector);
+
+    //     if(!currentInput || !currentInput.length)    return;
+
+    //     // console.log(`INFO: clearInputField() - currentInput: ${currentInput}`)
+
+    //     const re = /([^a-zA-Z0-9])/;
+    //     const backSpaceCount = currentInput.split(re).length;
+
+    //     const inputField = page.locator(selector);
+    //     await inputField.focus(selector);
+    //     for(let i = 0; i < backSpaceCount; i++) {
+    //         await inputField.press(`${specialKeys.CTRL}+${specialKeys.BACKSPACE}`);
+    //     }
+    // };
 
     /**
      * Triggers a keypress by keyCode for specified number of times
      */
-    pressKeys = async (keyPresses, page) => {
+    pressKeys = async (keyPresses, inputField) => {
         if(!keyPresses.length)      return;
-
         for (const keyPress of keyPresses) {
             const { keyCode, count } = keyPress;
             
             for(let i = 0; i < count; i++) {
-                await this.pressKey(keyCode, page);
+                await this.pressKey(keyCode, inputField);
             }
         };
     };
 
-    pressKey = async (keyCode, page) => {
-        await page.keyboard.press(keyCode);
+    pressKey = async (keyCode, inputField) => {
+        await inputField.press(keyCode);
     };
 
 

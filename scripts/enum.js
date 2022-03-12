@@ -27,7 +27,9 @@ const Enum = (() => {
 
     const specialKeys = {
         DOWN_ARROW: 'ArrowDown',
-        ENTER: 'Enter'
+        ENTER: 'Enter',
+        CTRL: 'Control',
+        BACKSPACE: 'Backspace',
     };
 
     return {

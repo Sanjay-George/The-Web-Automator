@@ -12,6 +12,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "mysql": "^2.18.1",
+    "playwright": "^1.19.2",
     "puppeteer": "^13.5.0",
     "puppeteer-screen-recorder": "^1.1.11"
   }

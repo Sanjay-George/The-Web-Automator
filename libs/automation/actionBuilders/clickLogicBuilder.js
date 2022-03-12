@@ -1,6 +1,7 @@
 const { LogicBuilder } = require("./logicBuilder");
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation } = require('../../common/navigationHandler');
+const { click } = require("../../common/pageHelper");
 class ClickLogicBuilder extends LogicBuilder 
 {
     constructor(action, page, meta, json)
@@ -145,27 +146,32 @@ class ClickLogicBuilder extends LogicBuilder
      * @param {string} target selector
      * @param {object} page puppeteer page
     */
-    perform = async (action, target, page) => {
+    perform = async (action, target, page, byPassChecks = false) => {
         const { insertScripts } = this.meta;
 
-        await addXhrListener(page);
-        await addNavigationListener(page);
+        // await addXhrListener(page);
+        // await addNavigationListener(page);
        
         // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
         await page.evaluate(selector => {
             DomUtils.sanitizeAnchorTags(selector)
         }, target);
 
-        await page.click(target);
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
+        const wasActionPerformed = await click(target, page, byPassChecks);
+        await page.waitForLoadState('networkidle');
+
+        // await Promise.all([
+        //     awaitXhrResponse(),
+        //     awaitNavigation(),
+        //     page.waitForTimeout(1000),
+        // ]);
+        
+        // TODO: ADD THIS BACK LATER, IN CASE DomUtils not defined error still comes
         await insertScripts(page);
            
-        await removeXhrListener();
-        removeNavigationListener(); 
+        // await removeXhrListener();
+        // removeNavigationListener(); 
+        return wasActionPerformed;
     };
 }
 

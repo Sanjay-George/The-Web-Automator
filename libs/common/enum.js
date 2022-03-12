@@ -35,7 +35,7 @@ const crawlerStatus = {
 const specialKeys = {
     DOWN_ARROW: 'ArrowDown',
     ENTER: 'Enter',
-    CTRL: 'ControlLeft',
+    CTRL: 'Control',
     BACKSPACE: 'Backspace',
 };
 
