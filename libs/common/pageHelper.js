@@ -106,10 +106,39 @@ async function click(selector, page, byPassChecks = false) {
 		console.error("\nEXCEPTION:");
 		console.error(ex);
 		// if(ex instanceof playwright.errors.TimeoutError) {
+			// TODO: calculate the timeout based on current speed of transimission (networkidle - domcontentloaded)
+			// for repeat 
 		// 	return await click(selector, page, byPassChecks);
 		// }
 	}
 	return false;
+}
+
+async function getInnerText(selector, page)
+{
+	if(!selector || !selector.length)       return null;
+	
+	try {
+		const isValidQuerySelector = await page.evaluate(selector => {
+            return DomUtils.isValidQuerySelector(selector);
+        }, selector);
+
+		if(!isValidQuerySelector) {
+			return selector;
+		}
+
+		const locator = page.locator(selector);
+		await locator.waitFor({
+			// state: 'attached',
+			timeout: ACTIONABILITY_TIMEOUT,
+		});
+		return (await locator.innerText()).trim();
+	}
+	catch(ex) {
+		console.error("\nEXCEPTION:");
+		console.error(ex);
+	}
+	return null;
 }
 
 
@@ -117,10 +146,9 @@ async function click(selector, page, byPassChecks = false) {
 module.exports = {
     openTab,
     closeTab,
-    // takeScreenShot,
-    // disableHeavyResources,
 	getWaitOptions,
 	goBack,
 	reloadPage,
 	click,
+	getInnerText
 }

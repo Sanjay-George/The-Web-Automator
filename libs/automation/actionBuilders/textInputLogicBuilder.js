@@ -77,7 +77,7 @@ class TextInputLogicBuilder extends LogicBuilder
             await inputField.fill('');  // .fill() waits for actionability
             await inputField.type(target.input, { delay: 200 });
             await this.pressKeys(target.keyPresses, inputField);
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('networkidle');  // TODO: ADD DYNAMIC TIMEOUT
 
             await this.meta.insertScripts(page);
         }

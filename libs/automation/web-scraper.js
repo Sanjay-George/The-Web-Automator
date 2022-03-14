@@ -1,5 +1,5 @@
 // const puppeteer = require('puppeteer');
-const { chromium } = require('playwright');
+const { chromium, firefox, webkit } = require('playwright');
 const fs = require('fs');
 // const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 
@@ -24,7 +24,7 @@ const init = async (crawler) => {
     configChain = JSON.parse(configChain);
 
     try {
-        const browser = await chromium.launch({ headless: false, defaultViewport: null} );
+        const browser = await firefox.launch({ headless: false, defaultViewport: null} );
         let page = await pageHelper.openTab(browser, url, insertScripts);
         rootUrl = url;
     
@@ -117,8 +117,8 @@ const run = async (chain, step, page, json, memory = []) => {
                 let key = propertiesArr[j].keys[i] || propertiesArr[j].keys[0] || propertiesArr[j].key;
                 let value = propertiesArr[j].values[i];
 
-                const labelText = await getInnerText(key, page) || key;
-                const targetText = await getInnerText(value, page);
+                const labelText = await pageHelper.getInnerText(key, page) || key;
+                const targetText = await pageHelper.getInnerText(value, page);
 
                 if(!labelText || !targetText) {
                     continue; 
@@ -165,19 +165,19 @@ const populateAllKeysAndValues = async (property, page) => {
     }
 };
 
-const getInnerText = async (selector, page) => {
-    if(!selector || !selector.length)       return null;
+// const getInnerText = async (selector, page) => {
+//     if(!selector || !selector.length)       return null;
     
-    return await page.evaluate(selector => {
-        let element = document.querySelector(selector);
-        if(element){
-            return element.innerText.trim();  // TODO: sanitize further 
-        }
-        else {
-            return null;
-        }
-    }, selector);
-};
+//     return await page.evaluate(selector => {
+//         let element = document.querySelector(selector);
+//         if(element){
+//             return element.innerText.trim();  // TODO: sanitize further 
+//         }
+//         else {
+//             return null;
+//         }
+//     }, selector);
+// };
 
 
 const memorize = (memory, step, action, target) => {

@@ -81,7 +81,7 @@ class LogicBuilder
             return true;
         }
         catch(ex) {
-            console.error("EXCEPTION");
+            console.error("\nEXCEPTION:");
             console.error(ex);
         }
         return false;
