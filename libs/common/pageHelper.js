@@ -1,6 +1,3 @@
-
-const playwright = require('playwright');
-
 const PAGE_LOAD_TIMEOUT = 10000;
 const ACTIONABILITY_TIMEOUT = 5000;
 const MAX_ATTEMPTS = 3;
@@ -23,9 +20,6 @@ async function openTab(browser, url, callback = null, attempt = 1, timeout = 0) 
 	context.grantPermissions(['geolocation', 'notifications']);
     const page = await context.newPage();
 
-    // await page.setBypassCSP(true);
-    // await page.setUserAgent(getUserAgent());
-    // getConfigValue("performanceMode") &&  
 	// await disableHeavyResources(page);
 	
 	try {
@@ -98,7 +92,9 @@ async function click(selector, page, byPassChecks = false) {
 		const locator = page.locator(selector);
 		await locator.first().click({
 			force: byPassChecks,
-			timeout: byPassChecks ? 500 : ACTIONABILITY_TIMEOUT,   // todo: improve this logic. If the page is already loaded, decrease timeout, else keep higher
+			timeout: byPassChecks ? 500 : ACTIONABILITY_TIMEOUT,   
+			// todo: improve the timeout logic. 
+			// If the page is already loaded, decrease timeout, else keep higher
 		});
 		return true;
 	}
@@ -106,8 +102,7 @@ async function click(selector, page, byPassChecks = false) {
 		console.error("\nEXCEPTION:");
 		console.error(ex);
 		// if(ex instanceof playwright.errors.TimeoutError) {
-			// TODO: calculate the timeout based on current speed of transimission (networkidle - domcontentloaded)
-			// for repeat 
+		// TODO: calculate the timeout based on current speed of transimission (networkidle - domcontentloaded)
 		// 	return await click(selector, page, byPassChecks);
 		// }
 	}
@@ -140,6 +135,62 @@ async function getInnerText(selector, page)
 	}
 	return null;
 }
+
+async function disableHeavyResources(page) {
+	const heavyResources = ["media", "font"]; 
+	// const heavyResources = ["image"]; 
+	const blockedReqKeywords = ["video", "playback", "youtube", "autoplay"];
+
+	// await page.setRequestInterception(true);
+	await page.route("**/*", async route => {
+		const request = route.request();
+		if (heavyResources.includes(request.resourceType())) { 
+			await route.abort();
+			return;
+		}
+
+		let blockReq = false;
+		for(let i = 0; i < blockedReqKeywords.length; i++) {
+			if(request.url().includes(blockedReqKeywords[i])) {
+				blockReq = true;
+				break;
+			}
+		}
+		if(blockReq) {
+			await route.abort(); 
+			return;
+		}
+
+		await route.continue();
+	});
+
+	// page.on('request', async request => {
+	// 	try{
+	// 		if (heavyResources.includes(request.resourceType())) { 
+	// 			await request.abort();
+	// 			return;
+	// 		}
+
+	// 		let blockReq = false;
+	// 		for(let i = 0; i < blockedReqKeywords.length; i++) {
+	// 			if(request.url().includes(blockedReqKeywords[i])) {
+	// 				blockReq = true;
+	// 				break;
+	// 			}
+	// 		}
+	// 		if(blockReq) {
+	// 			await request.abort(); 
+	// 			return;
+	// 		}
+
+	// 		await request.continue();
+	// 	}
+	// 	catch(ex) {
+	// 		console.error(ex);
+	// 	}
+	// });
+}
+
 
 
 

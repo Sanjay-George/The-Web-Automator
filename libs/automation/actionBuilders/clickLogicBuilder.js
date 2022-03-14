@@ -147,31 +147,37 @@ class ClickLogicBuilder extends LogicBuilder
      * @param {object} page puppeteer page
     */
     perform = async (action, target, page, byPassChecks = false) => {
-        const { insertScripts } = this.meta;
+        try{
+            const { insertScripts } = this.meta;
 
-        // await addXhrListener(page);
-        // await addNavigationListener(page);
-       
-        // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-        await page.evaluate(selector => {
-            DomUtils.sanitizeAnchorTags(selector)
-        }, target);
+            // await addXhrListener(page);
+            // await addNavigationListener(page);
+            
+            // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
+            await page.evaluate(selector => {
+                DomUtils.sanitizeAnchorTags(selector)
+            }, target);
 
-        const wasActionPerformed = await click(target, page, byPassChecks);
-        await page.waitForLoadState('networkidle');
+            const wasActionPerformed = await click(target, page, byPassChecks);
+            await page.waitForLoadState('networkidle');
 
-        // await Promise.all([
-        //     awaitXhrResponse(),
-        //     awaitNavigation(),
-        //     page.waitForTimeout(1000),
-        // ]);
-        
-        // TODO: ADD THIS BACK LATER, IN CASE DomUtils not defined error still comes
-        await insertScripts(page);
-           
-        // await removeXhrListener();
-        // removeNavigationListener(); 
-        return wasActionPerformed;
+            // await Promise.all([
+            //     awaitXhrResponse(),
+            //     awaitNavigation(),
+            //     page.waitForTimeout(1000),
+            // ]);
+            
+            // TODO: ADD THIS BACK LATER, IN CASE DomUtils not defined error still comes
+            await insertScripts(page);
+                
+            // await removeXhrListener();
+            // removeNavigationListener(); 
+            return wasActionPerformed;
+        }
+        catch(ex) 
+        {
+            return false;
+        }
     };
 }
 

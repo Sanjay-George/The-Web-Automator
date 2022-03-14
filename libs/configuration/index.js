@@ -1,4 +1,6 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer');
+const { chromium, firefox, webkit } = require('playwright');
+
 const pageHelper = require('../common/pageHelper');
 const crawlersDL = require("../database/crawlersDL");
 const { crawlerStatus } = require('../common/enum');
@@ -6,7 +8,7 @@ const { crawlerStatus } = require('../common/enum');
 let configChain = [];
 
 const configure = async (crawler) => {
-	const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+	const browser = await firefox.launch({ headless: false, defaultViewport: null} );
 	try {
 		let page = await pageHelper.openTab(browser, crawler.url, handlePageLoad);
 		await page.bringToFront();
