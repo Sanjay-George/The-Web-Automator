@@ -1,8 +1,8 @@
-# The Web Automator
+# The Web Automator💻
 
 This is a powerful and robust tool to automate tasks on the web without writing a single line of code.   
 
-### Uses
+### Uses 🔧
 Following are some uses of the tool:
 1. **Web Scraping:** The automator can be used to crawl a website and scrape data in JSON format. 
 2. **Automating Tasks** The tool can also be used for tasks such as automating form submissions.
@@ -12,16 +12,16 @@ Following are some uses of the tool:
 
 *Note: Only web-scraper module is being built right now. Rest of the modules will be supported in future.* 
 
-## Installation and Set up
+## Installation and Set up 🪛
 Please note that the code for the core logic or server and the UI panel are in 2 different repos as of now. This will be merged in future. 
 
-### To set up server 
+### To set up server 🏭
 1. Clone this repo and run `npm install` in root folder. 
 2. Set up your local mySQL server and run the queries in `automator.sql` file.
 3. Update the details of your mySQL server in `appsettings.json` under the `dbConfig` property
 4. Run `node server.js` in terminal to start the Express server.
 
-### To set up client
+### To set up client 🕴️
 1. Clone the [UI repo](https://github.com/Sanjay-George/Web-Automator-Panel)
 2. Run npm install to download all dependencies.
 3. Run `npm run dev` to build.
