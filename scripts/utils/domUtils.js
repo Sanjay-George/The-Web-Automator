@@ -17,6 +17,12 @@ const DomUtils = (() => {
         return "#"+ id;
     }
 
+    const _isValidClassName = className => {
+        // https://stackoverflow.com/a/449000
+        const classRegex = /^-?[_a-zA-Z]+[_a-zA-Z0-9-]*$/;
+        return classRegex.test(className);
+    };
+
     const _buildClassList = element => {
         if(element.classList.length === 0)
             return "";
@@ -24,7 +30,13 @@ const DomUtils = (() => {
         let classes = element.classList;
         let finalString = "";
         classes.forEach(className => {
-            finalString += "." + className;
+            if(_isValidClassName(className)) {
+                finalString += "." + className;
+                return;
+            }
+            // TODO: add escape character for illegal classNames
+            // eg: div.col-span-8.order-3.lg:order-none => div.col-span-8.order-3.lg\:order-none
+
         })
         return finalString;
     };
