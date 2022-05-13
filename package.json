@@ -16,5 +16,15 @@
     "playwright": "^1.19.2",
     "puppeteer": "^13.5.0",
     "puppeteer-screen-recorder": "^1.1.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "server.js",
+      "libs/*",
+      "package.json"
+    ]
   }
 }

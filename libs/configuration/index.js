@@ -17,11 +17,6 @@ const configure = async (crawler) => {
 	
 		if(page === null)	return;
 	
-		// await insertStyles(page);
-		// await insertScripts(page);
-		// await exposeFunctions(page);
-		// await sanitizeAnchorTags(page);
-	
 		page.on('load', async () => {
 			// insert all styles and scripts
 			console.log(`DOM loaded: ${page.url()}`);
@@ -70,7 +65,7 @@ const handlePageLoad = async (page) => {
 // but sometimes functions aren't exposing on first try. 
 // temporary fix - expose functions on page reload and catch the error 'method already exists'
 const exposeFunctions = async (page) => {
-	console.log('\nexposeFunctions - exposing getConfigChain');
+	console.log('exposeFunctions - exposing getConfigChain');
 	try {
 		await page.exposeFunction('getConfigChain', () => configChain);
 	}
