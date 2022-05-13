@@ -439,31 +439,23 @@ class StateMenu extends Menu {
                 { configType, stateName, stateType, collectionKey, 
                     properties, propertiesMeta, configChainIndex } = this.configuration;
             
-            for(let i = 0; i < propertiesMeta.length; i++) {
-                const meta = propertiesMeta[i];
+            for(let i = 0; i < properties.length; i++) {
+                const prop = properties[i];
 
-                if(!DomUtils.isValidQuerySelector(properties[i].value)) { 
+                if(!DomUtils.isValidQuerySelector(prop.value)) { 
+                    console.warn("State collection values have to be DOM elements.");
                     this.showError("State collection values have to be DOM elements.");
-                    return;
+                    break;
                 }
-                const sanitizedValueElement = 
-                    DomUtils.convertAllTagsInPathToAnotherType(meta.value[0], DomUtils.convertToAnchor); 
-                // NOTE: Using meta.value[0] assuming there'll be only one value per property. 
-                //       This could change in the future
-                const sanitizedValueSelector = DomUtils.getQuerySelector(sanitizedValueElement);
-                properties[i].value = sanitizedValueSelector;
 
-                if(!DomUtils.isValidQuerySelector(properties[i].key)) {
+                prop.value = DomUtils.QuerySelectors.convertAllTagsInPathToAnotherType(prop.value, DomUtils.QuerySelectors.convertToAnchor);
+
+                if(!DomUtils.isValidQuerySelector(prop.key)) {
                     continue;
                 }
 
-                const sanitizedKeyElement = 
-                    DomUtils.convertAllTagsInPathToAnotherType(meta.key[0], DomUtils.convertToAnchor);
-                const sanitizedKeySelector = 
-                    DomUtils.getQuerySelector(sanitizedKeyElement);
-                properties[i].key = sanitizedKeySelector;
+                prop.key = DomUtils.QuerySelectors.convertAllTagsInPathToAnotherType(prop.key, DomUtils.QuerySelectors.convertToAnchor);
             }
-
 
             const item = {
                 configType,
@@ -607,7 +599,7 @@ class StateMenu extends Menu {
 
         const { properties, propertiesMeta } = this.configuration;
         const sanitizedtarget = 
-            DomUtils.convertAllTagsInPathToAnotherType(target, DomUtils.convertToNoLink);
+            DomUtils.DomElements.convertAllTagsInPathToAnotherType(target, DomUtils.DomElements.convertToNoLink);
         const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
         properties.push(new StateProperty({ value:  sanitizedTargetSelector }));
         propertiesMeta.push(new StateProperty({ value: [ sanitizedtarget ]}));

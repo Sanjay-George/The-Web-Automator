@@ -171,7 +171,7 @@ class ActionMenu extends Menu {
             DynamicEventHandler.removeHandler("click");
 
             const labelQuerySelector = DomUtils.getQuerySelector(e.target);
-            if(!this.configuration.finalLabels.includes(labelQuerySelector)) { 
+            if(!this.configuration.finalLabels.includes(e.target)) { 
                 this.configuration.selectedLabels.push(labelQuerySelector);
                 this.configuration.finalLabels.push(e.target);
             }
@@ -413,26 +413,21 @@ class ActionMenu extends Menu {
                     actionKey, selectedTargets, selectedLabels, selectSimilar,
                      selectSiblings, finalLabels, finalTargets, textInput, keyPresses } = this.configuration;
 
-            for (let i = 0; i < finalTargets.length; i++) {
-                const sanitizedTargetElement = 
-                    DomUtils.convertAllTagsInPathToAnotherType(finalTargets[i], DomUtils.convertToAnchor);
-                const sanitizedTargetSelector = 
-                    DomUtils.getQuerySelector(sanitizedTargetElement);
-                if(selectedTargets[i]) {
-                    selectedTargets[i] = sanitizedTargetSelector;
-                }
+            for (let i = 0; i < selectedTargets.length; i++) {
+                selectedTargets[i] = 
+                    DomUtils.QuerySelectors.convertAllTagsInPathToAnotherType(
+                        selectedTargets[i], 
+                        DomUtils.QuerySelectors.convertToAnchor
+                    );
 
-                if(!DomUtils.isValidQuerySelector(finalLabels[i])) {
+                if(!DomUtils.isValidQuerySelector(selectedLabels[i])) {
                     continue;
                 }
-
-                const sanitizedLabelElement = 
-                    DomUtils.convertAllTagsInPathToAnotherType(finalLabels[i], DomUtils.convertToAnchor);
-                const sanitizedLabelSelector = 
-                    DomUtils.getQuerySelector(sanitizedLabelElement);
-                if(selectedLabels[i]) {
-                    selectedLabels[i] = sanitizedLabelSelector;
-                }
+                selectedLabels[i] = 
+                    DomUtils.QuerySelectors.convertAllTagsInPathToAnotherType(
+                        selectedLabels[i], 
+                        DomUtils.QuerySelectors.convertToAnchor
+                    );
             }
 
 
@@ -523,7 +518,7 @@ class ActionMenu extends Menu {
         let {selectedTargets, finalTargets} = this.configuration;
         
         const sanitizedtarget = 
-            DomUtils.convertAllTagsInPathToAnotherType(target, DomUtils.convertToNoLink);
+            DomUtils.DomElements.convertAllTagsInPathToAnotherType(target, DomUtils.DomElements.convertToNoLink);
         const sanitizedTargetSelector = DomUtils.getQuerySelector(sanitizedtarget);
         selectedTargets.push(sanitizedTargetSelector);
         finalTargets.push(sanitizedtarget);

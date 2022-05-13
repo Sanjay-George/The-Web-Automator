@@ -28,14 +28,14 @@ const ConfigManager = (() => {
     const disableAllAnchorTags = () => {
         const anchorElements = Array.from(document.querySelectorAll("a")).filter(item => item.host === window.location.host);
         anchorElements.forEach(anchor => {
-            DomUtils.convertToNoLink(anchor);
+            DomUtils.DomElements.convertToNoLink(anchor);
         });
     };
 
     const enableAllAnchorTags = () => {
         const linkElements = Array.from(document.querySelectorAll("no-link"));
         linkElements.forEach(link => {
-            DomUtils.convertToAnchor(link);
+            DomUtils.DomElements.convertToAnchor(link);
         });
     };
 
