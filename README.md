@@ -25,7 +25,7 @@ Please note that the code for the core logic or server and the UI panel are in 2
 1. Clone the [UI repo](https://github.com/Sanjay-George/Web-Automator-Panel)
 2. Run npm install to download all dependencies.
 3. Run `npm run dev` to build.
-4. Open http://localhost:3000/ to see the *ugly* home page
+4. Open http://localhost:3000/ to see the home page
 
 ![image](https://user-images.githubusercontent.com/10389062/157643060-4a901ba3-ad89-4f57-90ab-81e5944bfebb.png)
 
