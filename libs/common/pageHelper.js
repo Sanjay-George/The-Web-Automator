@@ -13,6 +13,12 @@ const userAgents = [
 	"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"
 ];
 
+const botAgents = [
+	"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+	"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/W.X.Y.Z Safari/537.36",
+	"Googlebot/2.1 (+http://www.google.com/bot.html)"
+];
+
 async function openTab(browser, url, callback = null, attempt = 1, timeout = 0) {
 	console.log(`\nOpening URL : ${url}`);
 
@@ -22,7 +28,7 @@ async function openTab(browser, url, callback = null, attempt = 1, timeout = 0) 
 		recordVideo: {
 			dir: './videos/'
 		},
-		userAgent: userAgents[Math.floor(Math.random() * userAgents.length)],
+		userAgent: botAgents[Math.floor(Math.random() * botAgents.length)],
 	});
 	// context.setDefaultTimeout(5000);
 	context.grantPermissions(['geolocation', 'notifications']);
@@ -60,6 +66,9 @@ async function reloadPage(page, callback = null, attempt = 0)
 			// await closeTab(page);
 			return await reloadPage(page, callback, attempt+1);
 		}
+		else {
+			throw ex;
+		}
 	}
 }
 
@@ -83,6 +92,9 @@ async function goBack(page, callback = null, attempt = 0)
 			}
 			await reloadPage(page, callback);
 			return await goBack(page, callback, attempt+1);
+		}
+		else {
+			throw ex;
 		}
 	}
 	return httpRes;

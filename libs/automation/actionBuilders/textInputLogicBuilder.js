@@ -74,7 +74,7 @@ class TextInputLogicBuilder extends LogicBuilder
     perform = async (action, target, page) => {
         try{
             const inputField = await page.locator(target.selector).first();
-            await inputField.fill('');  // .fill() waits for actionability
+            await inputField.fill('');  // INFO: .fill() waits for actionability
             await inputField.type(target.input, { delay: 200 });
             await this.pressKeys(target.keyPresses, inputField);
             await page.waitForLoadState('networkidle');  // TODO: ADD DYNAMIC TIMEOUT
@@ -129,7 +129,6 @@ class TextInputLogicBuilder extends LogicBuilder
 
 
     populateAllTargets = () => {
-        // TODO: Form output of the form { selector: "", input: "", keyPresses: [] } 
         const { selectedTargets, textInput, keyPresses } = this.action;
         const finalTargets = [];
 
@@ -137,7 +136,6 @@ class TextInputLogicBuilder extends LogicBuilder
         const constantKeyPresses = keyPresses.filter(item => !item.isIncrementalRepeat);  
         const allKeyPressesMatrix = this.populateAllKeyPresses(incrementalKeyPresses, constantKeyPresses); 
        
-
         selectedTargets.forEach(target => {
             textInput.forEach(input => {
                 allKeyPressesMatrix.forEach(keyPresses => {

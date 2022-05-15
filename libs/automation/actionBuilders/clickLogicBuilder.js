@@ -2,6 +2,7 @@ const { LogicBuilder } = require("./logicBuilder");
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation } = require('../../common/navigationHandler');
 const { click } = require("../../common/pageHelper");
+const { ActionDirector } = require("./actionDirector");
 class ClickLogicBuilder extends LogicBuilder 
 {
     constructor(action, page, meta, json)
@@ -58,7 +59,8 @@ class ClickLogicBuilder extends LogicBuilder
      * @returns {object} of the form { targets: Array<string>, labels: Array<string> }
      */
     populateAllTargetsAndLabels = async (action, page) => {
-        // TODO: If actionType = text / select box, populate the targets and labels here accordingly
+
+  
         if(action.selectSimilar) {
             const targets = await this.populateSimilarTargets(action.selectedTargets, page);
             const labels = await this.populateSimilarTargets(action.selectedLabels, page);
@@ -114,6 +116,10 @@ class ClickLogicBuilder extends LogicBuilder
             });
             return targetSelectors;
         }, selectedTargets);
+
+        if(!finalTargets.length) {
+            console.error("populateSimilarTargets() - Couldn't find any targets matching the selector");
+        }
         
         // console.log('INFO: All targets', JSON.stringify(finalTargets));
     
