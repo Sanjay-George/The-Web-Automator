@@ -1,6 +1,7 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer');
+const { chromium, firefox, webkit } = require('playwright');
 const fs = require('fs');
-const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
+// const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 
 const pageHelper = require('../common/pageHelper');
 const { elementTypes, actionTypes, configTypes } = require('../common/enum');
@@ -23,14 +24,11 @@ const init = async (crawler) => {
     configChain = JSON.parse(configChain);
 
     try {
-        const browser = await puppeteer.launch({ headless: false, defaultViewport: null} );
+        const browser = await firefox.launch({ headless: false, defaultViewport: null} );
         let page = await pageHelper.openTab(browser, url, insertScripts);
         rootUrl = url;
     
         await crawlersDL.updateStatus(id, crawlerStatus.IN_PROGRESS);
-        
-        const recorder = new PuppeteerScreenRecorder(page);
-        await recorder.start(`./captures/screen-rec-${+ new Date()}.mp4`);
     
         await insertScripts(page);
     
@@ -40,12 +38,9 @@ const init = async (crawler) => {
         // });
     
         await run(configChain, 0, page, json);
-    
-        // console.log(JSON.stringify(json));
 
         console.log("\nINFO: Crawling Completed! Saving Data...");
-    
-        await recorder.stop();
+
         await saveData(`data-${+ new Date}`, JSON.stringify(json));
         
         await page.close();
@@ -122,8 +117,8 @@ const run = async (chain, step, page, json, memory = []) => {
                 let key = propertiesArr[j].keys[i] || propertiesArr[j].keys[0] || propertiesArr[j].key;
                 let value = propertiesArr[j].values[i];
 
-                const labelText = await getInnerText(key, page) || key;
-                const targetText = await getInnerText(value, page);
+                const labelText = await pageHelper.getInnerText(key, page) || key;
+                const targetText = await pageHelper.getInnerText(value, page);
 
                 if(!labelText || !targetText) {
                     continue; 
@@ -170,19 +165,19 @@ const populateAllKeysAndValues = async (property, page) => {
     }
 };
 
-const getInnerText = async (selector, page) => {
-    if(!selector || !selector.length)       return null;
+// const getInnerText = async (selector, page) => {
+//     if(!selector || !selector.length)       return null;
     
-    return await page.evaluate(selector => {
-        let element = document.querySelector(selector);
-        if(element){
-            return element.innerText.trim();  // TODO: sanitize further 
-        }
-        else {
-            return null;
-        }
-    }, selector);
-};
+//     return await page.evaluate(selector => {
+//         let element = document.querySelector(selector);
+//         if(element){
+//             return element.innerText.trim();  // TODO: sanitize further 
+//         }
+//         else {
+//             return null;
+//         }
+//     }, selector);
+// };
 
 
 const memorize = (memory, step, action, target) => {
@@ -246,13 +241,6 @@ const insertScripts = async (page) => {
     } catch(ex) {}
 };
 
-const takeScreenShot = async (page) => {
-    await page.screenshot({
-        path: `./shots/screenshot-${+ new Date()}.png`,
-        type: 'jpeg',
-        quality: 30,
-    });
-}
 
 async function saveData(pageName, json) {
     const dir = './data';

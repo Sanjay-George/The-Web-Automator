@@ -4,6 +4,7 @@
   "description": "The crawler to end all crawlers",
   "main": "server.js",
   "scripts": {
+    "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Sanjay George",
@@ -11,8 +12,19 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "mysql": "^2.18.1",
+    "mysql2": "^2.3.3",
+    "playwright": "^1.19.2",
     "puppeteer": "^13.5.0",
     "puppeteer-screen-recorder": "^1.1.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "server.js",
+      "libs/*",
+      "package.json"
+    ]
   }
 }

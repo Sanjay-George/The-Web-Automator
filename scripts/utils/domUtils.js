@@ -17,6 +17,12 @@ const DomUtils = (() => {
         return "#"+ id;
     }
 
+    const _isValidClassName = className => {
+        // https://stackoverflow.com/a/449000
+        const classRegex = /^-?[_a-zA-Z]+[_a-zA-Z0-9-]*$/;
+        return classRegex.test(className);
+    };
+
     const _buildClassList = element => {
         if(element.classList.length === 0)
             return "";
@@ -24,7 +30,13 @@ const DomUtils = (() => {
         let classes = element.classList;
         let finalString = "";
         classes.forEach(className => {
-            finalString += "." + className;
+            if(_isValidClassName(className)) {
+                finalString += "." + className;
+                return;
+            }
+            // TODO: add escape character for illegal classNames
+            // eg: div.col-span-8.order-3.lg:order-none => div.col-span-8.order-3.lg\:order-none
+
         })
         return finalString;
     };
@@ -220,67 +232,111 @@ const DomUtils = (() => {
         return false;
     };
 
-    const _copyAllProperties = (src, dest) => {
-        dest.id = src.id;
-        dest.classList = src.classList;
-        dest.attributes = src.attributes;
-        dest.onclick = src.onclick;
-        dest.innerText = src.innerText;
-        dest.innerHTML = src.innerHTML;
-        dest.style = src.style;
-        dest.href = src.href;
-        dest.parentElement = src.parentElement;
-    };
-
-    const convertToNoLink = anchor => {
-        if(!anchor || anchor.nodeName.toLowerCase() !== "a") {
-            return { modifiedElement: anchor, isModified: false };
-        }
-
-        const noLink = document.createElement("no-link"); 
-        _copyAllProperties(anchor, noLink); 
-        anchor.replaceWith(noLink);
-        return { modifiedElement: noLink, isModified: true }; 
-    };
-
-    const convertToAnchor = noLink => {
-        if(!noLink || noLink.nodeName.toLowerCase() !== "no-link") {
-            return { modifiedElement: noLink, isModified: false };
-        }
-
-        const anchor = document.createElement("a");  
-        _copyAllProperties(noLink, anchor); 
-        noLink.replaceWith(anchor);
-        return { modifiedElement: anchor, isModified: true };
-    };
-
-    const convertAllTagsInPathToAnotherType = (element, fn) => {
-        if(element === null || element === undefined)   return element;
-        let traversedDistance = 0;
-        let childIndexAtEachStep = [];
-        
-        while(element !== document.body) {
-            const index  = Array.from(element.parentElement.children).indexOf(element);
-            childIndexAtEachStep.push(index);
-
-            const { modifiedElement, isModified } = fn(element);
-            
-            if(isModified) {
-                element.replaceWith(modifiedElement);  
+    const DomElements = (() => {
+        const _copyAllProperties = (src, dest) => {
+            dest.id = src.id;
+            dest.classList = src.classList;
+            dest.attributes = src.attributes;
+            dest.onclick = src.onclick;
+            dest.innerText = src.innerText;
+            dest.innerHTML = src.innerHTML;
+            dest.style = src.style;
+            dest.href = src.href;
+            dest.parentElement = src.parentElement;
+        };
+    
+        const convertToNoLink = anchor => {
+            if(!anchor || anchor.nodeName.toLowerCase() !== "a") {
+                return { modifiedElement: anchor, isModified: false };
             }
-            element = modifiedElement.parentElement;
-            traversedDistance++;
-        }
-
-        traversedDistance--;
-
-        while(traversedDistance >= 0) {
-            element = element.children[childIndexAtEachStep[traversedDistance]]
+    
+            const noLink = document.createElement("no-link"); 
+            _copyAllProperties(anchor, noLink); 
+            anchor.replaceWith(noLink);
+            return { modifiedElement: noLink, isModified: true }; 
+        };
+    
+        const convertToAnchor = noLink => {
+            if(!noLink || noLink.nodeName.toLowerCase() !== "no-link") {
+                return { modifiedElement: noLink, isModified: false };
+            }
+    
+            const anchor = document.createElement("a");  
+            _copyAllProperties(noLink, anchor); 
+            noLink.replaceWith(anchor);
+            return { modifiedElement: anchor, isModified: true };
+        };
+    
+        const convertAllTagsInPathToAnotherType = (element, fn) => {
+            if(element === null || element === undefined)   return element;
+            let traversedDistance = 0;
+            let childIndexAtEachStep = [];
+            
+            while(element !== document.body) {
+                const index  = Array.from(element.parentElement.children).indexOf(element);
+                childIndexAtEachStep.push(index);
+    
+                const { modifiedElement, isModified } = fn(element);
+                
+                if(isModified) {
+                    element.replaceWith(modifiedElement);  
+                }
+                element = modifiedElement.parentElement;
+                traversedDistance++;
+            }
+    
             traversedDistance--;
-        }
+    
+            while(traversedDistance >= 0) {
+                element = element.children[childIndexAtEachStep[traversedDistance]]
+                traversedDistance--;
+            }
+    
+            return element;
+        };
 
-        return element;
-    };
+        return {
+            convertAllTagsInPathToAnotherType,
+            convertToAnchor,
+            convertToNoLink
+        }
+    })();
+
+    const QuerySelectors = (() => {
+
+        // regex to check for <a> or <no-link> = /^(a|no-link)([#.:].*|)$/
+        const convertToNoLink = selector => {
+            const anchorRegex = /^(a)([#.:].*|)$/;
+            if(!selector || !selector.length || !anchorRegex.test(selector)) {
+                return selector;
+            }
+            return selector.replace('a', 'no-link');
+        };
+    
+        const convertToAnchor = selector => {
+            const noLinkRegex = /^(no-link)([#.:].*|)$/;
+            if(!selector || !selector.length || !noLinkRegex.test(selector)) {
+                return selector;
+            }
+            return selector.replace('no-link', 'a');
+        };
+    
+        const convertAllTagsInPathToAnotherType = (selector, fn) => {
+            if(!selector || !selector.length)   return selector;
+            
+            const selectorList = selector.split(" > ");
+            for (let i = 0;  i < selectorList.length; i++) {
+                selectorList[i] = fn(selectorList[i]);
+            }
+            return selectorList.join(" > ")
+        };
+
+        return {
+            convertAllTagsInPathToAnotherType,
+            convertToAnchor,
+            convertToNoLink
+        }
+    })();
 
     const setAnchorTargetTypeToSelf = element => {
         if(element.nodeName.toLowerCase() !== "a")  return false;
@@ -319,11 +375,13 @@ const DomUtils = (() => {
         addUnloadListener,
         removeUnloadListener,
         isValidQuerySelector,
-        convertToNoLink,
-        convertToAnchor,
-        convertAllTagsInPathToAnotherType,
+        // convertToNoLink,
+        // convertToAnchor,
+        // convertAllTagsInPathToAnotherType,
         sanitizeAnchorTags,
         setAnchorTargetTypeToSelf,
+        DomElements,
+        QuerySelectors,
     }
 })();
 

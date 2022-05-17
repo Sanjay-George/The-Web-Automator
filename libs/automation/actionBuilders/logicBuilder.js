@@ -64,25 +64,31 @@ class LogicBuilder
 
     performAction = async (action, target, memory, step, page) => {
         console.log(`\nINFO: performAction() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
+        
         try {
-            await this.perform(action, target, page);
-        }
-        catch(ex) {
-            console.error("\nPPTR EXCEPTION:");
-            console.error(ex);
-            // if perform(action) doesn't work, retry previous actions (to handle popup cases)
+            let wasActionPerformed = await this.perform(action, target, page);
+            if(wasActionPerformed) {
+                return true;
+            }
+    
+            // INFO: if perform(action) doesn't work, retry previous actions (to handle popup cases)
             // if none of the actions work, go back one page and try 
-            let wasActionPerformed = await this.tryActionsInMemory(memory, step, page);
+            wasActionPerformed = await this.tryActionsInMemory(memory, step, page);
             if(!wasActionPerformed) {
                 wasActionPerformed = await this.tryActionOnPrevPage(action, target, memory, step, page);
                 return wasActionPerformed;
             }
+            return true;
         }
-        return true;
+        catch(ex) {
+            console.error("\nEXCEPTION:");
+            console.error(ex);
+        }
+        return false;
     };
     
     tryActionsInMemory = async (memory, step, page) => {
-        // repeat all actions from beginning of memory to end
+        // INFO: repeat all actions from beginning of memory to the current step
         console.log(`\nINFO: tryActionsInMemory() - memory.length: ${memory.length}, step: ${step}`);
 
         let wasActionPerformed = true;
@@ -91,26 +97,21 @@ class LogicBuilder
                 continue;
             }
             const { action, target } = memory[i];
-            try{
-                if(action.actionType === this.action.actionType) {
-                    await this.perform(action, target, page);
-                }
-                else {
-                    const { getLogicBuilder } = this.meta;
-                    const logicBuilder = 
-                        getLogicBuilder(action.actionType, action, page, this.meta, this.json);
-                    await logicBuilder.perform(action, target, page);
-                }
+            let wasSuccessful = false;
+            
+            if(action.actionType === this.action.actionType) {
+                wasSuccessful = await this.perform(action, target, page, true);
             }
-            catch(ex) {
-                console.error("\nPPTR EXCEPTION:");
-                console.error(ex);
-                if(i === step) {
-                    wasActionPerformed = false;
-                }
-                continue;
+            else {
+                const { getLogicBuilder } = this.meta;
+                const logicBuilder = 
+                    getLogicBuilder(action.actionType, action, page, this.meta, this.json);
+                wasSuccessful = await logicBuilder.perform(action, target, page, true);
             }
-        }
+            if(!wasSuccessful && i === step) {
+                wasActionPerformed = false;
+            }
+        }    
         return wasActionPerformed;
     };
     
@@ -118,35 +119,16 @@ class LogicBuilder
         console.log(`\nINFO: tryActionOnPrevPage() - action: ${action.actionName.toUpperCase()}, target: ${target}`);
         
         if(await page.url() === this.meta.rootUrl)  return false;
-        await Promise.all([
-            addXhrListener(page),
-            addNavigationListener(page),
-        ]);
         
         const { insertScripts } = this.meta; 
-        // todo: make this incremental backoff
         const httpRes = await pageHelper.goBack(page, insertScripts); 
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(500),
-        ]);
-    
-        // console.log("INFO: going back, httpRes", httpRes);
-    
+        // httpRes && await page.waitForLoadState('networkidle');
+        
         if(httpRes  === null) {
             await pageHelper.reloadPage(page, insertScripts);
-            // return await this.performAction(action, target, memory, step, page);
+            // await page.waitForLoadState('networkidle');
         }
-    
-        await Promise.all([
-            removeXhrListener(),
-            removeNavigationListener(), 
-        ]);
-    
-    
-        // await page.goBack(pageHelper.getWaitOptions());
-        // await page.reload(pageHelper.getWaitOptions());
+
         return await this.performAction(action, target, memory, step, page);
     };    
 }

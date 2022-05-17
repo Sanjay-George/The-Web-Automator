@@ -1,6 +1,8 @@
 const { LogicBuilder } = require("./logicBuilder");
 const { addXhrListener, removeXhrListener, awaitXhrResponse } = require('../../common/xhrHandler');
 const { removeNavigationListener, addNavigationListener, awaitNavigation } = require('../../common/navigationHandler');
+const { click } = require("../../common/pageHelper");
+const { ActionDirector } = require("./actionDirector");
 class ClickLogicBuilder extends LogicBuilder 
 {
     constructor(action, page, meta, json)
@@ -57,7 +59,8 @@ class ClickLogicBuilder extends LogicBuilder
      * @returns {object} of the form { targets: Array<string>, labels: Array<string> }
      */
     populateAllTargetsAndLabels = async (action, page) => {
-        // TODO: If actionType = text / select box, populate the targets and labels here accordingly
+
+  
         if(action.selectSimilar) {
             const targets = await this.populateSimilarTargets(action.selectedTargets, page);
             const labels = await this.populateSimilarTargets(action.selectedLabels, page);
@@ -113,6 +116,10 @@ class ClickLogicBuilder extends LogicBuilder
             });
             return targetSelectors;
         }, selectedTargets);
+
+        if(!finalTargets.length) {
+            console.error("populateSimilarTargets() - Couldn't find any targets matching the selector");
+        }
         
         // console.log('INFO: All targets', JSON.stringify(finalTargets));
     
@@ -145,27 +152,38 @@ class ClickLogicBuilder extends LogicBuilder
      * @param {string} target selector
      * @param {object} page puppeteer page
     */
-    perform = async (action, target, page) => {
-        const { insertScripts } = this.meta;
+    perform = async (action, target, page, byPassChecks = false) => {
+        try{
+            const { insertScripts } = this.meta;
 
-        await addXhrListener(page);
-        await addNavigationListener(page);
-       
-        // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
-        await page.evaluate(selector => {
-            DomUtils.sanitizeAnchorTags(selector)
-        }, target);
+            // await addXhrListener(page);
+            // await addNavigationListener(page);
+            
+            // TODO: figure out how to waitForNavigation() this ONLY if page is about to redirect
+            await page.evaluate(selector => {
+                DomUtils.sanitizeAnchorTags(selector)
+            }, target);
 
-        await page.click(target);
-        await Promise.all([
-            awaitXhrResponse(),
-            awaitNavigation(),
-            page.waitForTimeout(1000),
-        ]);
-        await insertScripts(page);
-           
-        await removeXhrListener();
-        removeNavigationListener(); 
+            const wasActionPerformed = await click(target, page, byPassChecks);
+            await page.waitForLoadState('networkidle');
+
+            // await Promise.all([
+            //     awaitXhrResponse(),
+            //     awaitNavigation(),
+            //     page.waitForTimeout(1000),
+            // ]);
+            
+            // TODO: ADD THIS BACK LATER, IN CASE DomUtils not defined error still comes
+            await insertScripts(page);
+                
+            // await removeXhrListener();
+            // removeNavigationListener(); 
+            return wasActionPerformed;
+        }
+        catch(ex) 
+        {
+            return false;
+        }
     };
 }
 

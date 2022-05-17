@@ -1,24 +1,47 @@
-
-const DEFAULT_TIMEOUT = 10000;
+const PAGE_LOAD_TIMEOUT = 10000;
+const ACTIONABILITY_TIMEOUT = 5000;
 const MAX_ATTEMPTS = 3;
 
 function getWaitOptions(customTimeout) {
-	return { waitUntil: 'load', timeout: customTimeout || DEFAULT_TIMEOUT };
+	return { waitUntil: 'load', timeout: customTimeout || PAGE_LOAD_TIMEOUT };
 } 
 
-async function openTab(browser, url, callback = null, attempt = 0, timeout = 0) {
-    console.log(`\nOpening URL : ${url}`);
-    let page = await browser.newPage();
-    await page.setBypassCSP(true);
-    await page.setUserAgent(getUserAgent());
-    // getConfigValue("performanceMode") &&  
+const userAgents = [
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
+	"Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36",
+	"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",
+	"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"
+];
+
+const botAgents = [
+	"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+	"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/W.X.Y.Z Safari/537.36",
+	"Googlebot/2.1 (+http://www.google.com/bot.html)"
+];
+
+async function openTab(browser, url, callback = null, attempt = 1, timeout = 0) {
+	console.log(`\nOpening URL : ${url}`);
+
+	const context = await browser.newContext({
+		bypassCSP: true,
+		colorScheme: 'light',
+		recordVideo: {
+			dir: './videos/'
+		},
+		userAgent: botAgents[Math.floor(Math.random() * botAgents.length)],
+	});
+	// context.setDefaultTimeout(5000);
+	context.grantPermissions(['geolocation', 'notifications']);
+    const page = await context.newPage();
+
 	// await disableHeavyResources(page);
+	
 	try {
-		await page.goto(url, getWaitOptions(attempt * DEFAULT_TIMEOUT));
+		await page.goto(url, getWaitOptions(attempt * PAGE_LOAD_TIMEOUT));
 		callback && await callback(page);
 	}
 	catch(ex) {
-		console.error("\nPPTR EXCEPTION:");
+		console.error("\nEXCEPTION:");
 		console.error(ex);
 		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
 			await closeTab(page);
@@ -26,22 +49,25 @@ async function openTab(browser, url, callback = null, attempt = 0, timeout = 0) 
 		}
 		return null;
 	}
-    // await warmUpPage(page);
     return page;
 }
 
 async function reloadPage(page, callback = null, attempt = 0)
 {
 	try {
-		await page.reload(getWaitOptions(attempt * DEFAULT_TIMEOUT));
+		await page.reload(getWaitOptions(attempt * PAGE_LOAD_TIMEOUT));
+		await page.waitForLoadState('networkidle');
 		callback && await callback(page);
 	}
 	catch(ex) {
-		console.error("\nPPTR EXCEPTION:");
+		console.error("\nEXCEPTION:");
 		console.error(ex);
 		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
 			// await closeTab(page);
 			return await reloadPage(page, callback, attempt+1);
+		}
+		else {
+			throw ex;
 		}
 	}
 }
@@ -51,11 +77,12 @@ async function goBack(page, callback = null, attempt = 0)
 	const currUrl = page.url();
 	let httpRes = null;
 	try {
-		httpRes = await page.goBack(getWaitOptions(attempt * DEFAULT_TIMEOUT));
+		httpRes = await page.goBack(getWaitOptions(attempt * PAGE_LOAD_TIMEOUT));
+		await page.waitForLoadState('networkidle');
 		callback && await callback(page);
 	}
 	catch(ex) {
-		console.error("\nPPTR EXCEPTION:");
+		console.error("\nEXCEPTION:");
 		console.error(ex);
 		if(ex.name === "TimeoutError" && attempt < MAX_ATTEMPTS) {
 			// await closeTab(page);
@@ -66,67 +93,133 @@ async function goBack(page, callback = null, attempt = 0)
 			await reloadPage(page, callback);
 			return await goBack(page, callback, attempt+1);
 		}
+		else {
+			throw ex;
+		}
 	}
 	return httpRes;
 }
 
-function getUserAgent() {
-	const userAgents = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36 Edg/87.0.664.75", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15"];
-	return userAgents[Math.floor(Math.random() * userAgents.length)];
-}
 
 async function closeTab(page) {
     if(page === undefined) return;  
     return page.close();
 }
 
-async function takeScreenShot(elementHandle, fileName) {
-	await elementHandle.click();
-	await elementHandle.screenshot({path: `./screenshots/${fileName}.png`});
+
+async function click(selector, page, byPassChecks = false) {
+	try {
+		const locator = page.locator(selector);
+		await locator.first().click({
+			force: byPassChecks,
+			timeout: byPassChecks ? 500 : ACTIONABILITY_TIMEOUT,   
+			// todo: improve the timeout logic. 
+			// If the page is already loaded, decrease timeout, else keep higher
+		});
+		return true;
+	}
+	catch(ex) {
+		console.error("\nEXCEPTION:");
+		console.error(ex);
+		// if(ex instanceof playwright.errors.TimeoutError) {
+		// TODO: calculate the timeout based on current speed of transimission (networkidle - domcontentloaded)
+		// 	return await click(selector, page, byPassChecks);
+		// }
+	}
+	return false;
+}
+
+async function getInnerText(selector, page)
+{
+	if(!selector || !selector.length)       return null;
+	
+	try {
+		const isValidQuerySelector = await page.evaluate(selector => {
+            return DomUtils.isValidQuerySelector(selector);
+        }, selector);
+
+		if(!isValidQuerySelector) {
+			return selector;
+		}
+
+		const locator = page.locator(selector);
+		await locator.waitFor({
+			// state: 'attached',
+			timeout: ACTIONABILITY_TIMEOUT,
+		});
+		return (await locator.innerText()).trim();
+	}
+	catch(ex) {
+		console.error("\nEXCEPTION:");
+		console.error(ex);
+	}
+	return null;
 }
 
 async function disableHeavyResources(page) {
-	// const heavyResources = ["image", "media", "font"]; 
-	const heavyResources = ["image"]; 
+	const heavyResources = ["media", "font"]; 
+	// const heavyResources = ["image"]; 
 	const blockedReqKeywords = ["video", "playback", "youtube", "autoplay"];
 
-	await page.setRequestInterception(true);
-	page.on('request', async request => {
-	try{
+	// await page.setRequestInterception(true);
+	await page.route("**/*", async route => {
+		const request = route.request();
 		if (heavyResources.includes(request.resourceType())) { 
-		await request.abort();
-		return;
+			await route.abort();
+			return;
 		}
 
 		let blockReq = false;
 		for(let i = 0; i < blockedReqKeywords.length; i++) {
-		if(request.url().includes(blockedReqKeywords[i])) {
-			blockReq = true;
-			break;
-		}
+			if(request.url().includes(blockedReqKeywords[i])) {
+				blockReq = true;
+				break;
+			}
 		}
 		if(blockReq) {
-		await request.abort(); 
-		return;
+			await route.abort(); 
+			return;
 		}
 
-		await request.continue();
-	}
-	catch(ex) {
-		console.error("\nPPTR EXCEPTION:");
-		console.error(ex);
-	}
+		await route.continue();
 	});
+
+	// page.on('request', async request => {
+	// 	try{
+	// 		if (heavyResources.includes(request.resourceType())) { 
+	// 			await request.abort();
+	// 			return;
+	// 		}
+
+	// 		let blockReq = false;
+	// 		for(let i = 0; i < blockedReqKeywords.length; i++) {
+	// 			if(request.url().includes(blockedReqKeywords[i])) {
+	// 				blockReq = true;
+	// 				break;
+	// 			}
+	// 		}
+	// 		if(blockReq) {
+	// 			await request.abort(); 
+	// 			return;
+	// 		}
+
+	// 		await request.continue();
+	// 	}
+	// 	catch(ex) {
+	// 		console.error(ex);
+	// 	}
+	// });
 }
+
 
 
 
 module.exports = {
     openTab,
     closeTab,
-    takeScreenShot,
-    disableHeavyResources,
 	getWaitOptions,
 	goBack,
 	reloadPage,
+	click,
+	getInnerText
 }

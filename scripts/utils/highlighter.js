@@ -44,18 +44,21 @@ const Highlighter = (() => {
         if(!element.style.prevBorder)
             element.style.prevBorder = [];
 
-        element.style.prevBorder.push(element.style.border);
+        const computedStyles = window.getComputedStyle(element);
+
+        element.style.prevBorder.push(computedStyles.border);
         element.style.border = `1px solid rgb(${red}, ${green}, ${blue})`;
 
         if(!element.style.prevBackgroundColor) 
             element.style.prevBackgroundColor = [];
         
-        element.style.prevBackgroundColor.push(element.style.backgroundColor);
+        element.style.prevBackgroundColor.push(computedStyles.backgroundColor);
         element.style.backgroundColor = `rgb(${red}, ${green}, ${blue}, 0.10)`; 
     };
 
     const resetHighlight = (element) => {
         if(element === null || element === undefined || element.style === undefined)       return;
+
         element.style.border = element.style.prevBorder ? element.style.prevBorder.pop() : "transparent";
         element.style.backgroundColor = element.style.prevBackgroundColor ? element.style.prevBackgroundColor.pop() : "transparent";
 

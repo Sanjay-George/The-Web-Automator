@@ -1,4 +1,6 @@
-CREATE TABLE `automator`.`crawlers` (
+CREATE DATABASE IF NOT EXISTS `automator`;
+
+CREATE TABLE IF NOT EXISTS `automator`.`crawlers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `url` varchar(200) NOT NULL,
@@ -9,7 +11,8 @@ CREATE TABLE `automator`.`crawlers` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `webhooks` (
+
+CREATE TABLE IF NOT EXISTS `webhooks` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `crawlerId` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
